@@ -22,11 +22,11 @@ Before setting up the project, ensure you have the following installed on your m
 En-Passant-Backend/
 ├── .env.example
 ├── .gitignore
-├── app.js               # Main Express application setup and middleware
-├── config/
-│   └── db.js            # MongoDB connection configuration
 ├── package.json         # Project metadata and dependencies
 └── src/
+    ├── app.js           # Main Express application setup and middleware
+    ├── config/
+    │   └── db.js        # MongoDB connection configuration
     └── server.js        # Entry point to start the server
 ```
 
