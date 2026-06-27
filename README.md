@@ -16,27 +16,6 @@ Before setting up the project, ensure you have the following installed on your m
 - **Database:** MongoDB (via Mongoose)
 - **Authentication:** Clerk
 
-## Folder Structure
-
-```text
-En-Passant-Backend/
-├── .env.example
-├── .gitignore
-├── package.json         # Project metadata and dependencies
-└── src/
-    ├── app.js           # Main Express application setup and middleware
-    ├── config/
-    │   └── db.js        # MongoDB connection configuration
-    ├── features/
-    │   └── users/
-    │       └── user.js  # User model definition
-    ├── middleware/
-    │   ├── authMiddleware.js
-    │   ├── errorMiddleware.js
-    │   └── validateMiddllware.js
-    └── server.js        # Entry point to start the server
-```
-
 ## Local Setup Instructions
 
 1. **Clone the repository:**
