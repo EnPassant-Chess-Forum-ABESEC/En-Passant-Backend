@@ -27,6 +27,13 @@ En-Passant-Backend/
     ├── app.js           # Main Express application setup and middleware
     ├── config/
     │   └── db.js        # MongoDB connection configuration
+    ├── features/
+    │   └── users/
+    │       └── user.js  # User model definition
+    ├── middleware/
+    │   ├── authMiddleware.js
+    │   ├── errorMiddleware.js
+    │   └── validateMiddllware.js
     └── server.js        # Entry point to start the server
 ```
 
