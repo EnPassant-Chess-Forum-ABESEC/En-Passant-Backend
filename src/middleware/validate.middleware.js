@@ -6,9 +6,9 @@ export const validate = (schema) => async (req, res, next) => {
       params: req.params,
     });
 
-    req.body = validated.body || req.body;
-    req.query = validated.query || req.query;
-    req.params = validated.params || req.params;
+    if (validated.body) req.body = validated.body;
+    if (validated.query) Object.assign(req.query, validated.query);
+    if (validated.params) Object.assign(req.params, validated.params);
 
     next();
   } catch (error) {

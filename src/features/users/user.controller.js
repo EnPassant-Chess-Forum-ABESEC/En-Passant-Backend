@@ -1,9 +1,8 @@
-import { getCurrentUser, updateUser } from "./user.service.js";
+import { updateUser } from "./user.service.js";
 
 export const me = async (req, res, next) => {
   try {
-    const user = await getCurrentUser(req.clerkId);
-    res.json({ success: true, user });
+    res.json({ success: true, user: req.user });
   } catch (error) {
     next(error);
   }
