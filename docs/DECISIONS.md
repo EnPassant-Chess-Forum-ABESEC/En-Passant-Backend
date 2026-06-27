@@ -83,3 +83,15 @@ All external input must be validated before reaching business logic.
 - Type safety
 - Consistent validation
 - Cleaner controllers
+
+---
+
+# Decision 4: Just-In-Time (JIT) User Provisioning
+
+Instead of using Clerk webhooks (which require exposing local ports via ngrok during development and maintaining extra webhook infrastructure), using Just-In-Time (JIT) user synchronization in the authentication middleware.
+
+### Benefits
+
+- **Self-Healing:** If a user is deleted from the DB, they are automatically recreated on their next request.
+- **Developer Experience:** No external webhook testing tools required. Local development works out-of-the-box.
+- **Simpler Controllers:** Controllers don't need to check if a user exists in the database; the middleware guarantees `req.user` is populated.

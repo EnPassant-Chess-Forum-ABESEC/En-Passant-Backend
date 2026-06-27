@@ -20,6 +20,8 @@ Authorization: Bearer <Clerk Token>
 
 Retrieve the profile information of the currently authenticated user.
 
+> **Note on User Creation:** If the user does not exist in the database yet, this endpoint (like all protected endpoints) will automatically fetch their details from Clerk and create their profile on the fly (Just-In-Time Provisioning).
+
 ### Endpoint
 
 ```http

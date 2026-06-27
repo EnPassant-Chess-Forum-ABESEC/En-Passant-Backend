@@ -103,10 +103,13 @@ router.get('/me', userAuth, me);
 flowchart TD
     A[User logs in via Clerk] --> B[Clerk issues JWT]
     B --> C[Client sends request with Authorization header]
-    C --> D[auth.middleware extracts token]
-    D --> E[Clerk SDK validates token]
-    E --> F[req.clerkId set]
-    F --> G[Proceed to route handler]
+    C --> D[auth.middleware validates token]
+    D --> E{User in MongoDB?}
+    E -- Yes --> F[Attach user to req]
+    E -- No --> G[Fetch profile from Clerk API]
+    G --> H[Create user in MongoDB]
+    H --> F
+    F --> I[Proceed to route handler]
 ```
 
 ## Validation Flow
@@ -124,12 +127,12 @@ flowchart TD
 To add a new domain (e.g., tournaments):
 1. Create a folder under `features/` (e.g., `features/tournaments/`).
 2. Add the typical files:
-   - `tournament.js`
-   - `tournamentRepository.js`
-   - `tournamentService.js`
-   - `tournamentController.js`
-   - `tournamentRoutes.js`
-   - `tournamentValidation.js`
+   - `tournament.model.js`
+   - `tournament.repository.js`
+   - `tournament.service.js`
+   - `tournament.controller.js`
+   - `tournament.routes.js`
+   - `tournament.validation.js`
 3. Register the router in `src/app.js`.
 
 ---
