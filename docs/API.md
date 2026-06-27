@@ -53,6 +53,58 @@ Authorization: Bearer <Clerk Token>
 
 ---
 
+## Onboard User Profile
+
+Complete the onboarding process for a new user. This requires mandatory fields and marks the user as onboarded.
+
+### Endpoint
+
+```http
+POST /api/users/onboard
+```
+
+### Authentication
+
+Required
+
+### Headers
+
+```http
+Authorization: Bearer <Clerk Token>
+Content-Type: application/json
+```
+
+### Request Body
+
+```json
+{
+  "branch": "CSE",
+  "year": 2,
+  "chessAccounts": {
+    "chessCom": {
+      "username": "player123"
+    }
+  }
+}
+```
+
+### Response
+
+**Status: 200 OK**
+
+```json
+{
+  "success": true,
+  "message": "Onboarding complete",
+  "updatedUser": {
+    // ...
+    "isOnboardingComplete": true
+  }
+}
+```
+
+---
+
 ## Update Current User Profile
 
 Update the profile information of the currently authenticated user.
