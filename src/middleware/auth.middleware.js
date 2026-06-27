@@ -49,3 +49,29 @@ export const userAuth = async (req, res, next) => {
       .json({ message: "Internal Server Error in Authentication" });
   }
 };
+
+export const adminAuth = async (req, res, next) => {
+  try {
+    const { userId } = getAuth(req);
+
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+    const user = await User.findOne({ clerkId: userId });
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (user.role !== "admin")
+      return res.status(403).json({ message: "Unauthorized as admin" });
+
+    req.clerkId = userId;
+    req.user = user;
+
+    next();
+  } catch (error) {
+    console.log("Admin auth error:", error);
+
+    res
+      .status(500)
+      .json({ message: "Internal Server Error in Admin Authentication" });
+  }
+};

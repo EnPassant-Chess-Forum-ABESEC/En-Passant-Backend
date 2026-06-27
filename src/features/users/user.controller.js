@@ -1,4 +1,8 @@
-import { updateUser } from "./user.service.js";
+import {
+  updateUserService,
+  getUserByIdService,
+  getAllUsersService,
+} from "./user.service.js";
 
 export const me = async (req, res, next) => {
   try {
@@ -10,8 +14,7 @@ export const me = async (req, res, next) => {
 
 export const updateMe = async (req, res, next) => {
   try {
-    const updatedData = req.body;
-    const updatedUser = await updateUser(req.clerkId, updatedData);
+    const updatedUser = await updateUserService(req.clerkId, req.body);
 
     if (!updatedUser) {
       return res.status(404).json({
@@ -20,7 +23,11 @@ export const updateMe = async (req, res, next) => {
       });
     }
 
-    res.json({ success: true, message: "Profile updated", updatedUser });
+    res.json({
+      success: true,
+      message: "Profile updated",
+      updatedUser,
+    });
   } catch (error) {
     next(error);
   }
@@ -35,14 +42,52 @@ export const onboardUser = async (req, res, next) => {
       });
     }
 
-    const updatedData = {
+    const updatedUser = await updateUserService(req.clerkId, {
       ...req.body,
       isOnboardingComplete: true,
-    };
+    });
 
-    const updatedUser = await updateUser(req.clerkId, updatedData);
+    res.json({
+      success: true,
+      message: "Onboarding complete",
+      updatedUser,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
-    res.json({ success: true, message: "Onboarding complete", updatedUser });
+export const getUserById = async (req, res, next) => {
+  try {
+    const user = await getUserByIdService(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAllUsers = async (req, res, next) => {
+  try {
+    const pageSize = Number(req.query.pageSize) || 10;
+    const pageNumber = Number(req.query.pageNumber) || 1;
+
+    const users = await getAllUsersService(pageSize, pageNumber);
+
+    res.json({
+      success: true,
+      users,
+    });
   } catch (error) {
     next(error);
   }

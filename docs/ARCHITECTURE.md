@@ -77,7 +77,7 @@ router.get('/me', userAuth, me);
 - Location: `src/middleware/`
 - Handles authentication, validation, and error handling.
 - **Current middleware**:
-  - `auth.middleware` – extracts Clerk user ID.
+  - `auth.middleware` – extracts Clerk user ID (includes `userAuth` and `adminAuth`).
   - `validate.middleware` – validates request bodies with Zod.
   - `error.middleware` – formats errors into consistent responses.
 

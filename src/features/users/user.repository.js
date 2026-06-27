@@ -11,3 +11,9 @@ export const createUser = async (userData) => {
 export const updateUser = async (clerkId, userData) => {
   return User.findOneAndUpdate({ clerkId }, userData, { new: true });
 };
+
+export const findAll = (pageSize, pageNumber) => {
+  return User.find()
+    .limit(Number(pageSize))
+    .skip((Number(pageNumber) - 1) * Number(pageSize));
+};

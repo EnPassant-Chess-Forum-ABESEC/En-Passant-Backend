@@ -154,6 +154,76 @@ Content-Type: application/json
 
 ---
 
+## Get All Users (Admin)
+
+Retrieve a paginated list of all users.
+
+### Endpoint
+
+```http
+GET /api/users/all?pageSize=10&pageNumber=1
+```
+
+### Authentication
+
+Required (Admin Role)
+
+### Headers
+
+```http
+Authorization: Bearer <Clerk Token>
+```
+
+### Response
+
+**Status: 200 OK**
+
+```json
+{
+  "success": true,
+  "users": [
+    // array of user objects
+  ]
+}
+```
+
+---
+
+## Get User By ID (Admin)
+
+Retrieve a specific user profile by their MongoDB ObjectId.
+
+### Endpoint
+
+```http
+GET /api/users/:id
+```
+
+### Authentication
+
+Required (Admin Role)
+
+### Headers
+
+```http
+Authorization: Bearer <Clerk Token>
+```
+
+### Response
+
+**Status: 200 OK**
+
+```json
+{
+  "success": true,
+  "user": {
+    // user object
+  }
+}
+```
+
+---
+
 # Error Responses
 
 ## Unauthorized
