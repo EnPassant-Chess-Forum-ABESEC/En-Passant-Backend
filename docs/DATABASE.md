@@ -13,7 +13,7 @@ Environment variable: MONGO_URI
 
 ## Users Collection
 
-Model: features/users/user.js
+Model: features/users/user.model.js
 Purpose: Stores En-Passant club member information.
 
 ## User Schema

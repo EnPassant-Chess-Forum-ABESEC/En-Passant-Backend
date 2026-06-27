@@ -27,16 +27,16 @@ src/
 │   └─ db.js             # MongoDB connection
 ├─ features/
 │   └─ users/
-│       ├─ user.js               # Mongoose model
-│       ├─ userRepository.js     # Data access layer
-│       ├─ userService.js        # Business logic
-│       ├─ userController.js    # HTTP handlers
-│       ├─ userRoutes.js         # Express router
-│       └─ userValidation.js    # Zod schemas
+│       ├─ user.model.js         # Mongoose model
+│       ├─ user.repository.js    # Data access layer
+│       ├─ user.service.js       # Business logic
+│       ├─ user.controller.js    # HTTP handlers
+│       ├─ user.routes.js        # Express router
+│       └─ user.validation.js    # Zod schemas
 ├─ middleware/
-│   ├─ authMiddleware.js   # Clerk authentication
-│   ├─ validateMiddleware.js # Zod validation
-│   └─ errorMiddleware.js  # Global error handling
+│   ├─ auth.middleware.js      # Clerk authentication
+│   ├─ validate.middleware.js  # Zod validation
+│   └─ error.middleware.js     # Global error handling
 └─ server.js              # Server entry point
 ```
 
@@ -63,7 +63,7 @@ flowchart TD
 ## Layer Responsibilities
 
 ### Routes
-- Location: `features/*/userRoutes.js`
+- Location: `features/*/user.routes.js`
 - Define API endpoints, attach middleware, connect controllers.
 - **Should not** contain DB queries or business logic.
 
@@ -77,9 +77,9 @@ router.get('/me', userAuth, me);
 - Location: `src/middleware/`
 - Handles authentication, validation, and error handling.
 - **Current middleware**:
-  - `authMiddleware` – extracts Clerk user ID.
-  - `validateMiddleware` – validates request bodies with Zod.
-  - `errorMiddleware` – formats errors into consistent responses.
+  - `auth.middleware` – extracts Clerk user ID.
+  - `validate.middleware` – validates request bodies with Zod.
+  - `error.middleware` – formats errors into consistent responses.
 
 ---
 ### Controllers
@@ -103,7 +103,7 @@ router.get('/me', userAuth, me);
 flowchart TD
     A[User logs in via Clerk] --> B[Clerk issues JWT]
     B --> C[Client sends request with Authorization header]
-    C --> D[authMiddleware extracts token]
+    C --> D[auth.middleware extracts token]
     D --> E[Clerk SDK validates token]
     E --> F[req.clerkId set]
     F --> G[Proceed to route handler]
@@ -113,10 +113,10 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[Incoming request] --> B[validateMiddleware]
+    A[Incoming request] --> B[validate.middleware]
     B --> C{Zod schema validation}
     C -- Pass --> D[Controller]
-    C -- Fail --> E[errorMiddleware → 400 response]
+    C -- Fail --> E[error.middleware → 400 response]
 ```
 
 ## Adding a New Feature

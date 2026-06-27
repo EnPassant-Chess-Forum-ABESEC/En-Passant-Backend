@@ -2,9 +2,8 @@ import express from "express";
 import dotenv from "dotenv";
 import { clerkMiddleware } from "@clerk/express";
 import connectDb from "./config/db.js";
-import userRoutes from "./features/users/userRoutes.js";
-
-import { errorHandler } from "./middleware/errorMiddleware.js";
+import userRoutes from "./features/users/user.routes.js";
+import { errorHandler } from "./middleware/error.middleware.js";
 
 dotenv.config();
 

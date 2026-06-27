@@ -40,6 +40,8 @@ Before setting up the project, ensure you have the following installed on your m
 
    Open the `.env` file and populate the Clerk keys (`CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY`) with the development credentials from your Clerk dashboard. Update the `MONGO_URI` if your local database uses a different port or name.
 
+
+
 4. **Start the Development Server:**
    This project uses `nodemon` to automatically restart the server upon file changes.
    ```bash

@@ -5,7 +5,7 @@ The backend uses centralized error handling.
 Location:
 
 ```text
-src/middleware/errorMiddleware.js
+src/middleware/error.middleware.js
 ```
 
 ---

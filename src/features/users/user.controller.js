@@ -1,4 +1,4 @@
-import { getCurrentUser } from "./userService.js";
+import { getCurrentUser, updateUser } from "./user.service.js";
 
 export const me = async (req, res, next) => {
   try {
