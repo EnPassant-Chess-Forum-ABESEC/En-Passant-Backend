@@ -69,7 +69,7 @@ src/
 
 A request follows this flow:
 
-<img src="/docs/diagrams/request_flow.svg" alt="Request Lifecycle Diagram" width="100%"/>
+<img src="/docs/diagrams/Request_flow.svg" alt="Request Lifecycle Diagram" width="100%"/>
 
 ## Layer Responsibilities
 
@@ -120,7 +120,7 @@ router.get("/me", userAuth, me);
 
 ## Authentication Flow
 
-<img src="/docs/diagrams/authentication_flow.svg" alt="Authentication Flow Diagram" width="100%"/>
+<img src="/docs/diagrams/Authentication_flow.svg" alt="Authentication Flow Diagram" width="100%"/>
 
 ## Validation Flow
 
@@ -130,7 +130,7 @@ router.get("/me", userAuth, me);
 
 To keep API responses fast, external API synchronization is decoupled using a queue-based system.
 
-<img src="/docs/diagrams/Background_Sync_flow.svg" alt="Sync Flow Diagram" width="100%"/>
+<img src="/docs/diagrams/Background_Sync_Flow.svg" alt="Sync Flow Diagram" width="100%"/>
 
 - **Adapters**: Isolated files (`chesscom.adapter.js`, `lichess.adapter.js`) strictly handle fetching and normalizing data from external platforms.
 - **Engine**: Coordinates the sync logic and executes a single database update at the end to minimize writes.
@@ -140,7 +140,7 @@ To keep API responses fast, external API synchronization is decoupled using a qu
 
 The leaderboard relies on Redis Sorted Sets (`ZADD`, `ZREVRANGE`, `ZREVRANK`) to provide fast ranking data without heavy MongoDB aggregation queries.
 
-<img src="/docs/diagrams/Leaderboard_flow.svg" alt="Leaderboard Flow Diagram" width="100%"/>
+<img src="/docs/diagrams/Leaderboard_Flow.svg" alt="Leaderboard Flow Diagram" width="100%"/>
 
 - **Update**: Triggered automatically by the `SyncEngine` whenever a user's ratings change.
 - **Get Leaderboard**: Pulls the top IDs and their scores from Redis, then hydrates the response by querying MongoDB for those specific User documents.

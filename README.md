@@ -4,7 +4,7 @@ This repository contains the backend API for the En-Passant's official website. 
 
 ## System Architecture
 
-<img src="/docs/diagrams/High_level_architecture.svg" alt="High Level System Architecture" width="100%"/>
+<img src="/docs/diagrams/High_level_Architecture.svg" alt="High Level System Architecture" width="100%"/>
 
 ## Documentation
 
