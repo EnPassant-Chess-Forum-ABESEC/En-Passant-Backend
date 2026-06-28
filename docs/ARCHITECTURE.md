@@ -23,7 +23,7 @@ The backend follows a **feature‑based architecture**. Instead of grouping file
 
 The application is structured to treat distinct features as decoupled microservices logically (even within a monolith, like a modular monolith).
 
-<img src="/docs/En passant backend architecture.svg" alt="Backend Architecture Diagram" width="100%"/>
+<img src="/docs/En-Passant-Backend-Architecture.svg" alt="Backend Architecture Diagram" width="100%"/>
 
 ## Feature‑Based Structure
 
