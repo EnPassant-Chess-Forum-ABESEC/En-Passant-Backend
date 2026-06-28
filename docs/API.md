@@ -268,6 +268,85 @@ Returned when the request body fails validation.
 
 ---
 
+# Leaderboard APIs
+
+## Get Leaderboard
+
+Retrieve the top players for a specific time control.
+
+### Endpoint
+
+```http
+GET /api/leaderboard?timeControl=rapid&limit=20
+```
+- `timeControl`: `rapid`, `blitz`, or `bullet` (default: `rapid`)
+- `limit`: Number of users to return (default: `20`)
+
+### Response
+
+**Status: 200 OK**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "userId": "user_123",
+      "username": "johndoe",
+      "chessComUsername": "johndoe_chess",
+      "branch": "CSE",
+      "year": 2,
+      "rating": 1500
+    }
+  ]
+}
+```
+
+---
+
+## Get My Rank
+
+Retrieve the current authenticated user's rank and rating across all time controls.
+
+### Endpoint
+
+```http
+GET /api/leaderboard/my-rank
+```
+
+### Authentication
+
+Required
+
+### Headers
+
+```http
+Authorization: Bearer <Clerk Token>
+```
+
+### Response
+
+**Status: 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "rapid": {
+      "rank": 15,
+      "rating": 1200
+    },
+    "blitz": {
+      "rank": 42,
+      "rating": 1050
+    },
+    "bullet": null
+  }
+}
+```
+
+---
+
 # Response Conventions
 
 | Field     | Type      | Description                                  |

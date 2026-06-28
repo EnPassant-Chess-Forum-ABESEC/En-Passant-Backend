@@ -19,11 +19,11 @@
 
 The backend follows a **feature‑based architecture**. Instead of grouping files by technical responsibility (MVC style), code is organized around application features. Each feature contains everything required for that domain.
 
-## Overall System Architecture
+## Overall System Architecture (Subsystem/ component diagram)
 
 The application is structured to treat distinct features as decoupled microservices logically (even within a monolith, like a modular monolith).
 
-<img src="/docs/En-Passant-Backend-Architecture.svg" alt="Backend Architecture Diagram" width="100%"/>
+<img src="/docs/diagrams/En_passant_backend_architecture.svg" alt="Backend Architecture Diagram(subsystem/components)" width="100%"/>
 
 ## Feature‑Based Structure
 
@@ -32,7 +32,13 @@ src/
 ├─ app.js                # Express app and global middleware
 ├─ config/
 │   └─ db.js             # MongoDB connection
+├─ redis/
+│   └─ redis.client.js   # Redis client connection
 ├─ features/
+│   ├─ leaderboard/
+│   │   ├─ leaderboard.controller.js
+│   │   ├─ leaderboard.routes.js
+│   │   └─ leaderboard.service.js
 │   ├─ sync/
 │   │   ├─ adapters/             # External API logic
 │   │   ├─ sync.engine.js        # Core sync logic
@@ -63,15 +69,7 @@ src/
 
 A request follows this flow:
 
-```mermaid
-flowchart TD
-    A[Client Request] --> B[Route Layer]
-    B --> C[Middleware Layer]
-    C --> D[Controller Layer]
-    D --> E[Service Layer]
-    E --> F[Repository Layer]
-    F --> G[Database]
-```
+<img src="/docs/diagrams/request_flow.svg" alt="Request Lifecycle Diagram" width="100%"/>
 
 ## Layer Responsibilities
 
@@ -122,50 +120,31 @@ router.get("/me", userAuth, me);
 
 ## Authentication Flow
 
-```mermaid
-flowchart TD
-    A[User logs in via Clerk] --> B[Clerk issues JWT]
-    B --> C[Client sends request with Authorization header]
-    C --> D[auth.middleware validates token]
-    D --> E{User in MongoDB?}
-    E -- Yes --> F[Attach user to req]
-    E -- No --> G[Fetch profile from Clerk API]
-    G --> H[Create user in MongoDB]
-    H --> F
-    F --> I[Proceed to route handler]
-```
+<img src="/docs/diagrams/authentication_flow.svg" alt="Authentication Flow Diagram" width="100%"/>
 
 ## Validation Flow
 
-```mermaid
-flowchart TD
-    A[Incoming request] --> B[validate.middleware]
-    B --> C{Zod schema validation}
-    C -- Pass --> D[Controller]
-    C -- Fail --> E[error.middleware → 400 response]
-```
+<img src="/docs/diagrams/Validation_flow.svg" alt="Validation Flow Diagram" width="100%"/>
 
 ## Background Sync Flow (Chess Accounts)
 
 To keep API responses fast, external API synchronization is decoupled using a queue-based system.
 
-```mermaid
-flowchart TD
-    A[User Profile Update / Onboard] --> B[Controller enqueues job]
-    C[Daily Cron Job] --> D[Scheduler enqueues jobs]
-    B --> E[(BullMQ Queue + Redis)]
-    D --> E
-    E --> F[Sync Worker]
-    F --> G[Sync Engine]
-    G --> H[Chess.com Adapter]
-    G --> I[Lichess Adapter]
-    H --> J[(MongoDB)]
-    I --> J
-```
+<img src="/docs/diagrams/Background_Sync_flow.svg" alt="Sync Flow Diagram" width="100%"/>
 
 - **Adapters**: Isolated files (`chesscom.adapter.js`, `lichess.adapter.js`) strictly handle fetching and normalizing data from external platforms.
 - **Engine**: Coordinates the sync logic and executes a single database update at the end to minimize writes.
 - **Queue**: Uses BullMQ + Redis to manage job states, retries, and errors without blocking the user's request lifecycle.
+
+## Leaderboard Flow
+
+The leaderboard relies on Redis Sorted Sets (`ZADD`, `ZREVRANGE`, `ZREVRANK`) to provide fast ranking data without heavy MongoDB aggregation queries.
+
+<img src="/docs/diagrams/Leaderboard_flow.svg" alt="Leaderboard Flow Diagram" width="100%"/>
+
+- **Update**: Triggered automatically by the `SyncEngine` whenever a user's ratings change.
+- **Get Leaderboard**: Pulls the top IDs and their scores from Redis, then hydrates the response by querying MongoDB for those specific User documents.
+- **Get My Rank**: Directly queries Redis for the authenticated user's exact rank (0-indexed, shifted to 1-indexed) without hitting MongoDB.
 
 ## Adding a New Feature
 
@@ -182,3 +161,7 @@ To add a new domain (e.g., tournaments):
 3. Register the router in `src/app.js`.
 
 ---
+
+```
+
+```
