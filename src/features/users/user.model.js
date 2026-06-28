@@ -1,30 +1,61 @@
 import mongoose from "mongoose";
 
-// Chess account sub schema
-const chessAccountsSchema = new mongoose.Schema(
+const ratingsSchema = new mongoose.Schema(
   {
-    chessCom: {
-      username: { type: String, trim: true },
-      ratings: {
-        blitz: { type: Number, default: 0 },
-        bullet: { type: Number, default: 0 },
-        rapid: { type: Number, default: 0 },
-      },
-    },
-    lichess: {
-      username: { type: String, trim: true },
-      ratings: {
-        blitz: { type: Number, default: 0 },
-        bullet: { type: Number, default: 0 },
-        rapid: { type: Number, default: 0 },
-      },
-    },
-    lastSync: { type: Date, default: Date.now },
+    blitz: { type: Number, default: 0 },
+    bullet: { type: Number, default: 0 },
+    rapid: { type: Number, default: 0 },
   },
   { _id: false },
 );
 
-// Main user schema
+const chessAccountSchema = new mongoose.Schema(
+  {
+    username: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    ratings: {
+      type: ratingsSchema,
+      default: () => ({}),
+    },
+
+    status: {
+      type: String,
+      enum: ["pending", "synced", "failed"],
+      default: "pending",
+    },
+
+    lastSync: {
+      type: Date,
+      default: null,
+    },
+
+    lastError: {
+      type: String,
+      default: null,
+    },
+  },
+  { _id: false },
+);
+
+const chessAccountsSchema = new mongoose.Schema(
+  {
+    chessCom: {
+      type: chessAccountSchema,
+      default: undefined,
+    },
+
+    lichess: {
+      type: chessAccountSchema,
+      default: undefined,
+    },
+  },
+  { _id: false },
+);
+
 const userSchema = new mongoose.Schema(
   {
     clerkId: {
@@ -33,27 +64,45 @@ const userSchema = new mongoose.Schema(
       unique: true,
       index: true,
     },
+
     userName: {
       type: String,
       required: true,
+      trim: true,
     },
+
     collegeEmail: {
       type: String,
       required: true,
       unique: true,
+      trim: true,
+      lowercase: true,
     },
+
     branch: {
       type: String,
       default: null,
       trim: true,
     },
-    year: { type: Number, min: 1, max: 5, default: 1 },
-    chessAccounts: { type: chessAccountsSchema, default: {} },
+
+    year: {
+      type: Number,
+      min: 1,
+      max: 5,
+      default: 1,
+    },
+
+    chessAccounts: {
+      type: chessAccountsSchema,
+      default: () => ({}),
+    },
+
     profilePictureUrl: {
       type: String,
-      default: " ",
+      default: null,
       trim: true,
     },
+
     isOnboardingComplete: {
       type: Boolean,
       default: false,

@@ -3,6 +3,7 @@ import {
   getUserByIdService,
   getAllUsersService,
 } from "./user.service.js";
+import { enqueueSyncJob } from "../sync/sync.queue.js";
 
 export const me = async (req, res, next) => {
   try {
@@ -21,6 +22,10 @@ export const updateMe = async (req, res, next) => {
         success: false,
         message: "User not found",
       });
+    }
+
+    if (req.body.chessAccounts) {
+      await enqueueSyncJob(updatedUser._id, "profile_update");
     }
 
     res.json({
@@ -46,6 +51,10 @@ export const onboardUser = async (req, res, next) => {
       ...req.body,
       isOnboardingComplete: true,
     });
+
+    if (req.body.chessAccounts) {
+      await enqueueSyncJob(updatedUser._id, "onboarding");
+    }
 
     res.json({
       success: true,
