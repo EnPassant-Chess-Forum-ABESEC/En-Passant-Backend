@@ -1,5 +1,5 @@
 import { Worker } from "bullmq";
-import { redisConnection } from "./sync.queue.js";
+import { redisConnection } from "../../redis/redis.client.js";
 import { syncUserAccounts } from "./sync.engine.js";
 
 export const initSyncWorker = () => {

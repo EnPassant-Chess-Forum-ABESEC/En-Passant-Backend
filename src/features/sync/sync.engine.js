@@ -54,6 +54,17 @@ export const syncUserAccounts = async (userId) => {
   if (hasUpdates) {
     user.chessAccounts.lastSync = new Date();
     await user.save();
+
+    try {
+      const { updateUserLeaderboard } =
+        await import("../leaderboard/leaderboard.service.js");
+      await updateUserLeaderboard(user);
+    } catch (err) {
+      console.error(
+        `[SyncEngine] Failed to update leaderboard for user ${userId}:`,
+        err.message,
+      );
+    }
   }
 
   return results;

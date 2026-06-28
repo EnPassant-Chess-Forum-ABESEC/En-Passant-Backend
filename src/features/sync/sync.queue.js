@@ -1,14 +1,5 @@
 import { Queue } from "bullmq";
-import IORedis from "ioredis";
-
-const redisOptions = {
-  maxRetriesPerRequest: null,
-};
-
-export const redisConnection = new IORedis(
-  process.env.REDIS_URL || "redis://localhost:6379",
-  redisOptions,
-);
+import { redisConnection } from "../../redis/redis.client.js";
 
 export const syncQueue = new Queue("sync-queue", {
   connection: redisConnection,
