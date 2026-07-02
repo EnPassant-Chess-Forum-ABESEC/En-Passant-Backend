@@ -39,6 +39,15 @@ src/
 │   │   ├─ leaderboard.controller.js
 │   │   ├─ leaderboard.routes.js
 │   │   └─ leaderboard.service.js
+│   ├─ payments/                          # [WIP] Payment service
+│   │   └─ gateways/
+│   │       └─ razorpay.gateway.js        # Razorpay SDK wrapper
+│   ├─ storage/                           # [WIP] File storage service
+│   │   ├─ providers/
+│   │   │   └─ cloudinary.provider.js     # Cloudinary SDK init
+│   │   └─ storage.service.js            # uploadFile, deleteFile, signedUrl
+│   ├─ tasks/                             # [WIP] Task service
+│   │   └─ task.model.js                 # Department + Task schemas
 │   ├─ sync/
 │   │   ├─ adapters/             # External API logic
 │   │   ├─ sync.engine.js        # Core sync logic
