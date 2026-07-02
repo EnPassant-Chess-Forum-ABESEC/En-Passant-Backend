@@ -123,3 +123,101 @@ Allowed values:
 Purpose: Controls permissions.
 
 ---
+
+## departmentsCollection
+
+Model: features/tasks/task.model.js
+Purpose: Stores En-Passant club member information.
+
+## departmentSchema
+
+### code
+
+Type: String
+Purpose: Stores Clerk authentication identifier.
+Properties:
+
+- Required
+- Unique
+- Indexed
+
+---
+
+## year
+
+Type: Number
+Purpose: Stores Clerk authentication identifier.
+Properties:
+
+- Required
+- Unique
+- Indexed
+
+---
+
+## taskCollection
+
+Model: features/tasks/task.model.js
+Purpose: Stores En-Passant club member information.
+
+## taskSchema
+
+### departmentId
+
+Type: String
+Purpose: Stores Clerk authentication identifier.
+Properties:
+
+- Required
+- Unique
+- Indexed
+
+---
+
+### year
+
+Type: Number
+Purpose: Stores Clerk authentication identifier.
+Properties:
+
+- Required
+- Unique
+- Indexed
+
+---
+
+### order
+
+Type: Number
+Purpose: Stores Clerk authentication identifier.
+Properties:
+
+- Required
+- Unique
+- Indexed
+
+---
+
+### submissionType
+
+Type: String
+Purpose: Stores Clerk authentication identifier.
+Properties:
+
+- Required
+- Unique
+- Indexed
+
+---
+
+### isRequired
+
+Type: Boolean
+Purpose: Stores Clerk authentication identifier.
+Properties:
+
+- Required
+- Unique
+- Indexed
+
+---
