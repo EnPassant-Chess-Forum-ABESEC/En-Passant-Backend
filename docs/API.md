@@ -347,6 +347,112 @@ Authorization: Bearer <Clerk Token>
 
 ---
 
+# Task APIs
+
+## Get All Tasks for Year
+
+Retrieve all tasks across all departments for a given year.
+
+### Endpoint
+
+```http
+GET /api/tasks?year=2026
+```
+
+### Authentication
+
+Required
+
+### Query Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `year` | Number | Yes | The recruitment year (e.g. 2026) |
+
+### Headers
+
+```http
+Authorization: Bearer <Clerk Token>
+```
+
+### Response
+
+**Status: 200 OK**
+
+```json
+{
+  "tasks": [
+    {
+      "_id": "60d5ec4b1234567890123456",
+      "departmentId": {
+        "_id": "60d5ec4b1234567890123457",
+        "name": "Technical",
+        "code": "TECH",
+        "description": "Software development team"
+      },
+      "year": 2026,
+      "title": "Build a REST API",
+      "description": "Build a simple backend API using Express.js",
+      "order": 1,
+      "submissionType": "link",
+      "isRequired": true
+    }
+  ]
+}
+```
+
+---
+
+## Get Tasks by Department
+
+Retrieve tasks specifically for a single department in a given year, ordered by task display order.
+
+### Endpoint
+
+```http
+GET /api/tasks/department?departmentId=60d5ec4b1234567890123457&year=2026
+```
+
+### Authentication
+
+Required
+
+### Query Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `departmentId` | String | Yes | MongoDB ObjectId of the department |
+| `year` | Number | Yes | The recruitment year (e.g. 2026) |
+
+### Headers
+
+```http
+Authorization: Bearer <Clerk Token>
+```
+
+### Response
+
+**Status: 200 OK**
+
+```json
+{
+  "tasks": [
+    {
+      "_id": "60d5ec4b1234567890123456",
+      "departmentId": "60d5ec4b1234567890123457",
+      "year": 2026,
+      "title": "Build a REST API",
+      "description": "Build a simple backend API using Express.js",
+      "order": 1,
+      "submissionType": "link",
+      "isRequired": true
+    }
+  ]
+}
+```
+
+---
+
 # Response Conventions
 
 | Field     | Type      | Description                                  |

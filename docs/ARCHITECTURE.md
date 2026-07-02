@@ -45,9 +45,13 @@ src/
 │   ├─ storage/                           # [WIP] File storage service
 │   │   ├─ providers/
 │   │   │   └─ cloudinary.provider.js     # Cloudinary SDK init
-│   │   └─ storage.service.js            # uploadFile, deleteFile, signedUrl
+│   │   └─ storage.service.js             # uploadFile, deleteFile, signedUrl
 │   ├─ tasks/                             # [WIP] Task service
-│   │   └─ task.model.js                 # Department + Task schemas
+│   │   ├─ task.controller.js             # HTTP handlers
+│   │   ├─ task.model.js                  # Department + Task schemas
+│   │   ├─ task.repository.js             # Data access layer
+│   │   ├─ task.routes.js                 # Express router
+│   │   └─ task.service.js                # Business logic
 │   ├─ sync/
 │   │   ├─ adapters/             # External API logic
 │   │   ├─ sync.engine.js        # Core sync logic
@@ -65,7 +69,7 @@ src/
 │   ├─ auth.middleware.js      # Clerk authentication
 │   ├─ validate.middleware.js  # Zod validation
 │   └─ error.middleware.js     # Global error handling
-└─ server.js              # Server entry point
+└─ server.js                   # Server entry point
 ```
 
 ### Why Feature‑Based?
