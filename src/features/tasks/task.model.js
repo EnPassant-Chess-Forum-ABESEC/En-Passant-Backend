@@ -30,4 +30,4 @@ taskSchema.index({ departmentId: 1, year: 1, order: 1 });
 const Department = mongoose.model("Department", departmentSchema);
 const Task = mongoose.model("Task", taskSchema);
 
-export default { Department, Task };
+export { Department, Task };

@@ -124,17 +124,27 @@ Purpose: Controls permissions.
 
 ---
 
-## departmentsCollection
+## Departments Collection
 
-Model: features/tasks/task.model.js
-Purpose: Stores En-Passant club member information.
+Model: `features/tasks/task.model.js`
+Purpose: Stores static department/team definitions for the club (e.g. Technical, Design, Media). Rarely changes.
 
-## departmentSchema
+### name
+
+Type: String
+Purpose: Full display name of the department.
+Properties:
+
+- Required
+- Trimmed
+
+---
 
 ### code
 
 Type: String
-Purpose: Stores Clerk authentication identifier.
+Purpose: Short unique identifier for the department. Used for filtering and internal references.
+Examples: `"TECH"`, `"DESIGN"`, `"MEDIA"`
 Properties:
 
 - Required
@@ -143,81 +153,87 @@ Properties:
 
 ---
 
-## year
+### description
 
-Type: Number
-Purpose: Stores Clerk authentication identifier.
-Properties:
-
-- Required
-- Unique
-- Indexed
+Type: String
+Purpose: Optional description of what the department does.
 
 ---
 
-## taskCollection
+## Tasks Collection
 
-Model: features/tasks/task.model.js
-Purpose: Stores En-Passant club member information.
-
-## taskSchema
+Model: `features/tasks/task.model.js`
+Purpose: Stores recruitment task definitions per department per year. Tasks change annually and are set by coordinators through the admin panel — no code deployment needed.
 
 ### departmentId
 
-Type: String
-Purpose: Stores Clerk authentication identifier.
+Type: ObjectId (ref: Department)
+Purpose: Links the task to its owning department.
 Properties:
 
 - Required
-- Unique
-- Indexed
+- Indexed (compound with `year`)
 
 ---
 
 ### year
 
 Type: Number
-Purpose: Stores Clerk authentication identifier.
+Purpose: The recruitment year this task belongs to. Allows tasks to evolve year-to-year without affecting past records.
+Example: `2026`
 Properties:
 
 - Required
-- Unique
-- Indexed
+- Indexed (compound with `departmentId`)
+
+---
+
+### title
+
+Type: String
+Purpose: Short name of the task shown to applicants.
+Properties:
+
+- Required
+- Trimmed
+
+---
+
+### description
+
+Type: String
+Purpose: Full task description — what the applicant needs to build, design, or submit.
+Properties:
+
+- Required
 
 ---
 
 ### order
 
 Type: Number
-Purpose: Stores Clerk authentication identifier.
+Purpose: Display order of tasks within a department (1, 2, 3...). Controls the sequence shown to applicants.
 Properties:
 
 - Required
-- Unique
-- Indexed
 
 ---
 
 ### submissionType
 
 Type: String
-Purpose: Stores Clerk authentication identifier.
+Allowed values: `"file"`, `"link"`, `"both"`
+Purpose: Specifies what kind of submission is accepted for this task. `"file"` for uploads, `"link"` for GitHub/Figma/YouTube links, `"both"` for either.
 Properties:
 
 - Required
-- Unique
-- Indexed
 
 ---
 
 ### isRequired
 
 Type: Boolean
-Purpose: Stores Clerk authentication identifier.
-Properties:
-
-- Required
-- Unique
-- Indexed
+Default: `true`
+Purpose: Whether the task must be completed for the application to be considered. `false` makes it optional.
 
 ---
