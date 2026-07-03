@@ -237,3 +237,74 @@ Default: `true`
 Purpose: Whether the task must be completed for the application to be considered. `false` makes it optional.
 
 ---
+
+## Recruitment Collection
+
+Model: `features/recruitment/recruitment.model.js`
+Purpose: Stores recruitment application data for each year.
+
+### userId
+
+Type: ObjectId (ref: User)
+Purpose: Links to the user who owns this application.
+Properties:
+
+- Required
+- Indexed (compound with `year` for uniqueness)
+
+---
+
+### year
+
+Type: Number
+Purpose: The recruitment year this application belongs to.
+Default: Current year
+Properties:
+
+- Required
+- Indexed (compound with `userId` for uniqueness)
+
+---
+
+### status
+
+Type: String
+Allowed values: `APPLICATION_STATUS` enum values.
+Purpose: Current status of the recruitment application (e.g., DRAFT, ACTIVE, SELECTED, REJECTED).
+Properties:
+
+- Required
+- Default: `APPLICATION_STATUS.DRAFT`
+- Indexed (compound with `paymentStatus` for filtering)
+
+---
+
+### paymentStatus
+
+Type: String
+Allowed values: `PAYMENT_STATUS` enum values.
+Purpose: Payment status of the recruitment application (e.g., PENDING, SUCCESS, FAILED).
+Properties:
+
+- Required
+- Default: `PAYMENT_STATUS.PENDING`
+- Indexed (compound with `status` for filtering)
+
+---
+
+### preferredDepartmentId
+
+Type: ObjectId (ref: Department)
+Purpose: The department the user prefers most for this recruitment cycle.
+Properties:
+
+- Required
+
+---
+
+### secondaryDepartmentId
+
+Type: Array of ObjectId (ref: Department)
+Purpose: Additional departments the user is interested in (supports multiple secondary choices).
+
+---
