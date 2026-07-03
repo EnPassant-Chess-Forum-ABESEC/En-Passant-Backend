@@ -279,6 +279,7 @@ Retrieve the top players for a specific time control.
 ```http
 GET /api/leaderboard?timeControl=rapid&limit=20
 ```
+
 - `timeControl`: `rapid`, `blitz`, or `bullet` (default: `rapid`)
 - `limit`: Number of users to return (default: `20`)
 
@@ -365,9 +366,9 @@ Required
 
 ### Query Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `year` | Number | Yes | The recruitment year (e.g. 2026) |
+| Parameter | Type   | Required | Description                      |
+| --------- | ------ | -------- | -------------------------------- |
+| `year`    | Number | Yes      | The recruitment year (e.g. 2026) |
 
 ### Headers
 
@@ -419,10 +420,10 @@ Required
 
 ### Query Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `departmentId` | String | Yes | MongoDB ObjectId of the department |
-| `year` | Number | Yes | The recruitment year (e.g. 2026) |
+| Parameter      | Type   | Required | Description                        |
+| -------------- | ------ | -------- | ---------------------------------- |
+| `departmentId` | String | Yes      | MongoDB ObjectId of the department |
+| `year`         | Number | Yes      | The recruitment year (e.g. 2026)   |
 
 ### Headers
 
@@ -448,6 +449,127 @@ Authorization: Bearer <Clerk Token>
       "isRequired": true
     }
   ]
+}
+```
+
+---
+
+# Recruitment APIs
+
+## Create Recruitment Application
+
+Submit a new application for the current year.
+
+### Endpoint
+
+```http
+POST /api/recruitment/apply
+```
+
+### Authentication
+
+Required
+
+### Headers
+
+```http
+Authorization: Bearer <Clerk Token>
+Content-Type: application/json
+```
+
+### Request Body
+
+```json
+{
+  "preferredDepartmentId": "60d5ec4b1234567890123457",
+  "secondaryDepartmentId": ["60d5ec4b1234567890123458"]
+}
+```
+
+### Response
+
+**Status: 201 Created**
+
+```json
+{
+  "success": true,
+  "message": "Application created successfully",
+  "newApplication": {
+    "_id": "60d5ec4b1234567890123459",
+    "userId": "60d5ec4b1234567890123450",
+    "year": 2026,
+    "status": "DRAFT",
+    "paymentStatus": "PENDING",
+    "preferredDepartmentId": {
+      "_id": "60d5ec4b1234567890123457",
+      "name": "Technical",
+      "code": "TECH",
+      "description": "Software development team"
+    },
+    "secondaryDepartmentId": [
+      {
+        "_id": "60d5ec4b1234567890123458",
+        "name": "Design",
+        "code": "DESIGN",
+        "description": "Creative arts team"
+      }
+    ],
+    "createdAt": "2026-07-03T15:23:22.000Z",
+    "updatedAt": "2026-07-03T15:23:22.000Z"
+  }
+}
+```
+
+---
+
+## Get My Application
+
+Retrieve the current authenticated user's application for the current year.
+
+### Endpoint
+
+```http
+GET /api/recruitment/my-application
+```
+
+### Authentication
+
+Required
+
+### Headers
+
+```http
+Authorization: Bearer <Clerk Token>
+```
+
+### Response
+
+**Status: 200 OK**
+
+```json
+{
+  "success": true,
+  "myApplication": {
+    "_id": "60d5ec4b1234567890123459",
+    "userId": "60d5ec4b1234567890123450",
+    "year": 2026,
+    "status": "DRAFT",
+    "paymentStatus": "PENDING",
+    "preferredDepartmentId": {
+      "_id": "60d5ec4b1234567890123457",
+      "name": "Technical",
+      "code": "TECH"
+    },
+    "secondaryDepartmentId": [
+      {
+        "_id": "60d5ec4b1234567890123458",
+        "name": "Design",
+        "code": "DESIGN"
+      }
+    ],
+    "createdAt": "2026-07-03T15:23:22.000Z",
+    "updatedAt": "2026-07-03T15:23:22.000Z"
+  }
 }
 ```
 

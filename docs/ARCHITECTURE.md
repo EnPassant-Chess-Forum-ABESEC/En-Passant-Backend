@@ -42,6 +42,14 @@ src/
 │   ├─ payments/                          # [WIP] Payment service
 │   │   └─ gateways/
 │   │       └─ razorpay.gateway.js        # Razorpay SDK wrapper
+|   ├─ recruitment/                       # [WIP] Recruitment service
+|   |   ├─ recruitment.constants.js       # Recruitment enums and state machine
+|   |   ├─ recruitment.controller.js      # HTTP handlers
+|   |   ├─ recruitment.model.js           # Mongoose model
+|   |   ├─ recruitment.repository.js      # Data access layer
+|   |   ├─ recruitment.routes.js          # Express router
+|   |   └─ recruitment.service.js         # Business logic
+|   │   └─ recruitment.validation.js      # Zod validaiton schemas
 │   ├─ storage/                           # [WIP] File storage service
 │   │   ├─ providers/
 │   │   │   └─ cloudinary.provider.js     # Cloudinary SDK init
