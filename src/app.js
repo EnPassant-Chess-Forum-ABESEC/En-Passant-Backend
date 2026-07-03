@@ -7,6 +7,7 @@ import { errorHandler } from "./middleware/error.middleware.js";
 import userRoutes from "./features/users/user.routes.js";
 import leaderboardRoutes from "./features/leaderboard/leaderboard.routes.js";
 import taskRoutes from "./features/tasks/task.routes.js";
+import recruitmentRoutes from "./features/recruitment/recruitment.routes.js";
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ app.use(express.json());
 app.use("/api/users", userRoutes);
 app.use("/api/leaderboard", leaderboardRoutes);
 app.use("/api/tasks", taskRoutes);
+app.use("/api/recruitment", recruitmentRoutes);
 
 app.use(errorHandler);
 
