@@ -46,6 +46,28 @@ export const transitionStatus = async (applicationId, newStatus) => {
   );
 };
 
+export const handleSuccessfulPayment = async (applicationId, transactionId) => {
+  const currentApplication =
+    await recruitmentRepo.getRecruitmentById(applicationId);
+
+  if (!currentApplication) throw new Error("Application not found");
+  if (currentApplication.paymentStatus === "SUCCESS") return currentApplication;
+
+  const newStatus = "ACTIVE";
+  const currentStatus = currentApplication.status;
+  const transition = VALID_TRANSITIONS[currentStatus];
+
+  if (!transition || !transition.includes(newStatus)) {
+    throw new Error("Invalid transition to ACTIVE");
+  }
+
+  return await recruitmentRepo.updateApplication(applicationId, {
+    status: newStatus,
+    paymentStatus: "SUCCESS",
+    transactionId: transactionId,
+  });
+};
+
 export const autoRejectExpiredApplications = async () => {
   const cutoffDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
 

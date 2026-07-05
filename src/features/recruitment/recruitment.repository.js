@@ -27,6 +27,10 @@ export const updateRecruitmentStatus = async (id, status) => {
   return Recruitment.findByIdAndUpdate(id, { status }, { new: true });
 };
 
+export const updateApplication = async (id, updateData) => {
+  return Recruitment.findByIdAndUpdate(id, updateData, { new: true });
+};
+
 export const findExpiredPendingPayments = async (cutoffDate) => {
   return Recruitment.find({
     status: APPLICATION_STATUS.PAYMENT_PENDING,
