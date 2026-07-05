@@ -45,3 +45,31 @@ export const transitionStatus = async (applicationId, newStatus) => {
     newStatus,
   );
 };
+
+export const autoRejectExpiredApplications = async () => {
+  const cutoffDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+  const expiredApplications =
+    await recruitmentRepo.findExpiredPendingPayments(cutoffDate);
+
+  console.log(
+    `[Scheduler] Found ${expiredApplications.length} expired pending applications.`,
+  );
+
+  let deletedCount = 0;
+
+  for (const application of expiredApplications) {
+    try {
+      await recruitmentRepo.deleteApplication(application._id);
+      deletedCount++;
+    } catch (error) {
+      console.error(
+        `[Scheduler] Failed to delete application ${application._id}:`,
+        error.message,
+      );
+    }
+  }
+
+  console.log(`[Scheduler] Deleted ${deletedCount} applications.`);
+  return deletedCount;
+};

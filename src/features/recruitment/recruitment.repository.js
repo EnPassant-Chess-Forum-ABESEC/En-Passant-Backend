@@ -20,7 +20,7 @@ export const getRecruitmentById = async (recruitmentid) => {
 export const findAllRecruitment = async (filter) => {
   return Recruitment.find(filter).populate(
     "preferredDepartmentId secondaryDepartmentId",
-  ); // filter object
+  );
 };
 
 export const updateRecruitmentStatus = async (id, status) => {
@@ -32,4 +32,8 @@ export const findExpiredPendingPayments = async (cutoffDate) => {
     status: APPLICATION_STATUS.PAYMENT_PENDING,
     createdAt: { $lt: cutoffDate },
   });
+};
+
+export const deleteApplication = async (id) => {
+  return Recruitment.findByIdAndDelete(id);
 };
