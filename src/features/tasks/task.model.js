@@ -14,14 +14,21 @@ const taskSchema = new mongoose.Schema({
   },
   year: { type: Number, required: true },
   title: { type: String, required: true, trim: true },
-  description: { type: String, required: true },
+  summary: { type: String, required: true },
+  instructions: { type: String, required: true },
   order: { type: Number, required: true },
-  submissionType: {
-    type: String,
-    enum: ["file", "link", "both"],
-    required: true,
-  },
   isRequired: { type: Boolean, default: true },
+  submission: {
+    acceptsText: { type: Boolean, default: false },
+    acceptsLinks: { type: Boolean, default: false },
+    acceptsFiles: { type: Boolean, default: false },
+    fileCategory: {
+      type: String,
+      enum: ["image", "video", "raw"],
+    },
+    maxFiles: { type: Number },
+    maxFileSize: { type: Number }, // in bytes
+  },
 });
 
 // indexes
