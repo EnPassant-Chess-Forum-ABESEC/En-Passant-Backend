@@ -1,5 +1,5 @@
 import express from "express";
-import dotenv from "dotenv";
+import "dotenv/config";
 import { clerkMiddleware } from "@clerk/express";
 import cors from "cors";
 import connectDb from "./config/db.js";
@@ -11,7 +11,7 @@ import recruitmentRoutes from "./features/recruitment/recruitment.routes.js";
 import paymentRoutes from "./features/payments/payment.routes.js";
 import submissionRoutes from "./features/submissions/submission.routes.js";
 
-dotenv.config();
+
 
 const app = express();
 

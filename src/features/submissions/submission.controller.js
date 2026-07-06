@@ -82,7 +82,7 @@ export const uploadTaskSubmission = async (req, res, next) => {
         links,
         files: uploadedFiles,
       },
-      { upsert: true, new: true },
+      { upsert: true, returnDocument: 'after' },
     );
 
     return res.status(200).json({ success: true, submission: newSubmission });
