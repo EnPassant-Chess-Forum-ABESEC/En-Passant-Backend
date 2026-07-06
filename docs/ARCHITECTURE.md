@@ -214,7 +214,7 @@ Endpoints:
 
 ## Submission Service Flow
 
-<img src="/docs/diagrams/Submission_Flow.svg" alt="Submission Flow Diagram" width="100%">
+<img src="/docs/diagrams/submission_flow.svg" alt="Submission Flow Diagram" width="100%">
 
 On upload:
 
