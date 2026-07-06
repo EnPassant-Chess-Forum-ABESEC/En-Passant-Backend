@@ -1,10 +1,22 @@
 # En-Passant Backend
 
-This repository contains the backend API for the En-Passant's official website. Current stack includes Node.js, Express, MongoDB, and Clerk for authentication.
+This repository contains the backend API for the En-Passant's official website. Built with Node.js, Express, MongoDB, Redis (BullMQ), Clerk authentication, Cloudinary file storage, and Razorpay payments.
 
 ## System Architecture
 
 <img src="/docs/diagrams/High_level_Architecture.svg" alt="High Level System Architecture" width="100%"/>
+
+## Services
+
+| Service         | Routes             | Description                                                   |
+| --------------- | ------------------ | ------------------------------------------------------------- |
+| **Users**       | `/api/users`       | Club member profiles, Clerk JIT provisioning                  |
+| **Leaderboard** | `/api/leaderboard` | Redis sorted-set rankings by time control                     |
+| **Sync**        | _(background)_     | BullMQ workers syncing chess ratings from Chess.com & Lichess |
+| **Recruitment** | `/api/recruitment` | Application lifecycle with strict state machine               |
+| **Payments**    | `/api/payments`    | Razorpay checkout + webhook handler                           |
+| **Tasks**       | `/api/tasks`       | Department task definitions per recruitment year              |
+| **Submissions** | `/api/submissions` | File uploads to Cloudinary + signed URL fetch                 |
 
 ## Documentation
 

@@ -1,310 +1,239 @@
 # Database Documentation
 
-## Database
+## Overview
 
-The project uses MongoDB with Mongoose as the ODM.
-
-Connection: src/config/db.js
-Environment variable: MONGO_URI
+**Database:** MongoDB  
+**ODM:** Mongoose  
+**Connection:** `src/config/db.js`  
+**Environment variable:** `MONGO_URI`
 
 ---
 
-# Collections
+## Collections
+
+| Collection      | Model File                                         | Purpose                                       |
+|-----------------|----------------------------------------------------|-----------------------------------------------|
+| `users`         | `features/users/user.model.js`                     | Club member profiles and chess account data   |
+| `departments`   | `features/tasks/task.model.js`                     | Static department/team definitions            |
+| `tasks`         | `features/tasks/task.model.js`                     | Recruitment task definitions per year         |
+| `recruitments`  | `features/recruitment/recruitment.model.js`        | Candidate applications per year               |
+| `submissions`   | `features/submissions/submission.model.js`         | Task submission records and Cloudinary refs   |
+
+---
 
 ## Users Collection
 
-Model: features/users/user.model.js
-Purpose: Stores En-Passant club member information.
+**Model:** `features/users/user.model.js`  
+**Purpose:** Stores En-Passant club member information, linked to Clerk for authentication.
 
-## User Schema
+### Schema
 
-### clerkId
+| Field                   | Type     | Required | Default  | Notes                                              |
+|-------------------------|----------|----------|----------|----------------------------------------------------|
+| `clerkId`               | String   | Yes      | —        | Clerk auth identifier. Unique, indexed.            |
+| `userName`              | String   | No       | —        | Display name.                                      |
+| `collegeEmail`          | String   | Yes      | —        | Official college email. Unique.                    |
+| `branch`                | String   | No       | —        | Academic branch (e.g. `"CSE"`, `"ECE"`).           |
+| `year`                  | Number   | No       | —        | Academic year. Allowed: `1–5` (5 = passed out).    |
+| `chessAccounts`         | Object   | No       | `{}`     | Nested chess platform data (see below).            |
+| `lastSync`              | Date     | No       | —        | Timestamp of last rating sync.                     |
+| `profilePictureUrl`     | String   | No       | —        | Avatar URL.                                        |
+| `isOnboardingComplete`  | Boolean  | No       | `false`  | Whether the user finished profile setup.           |
+| `role`                  | String   | No       | `"user"` | Permissions. Allowed: `"user"`, `"admin"`.         |
 
-Type: String
-Purpose: Stores Clerk authentication identifier.
-Properties:
+#### `chessAccounts` Sub-Schema
 
-- Required
-- Unique
-- Indexed
+```
+chessAccounts: {
+  chessCom: {
+    username: String,
+    ratings: {
+      blitz:  Number | null,
+      bullet: Number | null,
+      rapid:  Number | null,
+    }
+  },
+  lichess: {
+    username: String,
+    ratings: {
+      blitz:  Number | null,
+      bullet: Number | null,
+      rapid:  Number | null,
+    }
+  }
+}
+```
 
----
+### Indexes
 
-### userName
-
-Type: String
-Purpose: Member display name.
-
----
-
-### collegeEmail
-
-Type: String
-Purpose: Official college email address.
-Properties:
-
-- Required
-- Unique
-
----
-
-### branch
-
-Type: String
-Purpose: Academic branch of member.
-
----
-
-### year
-
-Type: Number
-Purpose: Current academic year.
-Allowed: 1-5 (5 for passed out members)
-
----
-
-### chessAccounts
-
-Stores external chess platform accounts.
-
-Supported platforms:
-
-## Chess.com
-
-Fields:
-username: Chess.com user name
-ratings:
-
-- blitz
-- bullet
-- rapid
-
-## Lichess
-
-Fields:
-username: Lichess user name
-ratings:
-
-- blitz
-- bullet
-- rapid
-
----
-
-### lastSync
-
-Type: Date
-Purpose: Stores last chess rating synchronization time.
-
----
-
-### profilePictureUrl
-
-Type: String
-Purpose: Profile image URL.
-
----
-
-### isOnboardingComplete
-
-Type: Boolean
-Purpose: Tracks whether user completed profile setup.
-
----
-
-### role
-
-Type: String
-Allowed values:
-
-- user
-- admin
-
-Purpose: Controls permissions.
+| Index          | Type   | Purpose                           |
+|----------------|--------|-----------------------------------|
+| `clerkId`      | Unique | Fast lookup by Clerk identity     |
+| `collegeEmail` | Unique | Enforce one account per email     |
 
 ---
 
 ## Departments Collection
 
-Model: `features/tasks/task.model.js`
-Purpose: Stores static department/team definitions for the club (e.g. Technical, Design, Media). Rarely changes.
+**Model:** `features/tasks/task.model.js`  
+**Purpose:** Static department/team definitions. Seeded once per recruitment year. Rarely mutated.
 
-### name
+### Schema
 
-Type: String
-Purpose: Full display name of the department.
-Properties:
+| Field         | Type   | Required | Notes                                              |
+|---------------|--------|----------|----------------------------------------------------|
+| `name`        | String | Yes      | Full display name. Trimmed.                        |
+| `code`        | String | Yes      | Short unique identifier. Examples: `"WEBSITE"`, `"CONTENT"`, `"GRAPHICS"`, `"MEDIA"`. Indexed, unique. |
+| `description` | String | No       | Human-readable summary of the department's role.   |
 
-- Required
-- Trimmed
+### Indexes
 
----
-
-### code
-
-Type: String
-Purpose: Short unique identifier for the department. Used for filtering and internal references.
-Examples: `"TECH"`, `"DESIGN"`, `"MEDIA"`
-Properties:
-
-- Required
-- Unique
-- Indexed
-
----
-
-### description
-
-Type: String
-Purpose: Optional description of what the department does.
+| Index  | Type   | Purpose                           |
+|--------|--------|-----------------------------------|
+| `code` | Unique | One department per code globally  |
 
 ---
 
 ## Tasks Collection
 
-Model: `features/tasks/task.model.js`
-Purpose: Stores recruitment task definitions per department per year. Tasks change annually and are set by coordinators through the admin panel — no code deployment needed.
+**Model:** `features/tasks/task.model.js`  
+**Purpose:** Recruitment task definitions per department per year. Tasks can differ every year without touching code — they are seeded via script.
 
-### departmentId
+### Schema
 
-Type: ObjectId (ref: Department)
-Purpose: Links the task to its owning department.
-Properties:
+| Field          | Type     | Required | Notes                                              |
+|----------------|----------|----------|----------------------------------------------------|
+| `departmentId` | ObjectId | Yes      | Ref: `Department`. Compound indexed with `year`.   |
+| `year`         | Number   | Yes      | Recruitment year. e.g. `2026`.                     |
+| `title`        | String   | Yes      | Short task name. Trimmed.                          |
+| `summary`      | String   | Yes      | One-line description shown in task cards.          |
+| `instructions` | String   | Yes      | Full instructions shown to the applicant.          |
+| `order`        | Number   | Yes      | Display order within a department (1, 2, 3...).    |
+| `isRequired`   | Boolean  | No       | Default `true`. `false` = optional bonus task.     |
+| `submission`   | Object   | No       | Rules for what responses this task accepts (see below). |
 
-- Required
-- Indexed (compound with `year`)
+#### `submission` Sub-Schema
 
----
+| Field          | Type    | Default | Notes                                                |
+|----------------|---------|---------|------------------------------------------------------|
+| `acceptsText`  | Boolean | `false` | Whether a free-text response is accepted.            |
+| `acceptsLinks` | Boolean | `false` | Whether a URL/link is accepted (e.g. GitHub, Figma). |
+| `acceptsFiles` | Boolean | `false` | Whether file uploads are accepted.                   |
+| `fileCategory` | String  | —       | Required when `acceptsFiles: true`. Allowed: `"image"`, `"video"`, `"raw"`. Controls MIME type validation. |
+| `maxFiles`     | Number  | —       | Maximum number of files per submission.              |
+| `maxFileSize`  | Number  | —       | Maximum size in **bytes** per file (e.g. `5242880` = 5 MB). |
 
-### year
+### Indexes
 
-Type: Number
-Purpose: The recruitment year this task belongs to. Allows tasks to evolve year-to-year without affecting past records.
-Example: `2026`
-Properties:
-
-- Required
-- Indexed (compound with `departmentId`)
-
----
-
-### title
-
-Type: String
-Purpose: Short name of the task shown to applicants.
-Properties:
-
-- Required
-- Trimmed
+| Index                          | Type     | Purpose                              |
+|--------------------------------|----------|--------------------------------------|
+| `{ departmentId, year, order }` | Compound | Fast ordered task list per dept/year |
 
 ---
 
-### description
+## Recruitments Collection
 
-Type: String
-Purpose: Full task description — what the applicant needs to build, design, or submit.
-Properties:
+**Model:** `features/recruitment/recruitment.model.js`  
+**Purpose:** Tracks a candidate's application through the full recruitment lifecycle. One per user per year.
 
-- Required
+### Schema
 
----
+| Field                   | Type          | Required | Default  | Notes                                                |
+|-------------------------|---------------|----------|----------|------------------------------------------------------|
+| `userId`                | ObjectId      | Yes      | —        | Ref: `User`. Compound unique with `year`.            |
+| `year`                  | Number        | Yes      | Current  | Defaults to `new Date().getFullYear()`.              |
+| `status`                | String        | Yes      | `DRAFT`  | See state machine below.                             |
+| `paymentStatus`         | String        | Yes      | `PENDING`| `PENDING`, `SUCCESS`, or `FAILED`.                   |
+| `preferredDepartmentId` | ObjectId      | Yes      | —        | Ref: `Department`. Primary department choice.        |
+| `secondaryDepartmentId` | ObjectId[]    | No       | `[]`     | Ref: `Department`. Additional choices.               |
 
-### order
+#### Application Status State Machine
 
-Type: Number
-Purpose: Display order of tasks within a department (1, 2, 3...). Controls the sequence shown to applicants.
-Properties:
+All status transitions are validated by `recruitment.service.js` against the `VALID_TRANSITIONS` map:
 
-- Required
+```
+DRAFT
+  └─→ PAYMENT_PENDING
+        ├─→ ACTIVE             (payment.captured webhook)
+        └─→ PAYMENT_FAILED
+              └─→ PAYMENT_PENDING  (retry)
 
----
+ACTIVE
+  ├─→ TASK_SUBMITTED
+  │     └─→ UNDER_REVIEW
+  │           ├─→ SHORTLISTED
+  │           │     └─→ INTERVIEW
+  │           │           ├─→ SELECTED ✓
+  │           │           └─→ REJECTED ✗
+  │           └─→ REJECTED ✗
+  └─→ TASK_NOT_SUBMITTED
+        └─→ REJECTED ✗
+```
 
-### submissionType
+### Indexes
 
-Type: String
-Allowed values: `"file"`, `"link"`, `"both"`
-Purpose: Specifies what kind of submission is accepted for this task. `"file"` for uploads, `"link"` for GitHub/Figma/YouTube links, `"both"` for either.
-Properties:
-
-- Required
-
----
-
-### isRequired
-
-Type: Boolean
-Default: `true`
-Purpose: Whether the task must be completed for the application to be considered. `false` makes it optional.
-
----
-
-## Recruitment Collection
-
-Model: `features/recruitment/recruitment.model.js`
-Purpose: Stores recruitment application data for each year.
-
-### userId
-
-Type: ObjectId (ref: User)
-Purpose: Links to the user who owns this application.
-Properties:
-
-- Required
-- Indexed (compound with `year` for uniqueness)
+| Index                   | Type     | Purpose                                              |
+|-------------------------|----------|------------------------------------------------------|
+| `{ userId, year }`      | Unique   | One application per user per year                    |
+| `{ status, paymentStatus }` | Compound | Efficient filtering by pipeline stage            |
 
 ---
 
-### year
+## Submissions Collection
 
-Type: Number
-Purpose: The recruitment year this application belongs to.
-Default: Current year
-Properties:
+**Model:** `features/submissions/submission.model.js`  
+**Purpose:** Stores a candidate's response to a single task. Each document can contain text, links, and/or Cloudinary file references.
 
-- Required
-- Indexed (compound with `userId` for uniqueness)
+### Schema
 
----
+| Field           | Type       | Required | Notes                                                         |
+|-----------------|------------|----------|---------------------------------------------------------------|
+| `applicationId` | ObjectId   | Yes      | Ref: `Recruitment`. Compound unique with `taskId`.            |
+| `taskId`        | ObjectId   | Yes      | Ref: `Task`. Compound unique with `applicationId`.            |
+| `text`          | String     | No       | Free-text answer.                                             |
+| `links`         | String[]   | No       | Array of submitted URLs.                                      |
+| `files`         | Object[]   | No       | Array of uploaded file references (see below).                |
 
-### status
+#### `files` Array — File Object
 
-Type: String
-Allowed values: `APPLICATION_STATUS` enum values.
-Purpose: Current status of the recruitment application (e.g., DRAFT, ACTIVE, SELECTED, REJECTED).
-Properties:
+| Field          | Type   | Required | Notes                                                          |
+|----------------|--------|----------|----------------------------------------------------------------|
+| `publicId`     | String | Yes      | Cloudinary `public_id`. Path: `recruitment/{year}/{DEPT_CODE}/{applicationId}/...` |
+| `resourceType` | String | Yes      | Cloudinary resource type. Allowed: `"image"`, `"video"`, `"raw"`. |
+| `format`       | String | Yes      | File format string returned by Cloudinary (e.g. `"png"`, `"mp4"`, `"pdf"`). |
+| `originalName` | String | Yes      | Original filename from the user's device.                     |
+| `size`         | Number | Yes      | File size in bytes.                                           |
 
-- Required
-- Default: `APPLICATION_STATUS.DRAFT`
-- Indexed (compound with `paymentStatus` for filtering)
+> **Note:** Files are stored on **Cloudinary**, not in MongoDB. Only metadata is saved here. To access a file, call `GET /api/submissions/:appId/:taskId` which generates signed, time-limited URLs.
 
----
+### Indexes
 
-### paymentStatus
-
-Type: String
-Allowed values: `PAYMENT_STATUS` enum values.
-Purpose: Payment status of the recruitment application (e.g., PENDING, SUCCESS, FAILED).
-Properties:
-
-- Required
-- Default: `PAYMENT_STATUS.PENDING`
-- Indexed (compound with `status` for filtering)
+| Index                       | Type     | Purpose                                                     |
+|-----------------------------|----------|-------------------------------------------------------------|
+| `{ applicationId, taskId }` | Unique   | One submission document per application+task (upsert-safe)  |
 
 ---
 
-### preferredDepartmentId
+## Redis Usage
 
-Type: ObjectId (ref: Department)
-Purpose: The department the user prefers most for this recruitment cycle.
-Properties:
+Redis is used by **BullMQ** for job queue management (not direct data storage). It is **not** a persistence layer.
 
-- Required
+| Key Pattern / Queue          | Purpose                                                         |
+|------------------------------|-----------------------------------------------------------------|
+| `sync-queue` (BullMQ)        | Background jobs: sync a user's chess ratings from external APIs |
+| `recruitment-queue` (BullMQ) | Background jobs: auto-expire `PAYMENT_PENDING` applications older than 24 hours |
+| `leaderboard:{timeControl}`  | Redis Sorted Set: maps `userId → rating` for fast rank queries  |
 
----
+### Leaderboard Sorted Sets
 
-### secondaryDepartmentId
+The leaderboard service uses three Redis Sorted Sets, one per time control:
 
-Type: Array of ObjectId (ref: Department)
-Purpose: Additional departments the user is interested in (supports multiple secondary choices).
+```
+ZADD leaderboard:rapid  1200 "userId123"
+ZADD leaderboard:blitz  1050 "userId123"
+ZADD leaderboard:bullet  900 "userId123"
+```
 
----
+- **`ZREVRANGE`** — returns top N user IDs for the leaderboard page
+- **`ZREVRANK`** — returns a specific user's rank (0-indexed → shifted to 1-indexed)
+- User details are fetched from MongoDB using the returned IDs (hydration step)

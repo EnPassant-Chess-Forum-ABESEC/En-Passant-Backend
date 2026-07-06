@@ -19,7 +19,7 @@
 
 The backend follows a **feature‑based architecture**. Instead of grouping files by technical responsibility (MVC style), code is organized around application features. Each feature contains everything required for that domain.
 
-## Overall System Architecture (Subsystem/ component diagram)
+## Overall System Architecture (Subsystem/ component diagram)(some services are missing)
 
 The application is structured to treat distinct features as decoupled microservices logically (even within a monolith, like a modular monolith).
 
@@ -30,54 +30,65 @@ The application is structured to treat distinct features as decoupled microservi
 ```
 src/
 ├─ app.js                # Express app and global middleware
+├─ server.js             # Server entry point, initialises workers & schedulers
 ├─ config/
 │   └─ db.js             # MongoDB connection
 ├─ redis/
-│   └─ redis.client.js   # Redis client connection
+│   └─ redis.client.js   # IORedis client (used by BullMQ)
 ├─ features/
 │   ├─ leaderboard/
 │   │   ├─ leaderboard.controller.js
 │   │   ├─ leaderboard.routes.js
 │   │   └─ leaderboard.service.js
-│   ├─ payments/                          # [WIP] Payment service
-│   │   └─ gateways/
-│   │       └─ razorpay.gateway.js        # Razorpay SDK wrapper
-|   ├─ recruitment/                       # [WIP] Recruitment service
-|   |   ├─ recruitment.constants.js       # Recruitment enums and state machine
-|   |   ├─ recruitment.controller.js      # HTTP handlers
-|   |   ├─ recruitment.model.js           # Mongoose model
-|   |   ├─ recruitment.repository.js      # Data access layer
-|   |   ├─ recruitment.routes.js          # Express router
-|   |   └─ recruitment.service.js         # Business logic
-|   │   └─ recruitment.validation.js      # Zod validaiton schemas
-│   ├─ storage/                           # [WIP] File storage service
+│   ├─ payments/
+│   │   ├─ gateways/
+│   │   │   └─ razorpay.gateway.js        # Razorpay SDK wrapper
+│   │   ├─ payment.controller.js          # createCheckoutSession, razorpayWebhook
+│   │   └─ payment.routes.js
+│   ├─ recruitment/
+│   │   ├─ recruitment.constants.js       # Enums + VALID_TRANSITIONS state machine
+│   │   ├─ recruitment.controller.js      # createApplication, getMyApplication
+│   │   ├─ recruitment.model.js           # Mongoose Recruitment schema
+│   │   ├─ recruitment.queue.js           # BullMQ queue definition
+│   │   ├─ recruitment.repository.js      # Data access layer
+│   │   ├─ recruitment.routes.js          # Express router
+│   │   ├─ recruitment.scheduler.js       # Cron: daily expiry dispatcher
+│   │   ├─ recruitment.service.js         # Business logic + state transitions
+│   │   ├─ recruitment.validation.js      # Zod validation schemas
+│   │   └─ recruitment.worker.js          # BullMQ worker: autoRejectExpiredApplications
+│   ├─ storage/
 │   │   ├─ providers/
 │   │   │   └─ cloudinary.provider.js     # Cloudinary SDK init
-│   │   └─ storage.service.js             # uploadFile, deleteFile, signedUrl
-│   ├─ tasks/                             # [WIP] Task service
-│   │   ├─ task.controller.js             # HTTP handlers
+│   │   └─ storage.service.js             # uploadFile, deleteFile, generateSignedUrl
+│   ├─ submissions/
+│   │   ├─ submission.controller.js       # uploadTaskSubmission, getTaskSubmission
+│   │   ├─ submission.model.js            # Mongoose Submission schema
+│   │   └─ submission.routes.js           # Express router
+│   ├─ tasks/
+│   │   ├─ task.controller.js
 │   │   ├─ task.model.js                  # Department + Task schemas
-│   │   ├─ task.repository.js             # Data access layer
-│   │   ├─ task.routes.js                 # Express router
-│   │   └─ task.service.js                # Business logic
+│   │   ├─ task.repository.js
+│   │   ├─ task.routes.js
+│   │   └─ task.service.js
 │   ├─ sync/
-│   │   ├─ adapters/             # External API logic
-│   │   ├─ sync.engine.js        # Core sync logic
-│   │   ├─ sync.queue.js         # BullMQ configuration
-│   │   ├─ sync.scheduler.js     # Cron jobs
-│   │   └─ sync.worker.js        # Queue worker
+│   │   ├─ adapters/                      # Chess.com + Lichess adapters
+│   │   ├─ sync.engine.js                 # Core sync + leaderboard update logic
+│   │   ├─ sync.queue.js
+│   │   ├─ sync.scheduler.js              # Cron: daily sync dispatcher
+│   │   └─ sync.worker.js
 │   └─ users/
-│       ├─ user.model.js         # Mongoose model
-│       ├─ user.repository.js    # Data access layer
-│       ├─ user.service.js       # Business logic
-│       ├─ user.controller.js    # HTTP handlers
-│       ├─ user.routes.js        # Express router
-│       └─ user.validation.js    # Zod schemas
+│       ├─ user.model.js
+│       ├─ user.repository.js
+│       ├─ user.service.js
+│       ├─ user.controller.js
+│       ├─ user.routes.js
+│       └─ user.validation.js
 ├─ middleware/
-│   ├─ auth.middleware.js      # Clerk authentication
-│   ├─ validate.middleware.js  # Zod validation
-│   └─ error.middleware.js     # Global error handling
-└─ server.js                   # Server entry point
+│   ├─ auth.middleware.js      # Clerk JWT authentication (userAuth, adminAuth)
+│   ├─ upload.middleware.js    # Multer memory storage (10 MB limit)
+│   ├─ validate.middleware.js  # Zod schema validation
+│   └─ error.middleware.js     # Global error formatting
+└─ server.js                   # Entry: starts Express + workers + schedulers
 ```
 
 ### Why Feature‑Based?
@@ -167,6 +178,56 @@ The leaderboard relies on Redis Sorted Sets (`ZADD`, `ZREVRANGE`, `ZREVRANK`) to
 - **Get Leaderboard**: Pulls the top IDs and their scores from Redis, then hydrates the response by querying MongoDB for those specific User documents.
 - **Get My Rank**: Directly queries Redis for the authenticated user's exact rank (0-indexed, shifted to 1-indexed) without hitting MongoDB.
 
+## Recruitment Service Flow
+
+The recruitment pipeline enforces a strict finite state machine.
+
+<img src="/docs/diagrams/recruitment_flow_and_state_machine.svg" alt="Recruitment Flow Diagram" width="100%"/>
+
+- **Apply**: `POST /api/recruitment/apply` — Creates a `DRAFT` application.
+- **State Transitions**: All status changes go through `transitionStatus()` in `recruitment.service.js`, which validates against `VALID_TRANSITIONS` before writing.
+- **Background Expiry**: A daily cron (via BullMQ + Redis) fires `autoRejectExpiredApplications()` at midnight, deleting any `PAYMENT_PENDING` applications older than 24 hours.
+
+## Payment Flow
+
+The payment flow integrates Razorpay with the recruitment state machine:
+<img src="/docs//diagrams//payment_flow.svg" alt="Payment Flow Diagram" width="100%"/>
+
+1. `POST /api/payments/checkout` — Creates a Razorpay order and transitions application `DRAFT → PAYMENT_PENDING`.
+2. Razorpay redirects the user through their hosted checkout.
+3. `POST /api/payments/webhook` — Receives the `payment.captured` event, verifies the **HMAC-SHA256 signature**, and calls `handleSuccessfulPayment()` which transitions `PAYMENT_PENDING → ACTIVE`.
+
+## Task Service Flow
+
+Tasks are seeded per recruitment year and department. Each task has a `submission` sub-schema that controls what types of responses are accepted:
+
+- `acceptsText` — free-form text answer
+- `acceptsLinks` — external URLs (e.g., GitHub repo link)
+- `acceptsFiles` — file uploads, governed by `fileCategory`, `maxFiles`, and `maxFileSize`
+
+<img src="/docs/diagrams/task_flow.svg" alt="Task Submission Flow Diagram" width="100%"/>
+
+Endpoints:
+
+- `GET /api/tasks/department?departmentId=&year=` — Tasks for a specific department
+- `GET /api/tasks/?year=` — All tasks for a year
+
+## Submission Service Flow
+
+<img src="/docs/diagrams/Submission_Flow.svg" alt="Submission Flow Diagram" width="100%">
+
+On upload:
+
+1. Validates the caller's application is `ACTIVE` (cross-service check).
+2. Fetches the task's `submission` rules (cross-service check).
+3. Validates all files against those rules (count, size, MIME type).
+4. Streams each file buffer to **Cloudinary** via `upload_stream` into `recruitment/{year}/{DEPT_CODE}/{applicationId}/`.
+5. Upserts the `Submission` document in MongoDB (unique index: `applicationId + taskId`).
+
+On fetch (`GET /api/submissions/:appId/:taskId`):
+
+- Generates a **signed Cloudinary URL** (15-minute TTL) per stored file so admins and the applicant can securely view uploaded assets.
+
 ## Adding a New Feature
 
 To add a new domain (e.g., tournaments):
@@ -182,7 +243,3 @@ To add a new domain (e.g., tournaments):
 3. Register the router in `src/app.js`.
 
 ---
-
-```
-
-```
