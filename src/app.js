@@ -9,6 +9,7 @@ import leaderboardRoutes from "./features/leaderboard/leaderboard.routes.js";
 import taskRoutes from "./features/tasks/task.routes.js";
 import recruitmentRoutes from "./features/recruitment/recruitment.routes.js";
 import paymentRoutes from "./features/payments/payment.routes.js";
+import submissionRoutes from "./features/submissions/submission.routes.js";
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use("/api/leaderboard", leaderboardRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/recruitment", recruitmentRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/submissions", submissionRoutes);
 
 app.use(errorHandler);
 

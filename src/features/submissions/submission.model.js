@@ -14,7 +14,7 @@ const submissionSchema = new mongoose.Schema({
   text: { type: String },
   links: [
     {
-      type: string,
+      type: String,
     },
   ],
   files: [
@@ -39,4 +39,4 @@ submissionSchema.index({ applicationId: 1, taskId: 1 }, { unique: true });
 
 const Submission = mongoose.model("Submission", submissionSchema);
 
-export default Submission;
+export { Submission };
