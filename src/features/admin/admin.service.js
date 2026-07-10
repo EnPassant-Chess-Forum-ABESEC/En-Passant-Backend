@@ -3,6 +3,7 @@ import * as taskService from "../tasks/task.service.js";
 import * as recruitmentService from "../recruitment/recruitment.service.js";
 import * as storageService from "../storage/storage.service.js";
 import * as submissionRepo from "../submissions/submission.repository.js";
+import * as taskRepo from "../tasks/task.repository.js";
 
 export const getAllApplications = async (filters) => {
   const query = {};
@@ -66,5 +67,27 @@ export const getApplicationById = async (applicationId) => {
     return { application, submission };
   } catch (error) {
     throw new Error(`getApplicationById failed: ${error.message}`);
+  }
+};
+
+export const createDepartment = async (departmentData) => {
+  try {
+    const existing = await taskRepo.findByDepartmentByCode(departmentData.code);
+
+    if (existing) {
+      throw new Error("Department with this code already exists");
+    }
+
+    return await taskRepo.createDepartment(departmentData);
+  } catch (error) {
+    throw new Error(`createDepartment failed: ${error.message}`);
+  }
+};
+
+export const createTask = async (taskData) => {
+  try {
+    return await taskRepo.createTask(taskData);
+  } catch (error) {
+    throw new Error(`createTask failed: ${error.message}`);
   }
 };

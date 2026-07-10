@@ -15,7 +15,7 @@ const taskSchema = new mongoose.Schema({
   year: { type: Number, required: true },
   title: { type: String, required: true, trim: true },
   summary: { type: String, required: true },
-  instructions: { type: String, required: true },
+  instructions: [{ type: String, required: true }],
   order: { type: Number, required: true },
   isRequired: { type: Boolean, default: true },
   submission: {

@@ -15,3 +15,15 @@ export const findAllByYear = async (year) => {
 export const findAllDepartments = async () => {
   return Department.find().sort({ name: 1 });
 };
+
+export const findByDepartmentByCode = async (code) => {
+  return Department.findOne({ code });
+};
+
+export const createDepartment = async (departmentData) => {
+  return Department.create(departmentData);
+};
+
+export const createTask = async (taskData) => {
+  return Task.create(taskData);
+};

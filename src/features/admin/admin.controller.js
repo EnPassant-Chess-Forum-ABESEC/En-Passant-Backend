@@ -70,3 +70,34 @@ export const getAllDepartments = async (req, res, next) => {
     next(error);
   }
 };
+
+export const createDepartment = async (req, res, next) => {
+  try {
+    const department = await adminService.createDepartment(req.body);
+
+    return res.status(201).json({
+      success: true,
+      message: "Department created successfully",
+      department,
+    });
+  } catch (error) {
+    if (error.message.includes("already exists")) {
+      return res.status(409).json({ success: false, message: error.message });
+    }
+    next(error);
+  }
+};
+
+export const createTask = async (req, res, next) => {
+  try {
+    const task = await adminService.createTask(req.body);
+
+    return res.status(201).json({
+      success: true,
+      message: "Task created successfully",
+      task,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
