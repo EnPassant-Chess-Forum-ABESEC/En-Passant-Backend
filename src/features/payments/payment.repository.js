@@ -8,12 +8,17 @@ export const updatePaymentStatus = async (
   gatewayOrderId,
   status,
   gatewayPaymentId,
+  session
 ) => {
   return Payment.findOneAndUpdate(
     { gatewayOrderId },
     { status, gatewayPaymentId },
     { returnDocument: "after", session },
   );
+};
+
+export const countPayments = async () => {
+  return Payment.countDocuments();
 };
 
 export const getAllPayments = async (pageSize = 10, pageNumber = 1) => {

@@ -1,4 +1,5 @@
 import * as adminService from "./admin.service.js";
+import * as paymentRepo from "../payments/payment.repository.js";
 
 export const getAllApplications = async (req, res, next) => {
   const { status, departmentId, year } = req.query;
