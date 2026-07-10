@@ -13,6 +13,12 @@
   - [Repositories](#repositories)
 - [Authentication Flow](#authentication-flow)
 - [Validation Flow](#validation-flow)
+- [Background Sync Flow (Chess Accounts)](#background-sync-flow-chess-accounts)
+- [Leaderboard Flow](#leaderboard-flow)
+- [Recruitment Service Flow](#recruitment-service-flow)
+- [Payment Flow](#payment-flow)
+- [Task Service Flow](#task-service-flow)
+- [Submission Service Flow](#submission-service-flow)
 - [Adding a New Feature](#adding-a-new-feature)
 
 ## Overview
