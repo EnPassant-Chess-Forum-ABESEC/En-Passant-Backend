@@ -72,7 +72,7 @@ export const getApplicationById = async (applicationId) => {
 
 export const createDepartment = async (departmentData) => {
   try {
-    const existing = await taskRepo.findByDepartmentByCode(departmentData.code);
+    const existing = await taskRepo.findDepartmentByCode(departmentData.code);
 
     if (existing) {
       throw new Error("Department with this code already exists");
@@ -89,5 +89,61 @@ export const createTask = async (taskData) => {
     return await taskRepo.createTask(taskData);
   } catch (error) {
     throw new Error(`createTask failed: ${error.message}`);
+  }
+};
+
+export const updateDepartment = async (departmentId, departmentData) => {
+  try {
+    const department = await taskRepo.findDepartmentById(departmentId);
+
+    if (!department) {
+      throw new Error("Department not found");
+    }
+
+    return await taskRepo.updateDepartment(departmentId, departmentData);
+  } catch (error) {
+    throw new Error(`updateDepartment failed: ${error.message}`);
+  }
+};
+
+export const deleteDepartment = async (departmentId) => {
+  try {
+    const department = await taskRepo.findDepartmentById(departmentId);
+
+    if (!department) {
+      throw new Error("Department not found");
+    }
+
+    return await taskRepo.deleteDepartment(departmentId);
+  } catch (error) {
+    throw new Error(`deleteDepartment failed: ${error.message}`);
+  }
+};
+
+export const updateTask = async (taskId, taskData) => {
+  try {
+    const task = await taskRepo.findTaskById(taskId);
+
+    if (!task) {
+      throw new Error("Task not found");
+    }
+
+    return await taskRepo.updateTask(taskId, taskData);
+  } catch (error) {
+    throw new Error(`updateTask failed: ${error.message}`);
+  }
+};
+
+export const deleteTask = async (taskId) => {
+  try {
+    const task = await taskRepo.findTaskById(taskId);
+
+    if (!task) {
+      throw new Error("Task not found");
+    }
+
+    return await taskRepo.deleteTask(taskId);
+  } catch (error) {
+    throw new Error(`deleteTask failed: ${error.message}`);
   }
 };

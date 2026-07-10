@@ -88,6 +88,36 @@ export const createDepartment = async (req, res, next) => {
   }
 };
 
+export const updateDepartment = async (req, res, next) => {
+  try {
+    const updatedDepartment = await adminService.updateDepartment(
+      req.params.id,
+      req.body,
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Department updated successfully",
+      updatedDepartment,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteDepartment = async (req, res, next) => {
+  try {
+    await adminService.deleteDepartment(req.params.id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Department deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const createTask = async (req, res, next) => {
   try {
     const task = await adminService.createTask(req.body);
@@ -96,6 +126,33 @@ export const createTask = async (req, res, next) => {
       success: true,
       message: "Task created successfully",
       task,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateTask = async (req, res, next) => {
+  try {
+    const updatedTask = await adminService.updateTask(req.params.id, req.body);
+
+    return res.status(200).json({
+      success: true,
+      message: "Task updated successfully",
+      updatedTask,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteTask = async (req, res, next) => {
+  try {
+    await adminService.deleteTask(req.params.id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Task deleted successfully",
     });
   } catch (error) {
     next(error);
