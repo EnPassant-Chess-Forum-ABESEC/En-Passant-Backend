@@ -24,7 +24,13 @@ app.use(
 );
 
 app.use(clerkMiddleware());
-app.use(express.json());
+app.use(
+  express.json({
+    verify: (req, res, buf) => {
+      req.rawBody = buf.toString();
+    },
+  }),
+);
 
 app.use("/api/users", userRoutes);
 app.use("/api/leaderboard", leaderboardRoutes);

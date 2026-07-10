@@ -2,7 +2,8 @@ import {
   getMyApplication,
   handleSuccessfulPayment,
 } from "../recruitment/recruitment.service.js";
-import { createOrder, verifySignature } from "./gateways/razorpay.gateway.js";
+import { createOrder } from "./gateways/razorpay.gateway.js";
+import Razorpay from "razorpay";
 
 export const createCheckoutSession = async (req, res, next) => {
   const userId = req.user._id;
@@ -54,18 +55,21 @@ export const razorpayWebhook = async (req, res, next) => {
         .json({ success: false, message: "Missing signature" });
     }
 
+    try {
+      Razorpay.validateWebhookSignature(
+        req.rawBody,
+        signature,
+        process.env.RAZORPAY_WEBHOOK_SECRET,
+      );
+    } catch (err) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid signature" });
+    }
+
     if (event === "payment.captured") {
       const payment = payload.payment.entity;
-      const orderId = payment.order_id;
       const paymentId = payment.id;
-
-      const isValid = verifySignature(signature, orderId, paymentId);
-
-      if (!isValid) {
-        return res
-          .status(400)
-          .json({ success: false, message: "Invalid signature" });
-      }
 
       const applicationId = payment.notes?.applicationId;
 
