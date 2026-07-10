@@ -4,6 +4,8 @@ import {
 } from "../recruitment/recruitment.service.js";
 import { createOrder } from "./gateways/razorpay.gateway.js";
 import Razorpay from "razorpay";
+import * as paymentRepo from "./payment.repository.js";
+import mongoose from "mongoose";
 
 export const createCheckoutSession = async (req, res, next) => {
   const userId = req.user._id;
@@ -35,9 +37,19 @@ export const createCheckoutSession = async (req, res, next) => {
       },
     });
 
+    const payment = await paymentRepo.createPayment({
+      userId: application.userId,
+      applicationId: application._id,
+      amount: recruitmentAmountInPaise,
+      currency: "INR",
+      gatewayOrderId: order.id,
+      status: "PENDING",
+    });
+
     return res.status(200).json({
       success: true,
       order,
+      payment,
     });
   } catch (error) {
     next(error);
@@ -70,17 +82,43 @@ export const razorpayWebhook = async (req, res, next) => {
     if (event === "payment.captured") {
       const payment = payload.payment.entity;
       const paymentId = payment.id;
+      const orderId = payment.order_id;
 
       const applicationId = payment.notes?.applicationId;
 
       if (applicationId) {
-        await handleSuccessfulPayment(applicationId, paymentId);
+        const session = await mongoose.startSession();
+        session.startTransaction();
+
+        try {
+          await handleSuccessfulPayment(applicationId, paymentId, session);
+
+          await paymentRepo.updatePaymentStatus(
+            orderId,
+            "SUCCESS",
+            paymentId,
+            session,
+          );
+
+          await session.commitTransaction();
+        } catch (error) {
+          await session.abortTransaction();
+          throw error;
+        } finally {
+          await session.endSession();
+        }
       } else {
         console.warn(
           "Application ID not found in Razorpay payment notes",
           paymentId,
         );
       }
+    } else if (event === "payment.failed") {
+      const payment = payload.payment.entity;
+      const paymentId = payment.id;
+      const orderId = payment.order_id;
+
+      await paymentRepo.updatePaymentStatus(orderId, "FAILED", paymentId);
     }
 
     return res.status(200).send("OK");

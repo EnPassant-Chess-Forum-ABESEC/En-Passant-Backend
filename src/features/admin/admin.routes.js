@@ -13,6 +13,7 @@ import {
   getAllUsers,
   getUserById,
   updateUserRole,
+  getAllPayments,
 } from "./admin.controller.js";
 import { adminAuth } from "../../middleware/auth.middleware.js";
 import { validate } from "../../middleware/validate.middleware.js";
@@ -31,6 +32,7 @@ import {
 
 const router = express.Router();
 
+// recruitment management
 router.get(
   "/applications",
   adminAuth,
@@ -49,6 +51,8 @@ router.patch(
   validate(updateApplicationStatusSchema),
   updateApplicationStatus,
 );
+
+// department management
 router.get("/departments", adminAuth, getAllDepartments);
 router.post(
   "/departments",
@@ -68,10 +72,13 @@ router.delete(
   validate(deleteDepartmentSchema),
   deleteDepartment,
 );
+
+// task management
 router.post("/tasks", adminAuth, validate(createTaskSchema), createTask);
 router.patch("/tasks/:id", adminAuth, validate(updateTaskSchema), updateTask);
 router.delete("/tasks/:id", adminAuth, validate(deleteTaskSchema), deleteTask);
 
+// user management
 router.get("/users", adminAuth, getAllUsers);
 router.get("/users/:id", adminAuth, getUserById);
 router.patch(
@@ -80,5 +87,8 @@ router.patch(
   validate(updateUserRoleSchema),
   updateUserRole,
 );
+
+// payments
+router.get("/payments", adminAuth, getAllPayments);
 
 export default router;

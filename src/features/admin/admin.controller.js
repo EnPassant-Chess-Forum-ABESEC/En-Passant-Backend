@@ -211,3 +211,24 @@ export const updateUserRole = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getAllPayments = async (req, res, next) => {
+  try {
+    const pageSize = Number(req.query.pageSize) || 10;
+    const pageNumber = Number(req.query.pageNumber) || 1;
+
+    const payments = await adminService.getAllPayments(pageSize, pageNumber);
+
+    res.status(200).json({
+      success: true,
+      payments,
+      metadata: {
+        pageNumber,
+        pageSize,
+        total: await paymentRepo.countPayments(),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};

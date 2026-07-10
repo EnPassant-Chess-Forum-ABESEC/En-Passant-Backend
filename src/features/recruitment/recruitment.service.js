@@ -46,7 +46,11 @@ export const transitionStatus = async (applicationId, newStatus) => {
   );
 };
 
-export const handleSuccessfulPayment = async (applicationId, transactionId) => {
+export const handleSuccessfulPayment = async (
+  applicationId,
+  transactionId,
+  session,
+) => {
   const currentApplication =
     await recruitmentRepo.getRecruitmentById(applicationId);
 
@@ -61,11 +65,15 @@ export const handleSuccessfulPayment = async (applicationId, transactionId) => {
     throw new Error("Invalid transition to ACTIVE");
   }
 
-  return await recruitmentRepo.updateApplication(applicationId, {
-    status: newStatus,
-    paymentStatus: "SUCCESS",
-    transactionId: transactionId,
-  });
+  return await recruitmentRepo.updateApplication(
+    applicationId,
+    {
+      status: newStatus,
+      paymentStatus: "SUCCESS",
+      transactionId: transactionId,
+    },
+    session,
+  );
 };
 
 export const autoRejectExpiredApplications = async () => {

@@ -24,11 +24,18 @@ export const findAllRecruitment = async (filter) => {
 };
 
 export const updateRecruitmentStatus = async (id, status) => {
-  return Recruitment.findByIdAndUpdate(id, { status }, { returnDocument: 'after' });
+  return Recruitment.findByIdAndUpdate(
+    id,
+    { status },
+    { returnDocument: "after" },
+  );
 };
 
-export const updateApplication = async (id, updateData) => {
-  return Recruitment.findByIdAndUpdate(id, updateData, { returnDocument: 'after' });
+export const updateApplication = async (id, updateData, session) => {
+  return Recruitment.findByIdAndUpdate(id, updateData, {
+    returnDocument: "after",
+    session,
+  });
 };
 
 export const findExpiredPendingPayments = async (cutoffDate) => {

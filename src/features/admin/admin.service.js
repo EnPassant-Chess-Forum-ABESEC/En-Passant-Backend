@@ -5,6 +5,7 @@ import * as storageService from "../storage/storage.service.js";
 import * as submissionRepo from "../submissions/submission.repository.js";
 import * as taskRepo from "../tasks/task.repository.js";
 import * as userRepo from "../users/user.repository.js";
+import * as paymentRepo from "../payments/payment.repository.js";
 
 export const getAllApplications = async (filters) => {
   const query = {};
@@ -184,5 +185,17 @@ export const updateUserRole = async (userId, role) => {
     return user;
   } catch (error) {
     throw new Error(`updateUserRole failed: ${error.message}`);
+  }
+};
+
+export const getAllPayments = async (pageSize, pageNumber) => {
+  try {
+    const payments = await paymentRepo.getAllPayments(pageSize, pageNumber);
+
+    if (!payments) throw new Error("Payments not found");
+
+    return payments;
+  } catch (error) {
+    throw new Error(`getAllPayments failed: ${error.message}`);
   }
 };
