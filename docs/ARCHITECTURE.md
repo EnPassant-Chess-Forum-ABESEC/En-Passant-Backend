@@ -19,9 +19,9 @@
 
 The backend follows a **feature‑based architecture**. Instead of grouping files by technical responsibility (MVC style), code is organized around application features. Each feature contains everything required for that domain.
 
-## Overall System Architecture (Subsystem/ component diagram)(some services are missing)
+## Overall System Architecture (some services are missing)
 
-The application is structured to treat distinct features as decoupled microservices logically (even within a monolith, like a modular monolith).
+The application follows a modular monolith architecture where features are isolated as independent domains with clear boundaries, allowing future extraction into services if needed.
 
 <img src="/docs/diagrams/En_passant_backend_architecture.svg" alt="Backend Architecture Diagram(subsystem/components)" width="100%"/>
 
@@ -45,11 +45,13 @@ src/
 │   │   ├─ leaderboard.controller.js
 │   │   ├─ leaderboard.routes.js
 │   │   └─ leaderboard.service.js
-│   ├─ payments/
-│   │   ├─ gateways/
-│   │   │   └─ razorpay.gateway.js        # Razorpay SDK wrapper
-│   │   ├─ payment.controller.js          # createCheckoutSession, razorpayWebhook
-│   │   └─ payment.routes.js
+│   ├── payments/
+│   │   ├── gateways/
+│   │   │   └── razorpay.gateway.js        # Razorpay SDK wrapper
+│   │   ├── payment.controller.js          # createCheckoutSession, razorpayWebhook
+│   │   ├── payment.model.js               # Payment ledger schema
+│   │   ├── payment.repository.js          # Database queries for payments
+│   │   └── payment.routes.js
 │   ├─ recruitment/
 │   │   ├─ recruitment.constants.js       # Enums + VALID_TRANSITIONS state machine
 │   │   ├─ recruitment.controller.js      # createApplication, getMyApplication
@@ -196,12 +198,14 @@ The recruitment pipeline enforces a strict finite state machine.
 
 ## Payment Flow
 
-The payment flow integrates Razorpay with the recruitment state machine:
+The payment flow integrates Razorpay with the recruitment state machine and maintains a robust transaction ledger:
 <img src="/docs//diagrams//payment_flow.svg" alt="Payment Flow Diagram" width="100%"/>
 
-1. `POST /api/payments/checkout` — Creates a Razorpay order and transitions application `DRAFT → PAYMENT_PENDING`.
+1. `POST /api/payments/checkout` - Creates a Razorpay order, creates a `PENDING` record in the `Payments` collection, and transitions application `DRAFT -> PAYMENT_PENDING`.
 2. Razorpay redirects the user through their hosted checkout.
-3. `POST /api/payments/webhook` — Receives the `payment.captured` event, verifies the **HMAC-SHA256 signature**, and calls `handleSuccessfulPayment()` which transitions `PAYMENT_PENDING → ACTIVE`.
+3. `POST /api/payments/webhook` - Receives webhook events and verifies the **HMAC-SHA256 signature**.
+   - On `payment.captured`: A **MongoDB Transaction** is started. It updates the `Payment` ledger to `SUCCESS` and transitions the application `PAYMENT_PENDING -> ACTIVE`. The transaction ensures both updates succeed or fail together (atomicity).
+   - On `payment.failed`: The `Payment` ledger is updated to `FAILED`, but the application remains `PAYMENT_PENDING` allowing retry.
 
 ## Task Service Flow
 

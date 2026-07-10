@@ -13,7 +13,7 @@ const paymentSchema = new mongoose.Schema(
     },
     purpose: {
       type: String,
-      enum: ["recruitment", "event", "merch"],
+      enum: ["recruitment", "event"],
       default: "recruitment",
     },
     amount: {

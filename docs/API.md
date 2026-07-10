@@ -127,18 +127,9 @@ Update the authenticated user's profile.
 
 ---
 
-## GET /api/users/all
-
-Retrieve a paginated list of all users.
-
-**Auth:** Required (Admin)
-
-**Query Parameters:**
-
-| Parameter    | Type   | Default | Description          |
-| ------------ | ------ | ------- | -------------------- |
-| `pageSize`   | Number | 10      | Results per page     |
-| `pageNumber` | Number | 1       | Page index (1-based) |
+------------ | ------ | ------- | -------------------- |
+| `pageSize` | Number | 10 | Results per page |
+| `pageNumber` | Number | 1 | Page index (1-based) |
 
 **Example:** `GET /api/users/all?pageSize=20&pageNumber=2`
 
@@ -154,23 +145,6 @@ Retrieve a paginated list of all users.
 ```
 
 ---
-
-## GET /api/users/:id
-
-Retrieve a specific user by their MongoDB ObjectId.
-
-**Auth:** Required (Admin)
-
-**Response `200`:**
-
-```json
-{
-  "success": true,
-  "user": {
-    /* user object */
-  }
-}
-```
 
 ---
 
@@ -760,6 +734,103 @@ Create a new task for a specific department.
   "message": "Task created successfully",
   "task": {
     /* new task object */
+  }
+}
+```
+
+---
+
+## GET /api/admin/users
+
+Retrieve a paginated list of all users.
+
+**Auth:** Required (Admin)
+
+**Query Parameters:**
+
+| Parameter  | Type   | Default | Description      |
+| ---------- | ------ | ------- | ---------------- |
+| pageSize   | Number | 10      | Results per page |
+| pageNumber | Number | 1       | Page to retrieve |
+
+**Response 200:**
+
+```json
+{
+  "success": true,
+  "users": [
+    /* array of user objects */
+  ]
+}
+```
+
+---
+
+## GET /api/admin/users/:id
+
+Retrieve a specific user by their MongoDB ObjectId.
+
+**Auth:** Required (Admin)
+
+**Response 200:**
+
+```json
+{
+  "success": true,
+  "user": {
+    /* user object */
+  }
+}
+```
+
+---
+
+## PATCH /api/admin/users/:id/role
+
+Update a user's role (promote/demote).
+
+**Auth:** Required (Admin)
+
+**Request Body:**
+
+```json
+{
+  "role": "admin" // or "user"
+}
+```
+
+**Response 200:**
+
+```json
+{
+  "success": true,
+  "message": "User role updated successfully",
+  "updatedUser": {
+    /* user object */
+  }
+}
+```
+
+---
+
+## GET /api/admin/payments
+
+Retrieve a paginated list of all transactions (the payment ledger).
+
+**Auth:** Required (Admin)
+
+**Response 200:**
+
+```json
+{
+  "success": true,
+  "payments": [
+    /* array of payment objects */
+  ],
+  "metadata": {
+    "pageNumber": 1,
+    "pageSize": 10,
+    "total": 50
   }
 }
 ```
