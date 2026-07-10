@@ -158,3 +158,56 @@ export const deleteTask = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getUserById = async (req, res, next) => {
+  try {
+    const user = await adminService.getUserById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAllUsers = async (req, res, next) => {
+  try {
+    const pageSize = Number(req.query.pageSize) || 10;
+    const pageNumber = Number(req.query.pageNumber) || 1;
+
+    const users = await adminService.getAllUsers(pageSize, pageNumber);
+
+    res.status(200).json({
+      success: true,
+      users,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateUserRole = async (req, res, next) => {
+  try {
+    const updatedUser = await adminService.updateUserRole(
+      req.params.id,
+      req.body.role,
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "User role updated successfully",
+      updatedUser,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

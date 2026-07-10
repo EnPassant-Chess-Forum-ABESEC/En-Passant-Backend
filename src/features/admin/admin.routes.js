@@ -10,6 +10,9 @@ import {
   createTask,
   updateTask,
   deleteTask,
+  getAllUsers,
+  getUserById,
+  updateUserRole,
 } from "./admin.controller.js";
 import { adminAuth } from "../../middleware/auth.middleware.js";
 import { validate } from "../../middleware/validate.middleware.js";
@@ -23,6 +26,7 @@ import {
   createTaskSchema,
   updateTaskSchema,
   deleteTaskSchema,
+  updateUserRoleSchema,
 } from "./admin.validation.js";
 
 const router = express.Router();
@@ -67,5 +71,14 @@ router.delete(
 router.post("/tasks", adminAuth, validate(createTaskSchema), createTask);
 router.patch("/tasks/:id", adminAuth, validate(updateTaskSchema), updateTask);
 router.delete("/tasks/:id", adminAuth, validate(deleteTaskSchema), deleteTask);
+
+router.get("/users", adminAuth, getAllUsers);
+router.get("/users/:id", adminAuth, getUserById);
+router.patch(
+  "/users/:id/role",
+  adminAuth,
+  validate(updateUserRoleSchema),
+  updateUserRole,
+);
 
 export default router;

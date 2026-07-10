@@ -160,3 +160,14 @@ export const deleteTaskSchema = z.object({
     id: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid Task ID format"),
   }),
 });
+
+export const updateUserRoleSchema = z.object({
+  params: z.object({
+    id: z.string().trim().min(1, "User ID is required"),
+  }),
+  body: z.object({
+    role: z.enum(["user", "admin"], {
+      errorMap: () => ({ message: "Role must be 'user' or 'admin'" }),
+    }),
+  }),
+});

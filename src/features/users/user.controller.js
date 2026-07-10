@@ -1,8 +1,4 @@
-import {
-  updateUserService,
-  getUserByIdService,
-  getAllUsersService,
-} from "./user.service.js";
+import * as userRepo from "./user.repository.js";
 import { enqueueSyncJob } from "../sync/sync.queue.js";
 
 export const me = async (req, res, next) => {
@@ -15,7 +11,7 @@ export const me = async (req, res, next) => {
 
 export const updateMe = async (req, res, next) => {
   try {
-    const updatedUser = await updateUserService(req.clerkId, req.body);
+    const updatedUser = await userRepo.updateUser(req.clerkId, req.body);
 
     if (!updatedUser) {
       return res.status(404).json({
@@ -47,7 +43,7 @@ export const onboardUser = async (req, res, next) => {
       });
     }
 
-    const updatedUser = await updateUserService(req.clerkId, {
+    const updatedUser = await userRepo.updateUser(req.clerkId, {
       ...req.body,
       isOnboardingComplete: true,
     });
@@ -60,42 +56,6 @@ export const onboardUser = async (req, res, next) => {
       success: true,
       message: "Onboarding complete",
       updatedUser,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const getUserById = async (req, res, next) => {
-  try {
-    const user = await getUserByIdService(req.params.id);
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    res.json({
-      success: true,
-      user,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const getAllUsers = async (req, res, next) => {
-  try {
-    const pageSize = Number(req.query.pageSize) || 10;
-    const pageNumber = Number(req.query.pageNumber) || 1;
-
-    const users = await getAllUsersService(pageSize, pageNumber);
-
-    res.json({
-      success: true,
-      users,
     });
   } catch (error) {
     next(error);

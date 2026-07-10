@@ -4,6 +4,7 @@ import * as recruitmentService from "../recruitment/recruitment.service.js";
 import * as storageService from "../storage/storage.service.js";
 import * as submissionRepo from "../submissions/submission.repository.js";
 import * as taskRepo from "../tasks/task.repository.js";
+import * as userRepo from "../users/user.repository.js";
 
 export const getAllApplications = async (filters) => {
   const query = {};
@@ -145,5 +146,43 @@ export const deleteTask = async (taskId) => {
     return await taskRepo.deleteTask(taskId);
   } catch (error) {
     throw new Error(`deleteTask failed: ${error.message}`);
+  }
+};
+
+export const getUserById = async (id) => {
+  try {
+    const user = await userRepo.findByClerkId(id);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    return user;
+  } catch (error) {
+    throw new Error(`getUserById failed: ${error.message}`);
+  }
+};
+
+export const getAllUsers = async (pageSize, pageNumber) => {
+  try {
+    const users = await userRepo.findAll(pageSize, pageNumber);
+
+    return users;
+  } catch (error) {
+    throw new Error(`getAllUsers failed: ${error.message}`);
+  }
+};
+
+export const updateUserRole = async (userId, role) => {
+  try {
+    const user = await userRepo.updateUser(userId, { role });
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    return user;
+  } catch (error) {
+    throw new Error(`updateUserRole failed: ${error.message}`);
   }
 };
