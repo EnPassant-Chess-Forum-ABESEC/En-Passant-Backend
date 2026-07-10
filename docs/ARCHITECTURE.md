@@ -36,6 +36,11 @@ src/
 ├─ redis/
 │   └─ redis.client.js   # IORedis client (used by BullMQ)
 ├─ features/
+│   ├─ admin/
+│   │   ├─ admin.controller.js
+│   │   ├─ admin.routes.js
+│   │   ├─ admin.service.js
+│   │   └─ admin.validation.js
 │   ├─ leaderboard/
 │   │   ├─ leaderboard.controller.js
 │   │   ├─ leaderboard.routes.js
@@ -63,6 +68,7 @@ src/
 │   ├─ submissions/
 │   │   ├─ submission.controller.js       # uploadTaskSubmission, getTaskSubmission
 │   │   ├─ submission.model.js            # Mongoose Submission schema
+|   |   ├─ submission.repository.js       # Data access layer
 │   │   └─ submission.routes.js           # Express router
 │   ├─ tasks/
 │   │   ├─ task.controller.js
