@@ -678,6 +678,94 @@ Retrieve all available departments.
 
 ---
 
+## POST /api/admin/departments
+
+Create a new department.
+
+**Auth:** Required (Admin)
+
+**Request Body:**
+
+```json
+{
+  "name": "Jokes",
+  "code": "JOKES",
+  "description": "This is the Jokes Department"
+}
+```
+
+**Response `201`:**
+
+```json
+{
+  "success": true,
+  "message": "Department created successfully",
+  "department": {
+    "_id": "...",
+    "name": "Jokes",
+    "code": "JOKES",
+    "description": "This is the Jokes Department",
+    "__v": 0
+  }
+}
+```
+
+**Response `409`:**
+
+```json
+{
+  "success": false,
+  "message": "Department with this code already exists"
+}
+```
+
+---
+
+## POST /api/admin/tasks
+
+Create a new task for a specific department.
+
+**Auth:** Required (Admin)
+
+**Request Body:**
+
+```json
+{
+  "departmentId": "6a51040b29f7dd98626a8641",
+  "year": 2026,
+  "title": "Create memes related to chess",
+  "summary": "You have to create memes that will be posted on the official page of the club as stories. The memes should be funny, chess-related, and must not contain vulgar or offensive content.",
+  "instructions": [
+    "Create 5 original chess memes.",
+    "Keep all memes family-friendly and suitable for the official club page.",
+    "Avoid offensive, political, or vulgar content.",
+    "Share the final submissions as public links.",
+    "Submit all links before the deadline."
+  ],
+  "order": 1,
+  "isRequired": true,
+  "submission": {
+    "acceptsText": false,
+    "acceptsLinks": true,
+    "acceptsFiles": false
+  }
+}
+```
+
+**Response `201`:**
+
+```json
+{
+  "success": true,
+  "message": "Task created successfully",
+  "task": {
+    /* new task object */
+  }
+}
+```
+
+---
+
 # Error Reference
 
 ## Standard Error Format
