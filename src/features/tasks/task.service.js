@@ -11,3 +11,7 @@ export const getAllTasksForYear = async (year) => {
 export const getTaskById = async (taskId) => {
   return taskRepo.findById(taskId);
 };
+
+export const getAllDepartments = async () => {
+  return taskRepo.findAllDepartments();
+};

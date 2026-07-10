@@ -1,4 +1,4 @@
-import { Submission } from "./submission.model.js";
+import * as submissionRepo from "./submission.repository.js";
 import {
   uploadFile,
   isValidMimeType,
@@ -72,18 +72,22 @@ export const uploadTaskSubmission = async (req, res, next) => {
       });
     }
 
-    const newSubmission = await Submission.findOneAndUpdate(
-      {
-        applicationId,
-        taskId,
-      },
+    const newSubmission = await submissionRepo.upsertSubmission(
+      applicationId,
+      taskId,
       {
         text,
         links,
         files: uploadedFiles,
       },
-      { upsert: true, returnDocument: 'after' },
     );
+
+    if (application.status === "ACTIVE") {
+      await recruitmentService.transitionStatus(
+        applicationId,
+        "TASK_SUBMITTED",
+      );
+    }
 
     return res.status(200).json({ success: true, submission: newSubmission });
   } catch (error) {
@@ -105,10 +109,10 @@ export const getTaskSubmission = async (req, res, next) => {
       throw new Error("Unauthorized");
     }
 
-    const submission = await Submission.findOne({
+    const submission = await submissionRepo.findSubmission(
       applicationId,
       taskId,
-    }).lean();
+    );
 
     if (!submission)
       return res

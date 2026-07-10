@@ -1,4 +1,4 @@
-import { Task } from "./task.model.js";
+import { Department, Task } from "./task.model.js";
 
 export const findByDepartmentAndYear = async (departmentId, year) => {
   return Task.find({ departmentId, year }).sort({ order: 1 });
@@ -10,4 +10,8 @@ export const findById = async (taskId) => {
 
 export const findAllByYear = async (year) => {
   return Task.find({ year }).populate("departmentId");
+};
+
+export const findAllDepartments = async () => {
+  return Department.find().sort({ name: 1 });
 };
