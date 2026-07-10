@@ -5,7 +5,7 @@ import {
   generateSignedUrl,
 } from "../storage/storage.service.js";
 import * as recruitmentService from "../recruitment/recruitment.service.js";
-import * as taskService from "../tasks/task.service.js";
+import * as taskRepo from "../tasks/task.repository.js";
 
 export const uploadTaskSubmission = async (req, res, next) => {
   const { applicationId, taskId } = req.params;
@@ -27,7 +27,7 @@ export const uploadTaskSubmission = async (req, res, next) => {
     )
       throw new Error("application not found or is not active");
 
-    const task = await taskService.getTaskById(taskId);
+    const task = await taskRepo.findById(taskId);
 
     if (!task) throw new Error("Task not found");
 

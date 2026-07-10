@@ -1,4 +1,4 @@
-import * as taskService from "./task.service.js";
+import * as taskRepo from "./task.repository.js";
 
 export const getAllTasksByDepartment = async (req, res, next) => {
   const { departmentId, year } = req.query;
@@ -10,7 +10,7 @@ export const getAllTasksByDepartment = async (req, res, next) => {
       throw new Error("year is required");
     }
 
-    const tasks = await taskService.getAllTasksByDepartment(
+    const tasks = await taskRepo.findByDepartmentAndYear(
       departmentId,
       Number(year),
     );
@@ -28,7 +28,7 @@ export const getAllTasksForYear = async (req, res, next) => {
       throw new Error("year is required");
     }
 
-    const tasks = await taskService.getAllTasksForYear(Number(year));
+    const tasks = await taskRepo.findAllByYear(Number(year));
     return res.status(200).json({ tasks });
   } catch (error) {
     next(error);

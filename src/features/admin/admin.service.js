@@ -1,5 +1,4 @@
 import * as recruitmentRepo from "../recruitment/recruitment.repository.js";
-import * as taskService from "../tasks/task.service.js";
 import * as recruitmentService from "../recruitment/recruitment.service.js";
 import * as storageService from "../storage/storage.service.js";
 import * as submissionRepo from "../submissions/submission.repository.js";
@@ -31,7 +30,7 @@ export const getAllApplications = async (filters) => {
 
 export const getAllDepartments = async () => {
   try {
-    return await taskService.getAllDepartments();
+    return await taskRepo.findAllDepartments();
   } catch (error) {
     throw new Error(`getAllDepartments failed: ${error.message}`);
   }
