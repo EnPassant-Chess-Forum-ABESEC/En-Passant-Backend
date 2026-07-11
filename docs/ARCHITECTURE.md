@@ -25,7 +25,7 @@
 
 The backend follows a **feature‑based architecture**. Instead of grouping files by technical responsibility (MVC style), code is organized around application features. Each feature contains everything required for that domain.
 
-## Overall System Architecture (some services are missing)
+## Overall System Architecture
 
 The application follows a modular monolith architecture where features are isolated as independent domains with clear boundaries, allowing future extraction into services if needed.
 
