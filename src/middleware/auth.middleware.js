@@ -1,5 +1,6 @@
 import { getAuth, createClerkClient } from "@clerk/express";
 import User from "../features/users/user.model.js";
+import { enqueueWelcomeEmail } from "../features/email/email.queue.js";
 
 let clerkClient;
 
@@ -36,6 +37,10 @@ export const userAuth = async (req, res, next) => {
         collegeEmail: email,
         profilePictureUrl: clerkUser.imageUrl,
       });
+
+      if (email) {
+        await enqueueWelcomeEmail(dbUser._id, email, fullName);
+      }
     }
 
     req.clerkId = userId;

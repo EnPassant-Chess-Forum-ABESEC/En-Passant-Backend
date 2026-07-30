@@ -11,6 +11,7 @@ import recruitmentRoutes from "./features/recruitment/recruitment.routes.js";
 import paymentRoutes from "./features/payments/payment.routes.js";
 import submissionRoutes from "./features/submissions/submission.routes.js";
 import adminRoutes from "./features/admin/admin.routes.js";
+import eventRoutes from "./features/events/event.routes.js";
 
 const app = express();
 
@@ -39,6 +40,7 @@ app.use("/api/recruitment", recruitmentRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/submissions", submissionRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/events", eventRoutes);
 
 app.use(errorHandler);
 

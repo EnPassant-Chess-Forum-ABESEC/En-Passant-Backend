@@ -93,7 +93,7 @@ export const razorpayWebhook = async (req, res, next) => {
         try {
           await handleSuccessfulPayment(applicationId, paymentId, session);
 
-          await paymentRepo.updatePaymentStatus(
+          const updatedPayment = await paymentRepo.updatePaymentStatus(
             orderId,
             "SUCCESS",
             paymentId,
@@ -101,6 +101,12 @@ export const razorpayWebhook = async (req, res, next) => {
           );
 
           await session.commitTransaction();
+
+          if (updatedPayment) {
+            import("./receipt.queue.js").then((module) => {
+              module.enqueueReceiptGeneration(updatedPayment._id);
+            });
+          }
         } catch (error) {
           await session.abortTransaction();
           throw error;
@@ -122,6 +128,39 @@ export const razorpayWebhook = async (req, res, next) => {
     }
 
     return res.status(200).send("OK");
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getReceipt = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const payment = await paymentRepo.getPaymentById(id);
+
+    if (!payment) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Payment not found" });
+    }
+
+    if (
+      payment.userId.toString() !== req.user._id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      return res.status(403).json({ success: false, message: "Unauthorized" });
+    }
+
+    if (!payment.receiptPublicId) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Receipt not generated yet" });
+    }
+
+    const { generateSignedUrl } = await import("../storage/storage.service.js");
+    const url = generateSignedUrl(payment.receiptPublicId);
+
+    return res.status(200).json({ success: true, url });
   } catch (error) {
     next(error);
   }

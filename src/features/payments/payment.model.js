@@ -38,6 +38,14 @@ const paymentSchema = new mongoose.Schema(
       type: String, // The Razorpay payment_id
       default: null,
     },
+    receiptPublicId: {
+      type: String, // Cloudinary public_id of the receipt
+      default: null,
+    },
+    receiptUrl: {
+      type: String, // Cloudinary secure URL of the receipt
+      default: null,
+    },
   },
   {
     timestamps: true,

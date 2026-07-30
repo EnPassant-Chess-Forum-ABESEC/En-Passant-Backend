@@ -21,6 +21,10 @@ export const countPayments = async () => {
   return Payment.countDocuments();
 };
 
+export const getPaymentById = async (id) => {
+  return Payment.findById(id);
+};
+
 export const getAllPayments = async (pageSize = 10, pageNumber = 1) => {
   return Payment.find()
     .sort({ createdAt: -1 })

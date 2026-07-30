@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Payment Receipt</title>
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background: #f4f6f9;
+        font-family: Arial, Helvetica, sans-serif;
+        color: #374151;
+        padding: 40px 15px;
+      }
+
+      .container {
+        max-width: 650px;
+        margin: auto;
+        background: #ffffff;
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+      }
+
+      .header {
+        padding: 35px 40px;
+        border-bottom: 1px solid #eceff3;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .logo {
+        width: 60px;
+        height: 60px;
+        border: 2px dashed #d1d5db;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        color: #9ca3af;
+        background: #fafafa;
+      }
+
+      .brand h2 {
+        color: #111827;
+        margin-bottom: 4px;
+      }
+
+      .brand p {
+        color: #6b7280;
+        font-size: 14px;
+      }
+
+      .receipt-meta {
+        text-align: right;
+        font-size: 14px;
+        line-height: 1.7;
+        color: #6b7280;
+      }
+
+      /* Body */
+
+      .content {
+        padding: 40px;
+      }
+
+      .success {
+        font-size: 24px;
+        color: #111827;
+        margin-bottom: 10px;
+      }
+
+      .subtitle {
+        color: #6b7280;
+        margin-bottom: 35px;
+        line-height: 1.6;
+      }
+
+      .section-title {
+        font-size: 14px;
+        color: #9ca3af;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+        letter-spacing: 0.08em;
+      }
+
+      .customer {
+        margin-bottom: 35px;
+      }
+
+      .customer strong {
+        display: block;
+        color: #111827;
+        margin-bottom: 4px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      thead {
+        background: #f8fafc;
+      }
+
+      th {
+        text-align: left;
+        padding: 14px;
+        font-size: 14px;
+        color: #6b7280;
+      }
+
+      td {
+        padding: 18px 14px;
+        border-bottom: 1px solid #edf1f5;
+      }
+
+      .text-right {
+        text-align: right;
+      }
+
+      .total {
+        font-weight: bold;
+        color: #111827;
+        background: #fafafa;
+      }
+
+      /* Footer */
+
+      .footer {
+        border-top: 1px solid #eceff3;
+        padding: 30px 40px;
+        text-align: center;
+        font-size: 13px;
+        color: #9ca3af;
+        line-height: 1.8;
+      }
+
+      @media (max-width: 600px) {
+        .header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 20px;
+        }
+
+        .receipt-meta {
+          text-align: left;
+        }
+
+        .content,
+        .footer {
+          padding: 28px 22px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="header">
+        <div class="brand">
+          <img
+            src="https://i.ibb.co/KcFKKwf3/En-Passant-New-Logo.png"
+            alt="En Passant Logo"
+            width="72"
+            style="margin: 0 auto 20px"
+          />
+
+          <div>
+            <h2>En-Passant</h2>
+            <p>Official Payment Receipt</p>
+          </div>
+        </div>
+
+        <div class="receipt-meta">
+          <div><strong>Receipt #</strong> <%= paymentId %></div>
+          <div><strong>Date</strong> <%= date %></div>
+        </div>
+      </div>
+
+      <div class="content">
+        <h1 class="success">Payment Received</h1>
+
+        <p class="subtitle">
+          Thank you for your payment. Your transaction has been successfully
+          processed and recorded.
+        </p>
+
+        <div class="customer">
+          <div class="section-title">Billed To</div>
+
+          <strong><%= userName %></strong>
+          <div><%= userEmail %></div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th class="text-right">Amount</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr>
+              <td><%= purpose %></td>
+              <td class="text-right">₹<%= amount %></td>
+            </tr>
+
+            <tr class="total">
+              <td>Total Paid</td>
+              <td class="text-right">₹<%= amount %></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="footer">
+        This receipt serves as confirmation that your payment has been
+        received.<br />
+
+        If you have any questions regarding this payment, simply reply to this
+        email.<br />
+
+        <strong>Thank you.</strong>
+      </div>
+    </div>
+  </body>
+</html>
