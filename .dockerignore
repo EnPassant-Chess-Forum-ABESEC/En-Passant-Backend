@@ -1,0 +1,9 @@
+node_modules
+.env
+.git
+.gitignore
+README.md
+docs
+tasks.md
+recruitment_architecture.md
+recruitment.md
