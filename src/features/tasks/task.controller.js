@@ -34,3 +34,12 @@ export const getAllTasksForYear = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getAllDepartments = async (req, res, next) => {
+  try {
+    const departments = await taskRepo.findAllDepartments();
+    return res.status(200).json({ success: true, departments });
+  } catch (error) {
+    next(error);
+  }
+};

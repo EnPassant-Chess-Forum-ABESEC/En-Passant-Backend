@@ -34,7 +34,7 @@ app.use(
 );
 
 app.get("/api/health", (req, res) => {
-  console.log("cron pinged");
+  console.log("[server] cron pinged");
   res.status(200).json({ status: "success", message: "pong" });
 });
 
