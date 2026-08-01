@@ -14,7 +14,6 @@
   "license": "ISC",
   "dependencies": {
     "@clerk/express": "^2.1.32",
-    "@sendgrid/mail": "^8.1.6",
     "bullmq": "^5.79.1",
     "cloudinary": "^2.10.0",
     "cors": "^2.8.6",
@@ -27,6 +26,7 @@
     "nodemon": "^3.1.14",
     "puppeteer": "^25.4.0",
     "razorpay": "^2.9.6",
+    "resend": "^6.18.1",
     "zod": "^4.4.3"
   }
 }
