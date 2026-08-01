@@ -3,7 +3,7 @@ import "dotenv/config";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export const sendEmail = async ({ to, subject, text, html }) => {
+export const sendEmail = async ({ to, subject, text, html, attachments }) => {
   try {
     if (!process.env.RESEND_API_KEY) {
       console.warn("RESEND_API_KEY is not set. Email will not be sent.");
@@ -17,6 +17,10 @@ export const sendEmail = async ({ to, subject, text, html }) => {
       text,
       html: html || text,
     };
+
+    if (attachments && attachments.length > 0) {
+      msg.attachments = attachments;
+    }
 
     const { data, error } = await resend.emails.send(msg);
 
