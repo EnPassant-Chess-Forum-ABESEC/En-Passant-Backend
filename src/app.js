@@ -19,7 +19,11 @@ connectDb();
 
 app.use(
   cors({
-    origin: ["http://localhost:3000", process.env.FRONTEND_URL].filter(Boolean),
+    origin: [
+      "http://localhost:3000",
+      "https://www.enpassant.co.in",
+      "https://enpassant.co.in",
+    ].filter(Boolean),
     credentials: true,
   }),
 );
