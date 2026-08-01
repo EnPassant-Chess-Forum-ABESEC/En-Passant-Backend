@@ -19,7 +19,7 @@ connectDb();
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: ["http://localhost:3000", process.env.FRONTEND_URL].filter(Boolean),
     credentials: true,
   }),
 );
@@ -32,6 +32,11 @@ app.use(
     },
   }),
 );
+
+app.get("/api/health", (req, res) => {
+  console.log("cron pinged");
+  res.status(200).json({ status: "success", message: "pong" });
+});
 
 app.use("/api/users", userRoutes);
 app.use("/api/leaderboard", leaderboardRoutes);
