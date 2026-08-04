@@ -6,6 +6,7 @@ import { createOrder } from "./gateways/razorpay.gateway.js";
 import Razorpay from "razorpay";
 import * as paymentRepo from "./payment.repository.js";
 import mongoose from "mongoose";
+import { uploadFile } from "../storage/storage.service.js";
 
 export const createCheckoutSession = async (req, res, next) => {
   const userId = req.user._id;
@@ -161,6 +162,75 @@ export const getReceipt = async (req, res, next) => {
     const url = generateSignedUrl(payment.receiptPublicId);
 
     return res.status(200).json({ success: true, url });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const submitManualPayment = async (req, res, next) => {
+  const userId = req.user._id;
+
+  try {
+    const { utr } = req.body;
+    if (!utr) {
+      return res
+        .status(400)
+        .json({ success: false, message: "UTR (Transaction ID) is required." });
+    }
+
+    if (!req.file) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Payment screenshot is required." });
+    }
+
+    const currentYear = new Date().getFullYear();
+    const application = await getMyApplication(userId, currentYear);
+    if (!application) throw new Error("Application not found");
+
+    if (
+      application.status === "ACTIVE" ||
+      application.paymentStatus === "SUCCESS"
+    ) {
+      throw new Error(
+        "Application is already active or payment is already done",
+      );
+    }
+
+    const userNameSanitized = req.user.userName
+      .replace(/[^a-zA-Z0-9]/g, "_")
+      .toLowerCase();
+    const dateStr = new Date().toISOString().split("T")[0];
+    const publicId = `receipts/${userNameSanitized}_${dateStr}_${Date.now()}`;
+
+    const uploadResult = await uploadFile(req.file.buffer, {
+      public_id: publicId,
+      folder: "manual_payments",
+    });
+
+    const recruitmentAmount = process.env.RECRUITMENT_AMOUNT;
+    if (!recruitmentAmount) throw new Error("Recruitment amount not found");
+
+    const recruitmentAmountInPaise = parseInt(recruitmentAmount) * 100;
+
+    const payment = await paymentRepo.createPayment({
+      userId: application.userId,
+      applicationId: application._id,
+      amount: recruitmentAmountInPaise,
+      currency: "INR",
+      gateway: "MANUAL",
+      gatewayOrderId: `manual_order_${Date.now()}`,
+      status: "PENDING",
+      utr,
+      paymentScreenshotPublicId: uploadResult.public_id,
+      paymentScreenshotUrl: uploadResult.secure_url,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Payment submitted manually and is pending verification.",
+      payment,
+    });
   } catch (error) {
     next(error);
   }

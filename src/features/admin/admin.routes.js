@@ -14,6 +14,7 @@ import {
   getUserById,
   updateUserRole,
   getAllPayments,
+  verifyPayment,
 } from "./admin.controller.js";
 import { adminAuth } from "../../middleware/auth.middleware.js";
 import { validate } from "../../middleware/validate.middleware.js";
@@ -28,6 +29,7 @@ import {
   updateTaskSchema,
   deleteTaskSchema,
   updateUserRoleSchema,
+  verifyPaymentSchema,
 } from "./admin.validation.js";
 
 const router = express.Router();
@@ -90,5 +92,6 @@ router.patch(
 
 // payments
 router.get("/payments", adminAuth, getAllPayments);
+router.patch("/payments/:id/verify", adminAuth, validate(verifyPaymentSchema), verifyPayment);
 
 export default router;

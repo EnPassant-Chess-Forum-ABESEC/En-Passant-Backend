@@ -1,5 +1,7 @@
 import * as adminService from "./admin.service.js";
 import * as paymentRepo from "../payments/payment.repository.js";
+import { handleSuccessfulPayment } from "../recruitment/recruitment.service.js";
+import mongoose from "mongoose";
 
 export const getAllApplications = async (req, res, next) => {
   const { status, departmentId, year } = req.query;
@@ -228,6 +230,60 @@ export const getAllPayments = async (req, res, next) => {
         pageSize,
         total: await paymentRepo.countPayments(),
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const verifyPayment = async (req, res, next) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  try {
+    const payment = await paymentRepo.getPaymentById(id);
+    if (!payment) {
+      return res.status(404).json({ success: false, message: "Payment not found" });
+    }
+
+    if (payment.status !== "PENDING") {
+      return res.status(400).json({ success: false, message: `Payment is already ${payment.status}` });
+    }
+
+    if (status === "SUCCESS") {
+      const session = await mongoose.startSession();
+      session.startTransaction();
+
+      try {
+        await handleSuccessfulPayment(payment.applicationId, payment.utr || payment.gatewayOrderId, session);
+
+        const updatedPayment = await paymentRepo.updatePaymentStatus(
+          payment.gatewayOrderId,
+          "SUCCESS",
+          payment.utr || "MANUAL_VERIFIED",
+          session
+        );
+
+        await session.commitTransaction();
+
+        if (updatedPayment) {
+          import("../payments/receipt.queue.js").then((module) => {
+            module.enqueueReceiptGeneration(updatedPayment._id);
+          });
+        }
+      } catch (error) {
+        await session.abortTransaction();
+        throw error;
+      } finally {
+        await session.endSession();
+      }
+    } else if (status === "FAILED") {
+      await paymentRepo.updatePaymentStatus(payment.gatewayOrderId, "FAILED", null);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Payment manually verified as ${status}`,
     });
   } catch (error) {
     next(error);

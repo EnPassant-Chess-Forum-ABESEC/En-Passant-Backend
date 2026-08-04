@@ -38,6 +38,16 @@ const paymentSchema = new mongoose.Schema(
       type: String, // The Razorpay payment_id
       default: null,
     },
+    utr: {
+      type: String, // For manual UPI payments
+      sparse: true,
+    },
+    paymentScreenshotPublicId: {
+      type: String,
+    },
+    paymentScreenshotUrl: {
+      type: String,
+    },
     receiptPublicId: {
       type: String, // Cloudinary public_id of the receipt
       default: null,

@@ -31,15 +31,27 @@ export const userAuth = async (req, res, next) => {
         [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") ||
         "Unnamed User";
 
-      dbUser = await User.create({
-        clerkId: userId,
-        userName: fullName,
-        collegeEmail: email,
-        profilePictureUrl: clerkUser.imageUrl,
-      });
-
       if (email) {
-        await enqueueWelcomeEmail(dbUser._id, email, fullName);
+        dbUser = await User.findOne({ collegeEmail: email });
+        if (dbUser) {
+          return res.status(403).json({
+            message:
+              "An account with this email already exists but is orphaned. Please contact support to link your account.",
+          });
+        }
+      }
+
+      if (!dbUser) {
+        dbUser = await User.create({
+          clerkId: userId,
+          userName: fullName,
+          collegeEmail: email,
+          profilePictureUrl: clerkUser.imageUrl,
+        });
+
+        if (email) {
+          await enqueueWelcomeEmail(dbUser._id, email, fullName);
+        }
       }
     }
 
@@ -51,7 +63,11 @@ export const userAuth = async (req, res, next) => {
     console.error("Auth Middleware Error:", error);
     res
       .status(500)
-      .json({ message: "Internal Server Error in Authentication" });
+      .json({
+        message: "Internal Server Error in Authentication",
+        error: error.message,
+        stack: error.stack,
+      });
   }
 };
 

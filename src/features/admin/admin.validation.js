@@ -171,3 +171,14 @@ export const updateUserRoleSchema = z.object({
     }),
   }),
 });
+
+export const verifyPaymentSchema = z.object({
+  params: z.object({
+    id: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid Payment ID format"),
+  }),
+  body: z.object({
+    status: z.enum(["SUCCESS", "FAILED"], {
+      errorMap: () => ({ message: "Status must be 'SUCCESS' or 'FAILED'" }),
+    }),
+  }),
+});
