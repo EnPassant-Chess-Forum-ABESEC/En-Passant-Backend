@@ -61,13 +61,11 @@ export const userAuth = async (req, res, next) => {
     next();
   } catch (error) {
     console.error("Auth Middleware Error:", error);
-    res
-      .status(500)
-      .json({
-        message: "Internal Server Error in Authentication",
-        error: error.message,
-        stack: error.stack,
-      });
+    res.status(500).json({
+      message: "Internal Server Error in Authentication",
+      error: error.message,
+      stack: error.stack,
+    });
   }
 };
 
