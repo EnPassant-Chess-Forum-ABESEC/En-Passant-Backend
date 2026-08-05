@@ -8,7 +8,7 @@ export const updatePaymentStatus = async (
   gatewayOrderId,
   status,
   gatewayPaymentId,
-  session
+  session,
 ) => {
   return Payment.findOneAndUpdate(
     { gatewayOrderId },
@@ -30,4 +30,12 @@ export const getAllPayments = async (pageSize = 10, pageNumber = 1) => {
     .sort({ createdAt: -1 })
     .limit(Number(pageSize))
     .skip((Number(pageNumber) - 1) * Number(pageSize));
+};
+
+export const calculateTotalRevenue = async () => {
+  const result = await Payment.aggregate([
+    { $match: { status: "SUCCESS" } },
+    { $group: { _id: null, total: { $sum: "$amount" } } },
+  ]);
+  return result[0]?.total || 0;
 };

@@ -36,6 +36,33 @@ export const getAllDepartments = async () => {
   }
 };
 
+export const updatePaymentStatus = async (paymentId, status) => {
+  try {
+    return await paymentRepo.updatePaymentStatus(paymentId, status);
+  } catch (error) {
+    throw new Error(`updatePaymentStatus failed: ${error.message}`);
+  }
+};
+
+export const getDashboardStats = async () => {
+  try {
+    const [totalApplications, activeTasks, totalMembers, totalRevenue] = await Promise.all([
+      recruitmentRepo.countRecruitments(),
+      taskRepo.countTasks(),
+      userRepo.countUsers(),
+      paymentRepo.calculateTotalRevenue()
+    ]);
+    return {
+      totalApplications,
+      activeTasks,
+      totalMembers,
+      totalRevenue
+    };
+  } catch (error) {
+    throw new Error(`getDashboardStats failed: ${error.message}`);
+  }
+};
+
 export const updateApplicationStatus = async (applicationId, newStatus) => {
   try {
     return await recruitmentService.transitionStatus(applicationId, newStatus);

@@ -49,3 +49,7 @@ export const updateTask = async (taskId, taskData) => {
 export const deleteTask = async (taskId) => {
   return Task.findByIdAndDelete(taskId);
 };
+
+export const countTasks = async () => {
+  return Task.countDocuments();
+};

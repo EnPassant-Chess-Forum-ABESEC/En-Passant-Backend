@@ -48,3 +48,7 @@ export const findExpiredPendingPayments = async (cutoffDate) => {
 export const deleteApplication = async (id) => {
   return Recruitment.findByIdAndDelete(id);
 };
+
+export const countRecruitments = async () => {
+  return Recruitment.countDocuments();
+};

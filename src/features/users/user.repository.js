@@ -12,6 +12,10 @@ export const updateUser = async (clerkId, userData) => {
   return User.findOneAndUpdate({ clerkId }, userData, { returnDocument: 'after' });
 };
 
+export const countUsers = async () => {
+  return User.countDocuments();
+};
+
 export const findAll = (pageSize, pageNumber) => {
   return User.find()
     .limit(Number(pageSize))

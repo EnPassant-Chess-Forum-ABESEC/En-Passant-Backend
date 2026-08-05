@@ -94,4 +94,8 @@ router.patch(
 router.get("/payments", adminAuth, getAllPayments);
 router.patch("/payments/:id/verify", adminAuth, validate(verifyPaymentSchema), verifyPayment);
 
+// stats
+import { getDashboardStats } from "./admin.controller.js";
+router.get("/stats", adminAuth, getDashboardStats);
+
 export default router;
