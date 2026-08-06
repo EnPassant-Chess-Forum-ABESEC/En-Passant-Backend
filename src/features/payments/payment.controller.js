@@ -226,6 +226,14 @@ export const submitManualPayment = async (req, res, next) => {
       paymentScreenshotUrl: uploadResult.secure_url,
     });
 
+    import("../email/email.queue.js").then((module) => {
+      module.enqueuePaymentPendingEmail(
+        req.user._id,
+        req.user.collegeEmail,
+        req.user.userName,
+      );
+    });
+
     return res.status(200).json({
       success: true,
       message: "Payment submitted manually and is pending verification.",

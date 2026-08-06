@@ -26,3 +26,30 @@ export const enqueueWelcomeEmail = async (userId, email, name) => {
     console.error(`Failed to enqueue welcome email for ${userId}:`, error);
   }
 };
+
+export const enqueuePaymentPendingEmail = async (userId, email, name) => {
+  try {
+    await emailQueue.add("send-payment-pending-email", {
+      userId,
+      email,
+      name,
+    });
+    console.log(`Enqueued payment pending email for user ${userId}`);
+  } catch (error) {
+    console.error(`Failed to enqueue payment pending email for ${userId}:`, error);
+  }
+};
+
+export const enqueuePaymentSuccessEmail = async (userId, email, name, receiptUrl) => {
+  try {
+    await emailQueue.add("send-payment-success-email", {
+      userId,
+      email,
+      name,
+      receiptUrl,
+    });
+    console.log(`Enqueued payment success email for user ${userId}`);
+  } catch (error) {
+    console.error(`Failed to enqueue payment success email for ${userId}:`, error);
+  }
+};

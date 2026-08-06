@@ -69,6 +69,15 @@ const processReceiptJob = async (job) => {
     console.log(
       `Successfully generated and uploaded receipt for payment ${payment._id}`,
     );
+
+    import("../email/email.queue.js").then((module) => {
+      module.enqueuePaymentSuccessEmail(
+        user._id,
+        user.collegeEmail,
+        user.userName,
+        cloudinaryResult.secure_url
+      );
+    });
   }
 };
 
