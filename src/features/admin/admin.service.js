@@ -150,7 +150,7 @@ export const deleteDepartment = async (departmentId) => {
 
 export const updateTask = async (taskId, taskData) => {
   try {
-    const task = await taskRepo.findTaskById(taskId);
+    const task = await taskRepo.findById(taskId);
 
     if (!task) {
       throw new Error("Task not found");
@@ -164,7 +164,7 @@ export const updateTask = async (taskId, taskData) => {
 
 export const deleteTask = async (taskId) => {
   try {
-    const task = await taskRepo.findTaskById(taskId);
+    const task = await taskRepo.findById(taskId);
 
     if (!task) {
       throw new Error("Task not found");
