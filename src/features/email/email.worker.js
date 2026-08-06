@@ -32,17 +32,9 @@ const processEmailJob = async (job) => {
     
     const subject = "Payment Under Review - En-Passant Recruitment";
     const text = `Hi ${userName},\n\nWe have received your manual payment details. Your payment is currently under review by our administrators.\n\nYou will receive your official receipt once the payment is verified. You can also check your application status on your dashboard.`;
-    const html = `
-      <div style="font-family: sans-serif; color: #333; line-height: 1.5; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #1E3A8A;">Payment Received & Under Review</h2>
-        <p>Hi <strong>${userName}</strong>,</p>
-        <p>We have successfully received your manual payment details for the En-Passant Recruitment.</p>
-        <p>Your payment is currently under review by our administrators. Once your payment is verified, we will email you your official receipt and your application status will be updated.</p>
-        <p>If you have any questions, feel free to reply to this email.</p>
-        <br/>
-        <p>Best regards,<br/><strong>En-Passant Team</strong></p>
-      </div>
-    `;
+    
+    const templatePath = path.join(__dirname, "templates", "payment_pending.ejs");
+    const html = await ejs.renderFile(templatePath, { userName });
 
     await sendEmail({ to: email, subject, text, html });
   } else if (name === "send-payment-success-email") {
@@ -50,21 +42,9 @@ const processEmailJob = async (job) => {
     
     const subject = "Payment Verified & Receipt - En-Passant Recruitment";
     const text = `Hi ${userName},\n\nYour payment has been successfully verified! You can now proceed with your recruitment tasks.\n\nYou can download your official receipt here: ${receiptUrl}`;
-    const html = `
-      <div style="font-family: sans-serif; color: #333; line-height: 1.5; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #15803D;">Payment Verified</h2>
-        <p>Hi <strong>${userName}</strong>,</p>
-        <p>Great news! Your manual payment for the En-Passant Recruitment has been successfully verified.</p>
-        <p>You can now log into your dashboard and proceed with your assigned recruitment tasks.</p>
-        <p>Your official payment receipt has been generated. You can download it using the link below:</p>
-        <div style="margin: 30px 0;">
-          <a href="${receiptUrl}" style="background-color: #1E3A8A; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Download Receipt</a>
-        </div>
-        <p style="font-size: 0.9em; color: #666;">Or copy this link: <a href="${receiptUrl}">${receiptUrl}</a></p>
-        <br/>
-        <p>Best regards,<br/><strong>En-Passant Team</strong></p>
-      </div>
-    `;
+    
+    const templatePath = path.join(__dirname, "templates", "payment_success.ejs");
+    const html = await ejs.renderFile(templatePath, { userName, receiptUrl });
 
     await sendEmail({ to: email, subject, text, html });
   }

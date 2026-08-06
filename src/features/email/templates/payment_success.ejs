@@ -1,0 +1,13 @@
+<div style="font-family: sans-serif; color: #333; line-height: 1.5; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <h2 style="color: #15803D;">Payment Verified</h2>
+  <p>Hi <strong><%= userName %></strong>,</p>
+  <p>Great news! Your manual payment for the En-Passant Recruitment has been successfully verified.</p>
+  <p>You can now log into your dashboard and proceed with your assigned recruitment tasks.</p>
+  <p>Your official payment receipt has been generated. You can download it using the link below:</p>
+  <div style="margin: 30px 0;">
+    <a href="<%= receiptUrl %>" style="background-color: #1E3A8A; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Download Receipt</a>
+  </div>
+  <p style="font-size: 0.9em; color: #666;">Or copy this link: <a href="<%= receiptUrl %>"><%= receiptUrl %></a></p>
+  <br/>
+  <p>Best regards,<br/><strong>En-Passant Team</strong></p>
+</div>
