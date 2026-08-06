@@ -143,16 +143,30 @@ export const getReceipt = async (req, res, next) => {
       return res.status(403).json({ success: false, message: "Unauthorized" });
     }
 
-    if (!payment.receiptPublicId) {
+    if (!payment.receiptUrl) {
       return res
         .status(404)
         .json({ success: false, message: "Receipt not generated yet" });
     }
 
-    const { generateSignedUrl } = await import("../storage/storage.service.js");
-    const url = generateSignedUrl(payment.receiptPublicId);
+    return res.status(200).json({ success: true, url: payment.receiptUrl });
+  } catch (error) {
+    next(error);
+  }
+};
 
-    return res.status(200).json({ success: true, url });
+export const downloadReceiptPdf = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const payment = await paymentRepo.getPaymentById(id);
+
+    if (!payment || !payment.receiptFile) {
+      return res.status(404).send("Receipt not found");
+    }
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `inline; filename="receipt_${id}.pdf"`);
+    res.send(payment.receiptFile);
   } catch (error) {
     next(error);
   }

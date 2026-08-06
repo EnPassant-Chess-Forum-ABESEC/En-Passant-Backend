@@ -6,6 +6,7 @@ import {
   razorpayWebhook,
   getReceipt,
   submitManualPayment,
+  downloadReceiptPdf,
 } from "./payment.controller.js";
 
 const router = express.Router();
@@ -13,6 +14,7 @@ const router = express.Router();
 router.post("/checkout", userAuth, createCheckoutSession);
 router.post("/webhook", razorpayWebhook);
 router.get("/:id/receipt", userAuth, getReceipt);
+router.get("/:id/receipt.pdf", downloadReceiptPdf);
 router.post(
   "/manual",
   userAuth,

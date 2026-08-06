@@ -53,9 +53,12 @@ const paymentSchema = new mongoose.Schema(
       default: null,
     },
     receiptUrl: {
-      type: String, // Cloudinary secure URL of the receipt
+      type: String, // Backend URL of the receipt
       default: null,
     },
+    receiptFile: {
+      type: Buffer, // Storing the raw PDF bytes
+    }
   },
   {
     timestamps: true,

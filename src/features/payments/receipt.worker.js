@@ -61,18 +61,15 @@ const processReceiptJob = async (job) => {
 
     await browser.close();
 
-    const cloudinaryResult = await uploadFile(pdfBuffer, {
-      folder: "en-passant/receipts",
-      resource_type: "raw",
-      public_id: `receipt_${payment._id}.pdf`,
-    });
+    const backendUrl = process.env.BACKEND_URL || "http://localhost:8080";
+    const receiptLink = `${backendUrl}/api/payments/${payment._id}/receipt.pdf`;
 
-    payment.receiptPublicId = cloudinaryResult.public_id;
-    payment.receiptUrl = cloudinaryResult.secure_url;
+    payment.receiptFile = pdfBuffer;
+    payment.receiptUrl = receiptLink;
     await payment.save();
 
     console.log(
-      `Successfully generated and uploaded receipt for payment ${payment._id}`,
+      `Successfully generated and saved receipt to DB for payment ${payment._id}`,
     );
 
     import("../email/email.queue.js").then((module) => {
@@ -80,7 +77,7 @@ const processReceiptJob = async (job) => {
         user._id,
         user.collegeEmail,
         user.userName,
-        cloudinaryResult.secure_url
+        receiptLink
       );
     });
   }
