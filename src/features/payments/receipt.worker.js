@@ -39,11 +39,16 @@ const processReceiptJob = async (job) => {
       amount: payment.amount,
     });
 
-    const browser = await puppeteer.launch({
-      headless: "new",
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || puppeteer.executablePath(),
+    const launchOptions = {
+      headless: true,
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    });
+    };
+
+    if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+      launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+    }
+
+    const browser = await puppeteer.launch(launchOptions);
 
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: "networkidle0" });
