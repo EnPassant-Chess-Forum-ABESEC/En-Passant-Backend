@@ -1,7 +1,6 @@
 import { Worker } from "bullmq";
 import { redisConnection } from "../../redis/redis.client.js";
 import Payment from "./payment.model.js";
-import { uploadFile } from "../storage/storage.service.js";
 
 import ejs from "ejs";
 import path from "path";
@@ -64,7 +63,7 @@ const processReceiptJob = async (job) => {
     const backendUrl = process.env.BACKEND_URL || "http://localhost:8080";
     const receiptLink = `${backendUrl}/api/payments/${payment._id}/receipt.pdf`;
 
-    payment.receiptFile = pdfBuffer;
+    payment.receiptFile = Buffer.from(pdfBuffer);
     payment.receiptUrl = receiptLink;
     await payment.save();
 
@@ -77,7 +76,7 @@ const processReceiptJob = async (job) => {
         user._id,
         user.collegeEmail,
         user.userName,
-        receiptLink
+        receiptLink,
       );
     });
   }

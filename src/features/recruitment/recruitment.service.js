@@ -1,4 +1,5 @@
 import * as recruitmentRepo from "./recruitment.repository.js";
+import * as submissionRepo from "../submissions/submission.repository.js";
 import { VALID_TRANSITIONS } from "./recruitment.constants.js";
 
 export const createApplication = async (userId, data) => {
@@ -23,7 +24,13 @@ export const getMyApplication = async (userId, year) => {
 
   if (!application) throw new Error("Application not found");
 
-  return application;
+  const submissions = await submissionRepo.findSubmissionsByApplicationId(application._id);
+  const submittedTaskIds = submissions.map(sub => sub.taskId?._id || sub.taskId);
+
+  const appObj = application.toObject();
+  appObj.submittedTaskIds = submittedTaskIds;
+
+  return appObj;
 };
 
 export const transitionStatus = async (applicationId, newStatus) => {

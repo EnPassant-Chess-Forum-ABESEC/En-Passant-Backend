@@ -12,5 +12,10 @@ export const findSubmission = async (applicationId, taskId) => {
 };
 
 export const findSubmissionsByApplicationId = async (applicationId) => {
-  return Submission.find({ applicationId }).lean();
+  return Submission.find({ applicationId })
+    .populate({
+      path: "taskId",
+      populate: { path: "departmentId" },
+    })
+    .lean();
 };
