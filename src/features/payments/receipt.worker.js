@@ -64,7 +64,7 @@ const processReceiptJob = async (job) => {
     const cloudinaryResult = await uploadFile(pdfBuffer, {
       folder: "en-passant/receipts",
       resource_type: "raw",
-      public_id: `receipt_${payment._id}`,
+      public_id: `receipt_${payment._id}.pdf`,
     });
 
     payment.receiptPublicId = cloudinaryResult.public_id;
