@@ -38,13 +38,6 @@ export const updateApplication = async (id, updateData, session) => {
   });
 };
 
-export const findExpiredPendingPayments = async (cutoffDate) => {
-  return Recruitment.find({
-    status: APPLICATION_STATUS.PAYMENT_PENDING,
-    createdAt: { $lt: cutoffDate },
-  });
-};
-
 export const deleteApplication = async (id) => {
   return Recruitment.findByIdAndDelete(id);
 };

@@ -2,8 +2,6 @@ import "dotenv/config";
 import app from "./app.js";
 import { initSyncWorker } from "./features/sync/sync.worker.js";
 import { initSyncScheduler } from "./features/sync/sync.scheduler.js";
-import { initRecruitmentScheduler } from "./features/recruitment/recruitment.scheduler.js";
-import { initRecruitmentWorker } from "./features/recruitment/recruitment.worker.js";
 import { initEmailWorker } from "./features/email/email.worker.js";
 import { initReceiptWorker } from "./features/payments/receipt.worker.js";
 
@@ -11,8 +9,6 @@ import { initReceiptWorker } from "./features/payments/receipt.worker.js";
 
 initSyncWorker();
 initSyncScheduler();
-initRecruitmentScheduler();
-initRecruitmentWorker();
 initEmailWorker();
 initReceiptWorker();
 
