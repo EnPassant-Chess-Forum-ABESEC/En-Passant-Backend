@@ -88,20 +88,14 @@ export const razorpayWebhook = async (req, res, next) => {
       const applicationId = payment.notes?.applicationId;
 
       if (applicationId) {
-        const session = await mongoose.startSession();
-        session.startTransaction();
-
         try {
-          await handleSuccessfulPayment(applicationId, paymentId, session);
+          await handleSuccessfulPayment(applicationId, paymentId);
 
           const updatedPayment = await paymentRepo.updatePaymentStatus(
             orderId,
             "SUCCESS",
-            paymentId,
-            session,
+            paymentId
           );
-
-          await session.commitTransaction();
 
           if (updatedPayment) {
             import("./receipt.queue.js").then((module) => {
@@ -109,10 +103,7 @@ export const razorpayWebhook = async (req, res, next) => {
             });
           }
         } catch (error) {
-          await session.abortTransaction();
           throw error;
-        } finally {
-          await session.endSession();
         }
       } else {
         console.warn(

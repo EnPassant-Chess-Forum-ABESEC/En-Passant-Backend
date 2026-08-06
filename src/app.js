@@ -12,6 +12,7 @@ import paymentRoutes from "./features/payments/payment.routes.js";
 import submissionRoutes from "./features/submissions/submission.routes.js";
 import adminRoutes from "./features/admin/admin.routes.js";
 import eventRoutes from "./features/events/event.routes.js";
+import webhookRoutes from "./features/webhooks/webhook.routes.js";
 
 const app = express();
 
@@ -50,6 +51,7 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/submissions", submissionRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/events", eventRoutes);
+app.use("/api/webhooks", webhookRoutes);
 
 app.use(errorHandler);
 

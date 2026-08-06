@@ -302,36 +302,22 @@ export const verifyPayment = async (req, res, next) => {
     }
 
     if (status === "SUCCESS") {
-      const session = await mongoose.startSession();
-      session.startTransaction();
-
-      try {
         await handleSuccessfulPayment(
           payment.applicationId,
-          payment.utr || payment.gatewayOrderId,
-          session,
+          payment.utr || payment.gatewayOrderId
         );
 
         const updatedPayment = await paymentRepo.updatePaymentStatus(
           payment.gatewayOrderId,
           "SUCCESS",
-          payment.utr || "MANUAL_VERIFIED",
-          session,
+          payment.utr || "MANUAL_VERIFIED"
         );
-
-        await session.commitTransaction();
 
         if (updatedPayment) {
           import("../payments/receipt.queue.js").then((module) => {
             module.enqueueReceiptGeneration(updatedPayment._id);
           });
         }
-      } catch (error) {
-        await session.abortTransaction();
-        throw error;
-      } finally {
-        await session.endSession();
-      }
     } else if (status === "FAILED") {
       await paymentRepo.updatePaymentStatus(
         payment.gatewayOrderId,
