@@ -225,3 +225,23 @@ export const getAllPayments = async (pageSize, pageNumber) => {
     throw new Error(`getAllPayments failed: ${error.message}`);
   }
 };
+
+import { generateApplicationsExcel, generatePaymentsExcel } from "../../utils/excel.util.js";
+
+export const exportApplicationsAsExcel = async (filters) => {
+  try {
+    const applications = await getAllApplications(filters);
+    return await generateApplicationsExcel(applications);
+  } catch (error) {
+    throw new Error(`exportApplicationsAsExcel failed: ${error.message}`);
+  }
+};
+
+export const exportPaymentsAsExcel = async () => {
+  try {
+    const payments = await paymentRepo.getAllPaymentsForExport();
+    return await generatePaymentsExcel(payments);
+  } catch (error) {
+    throw new Error(`exportPaymentsAsExcel failed: ${error.message}`);
+  }
+};

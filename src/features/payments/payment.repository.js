@@ -33,6 +33,12 @@ export const getAllPayments = async (pageSize = 10, pageNumber = 1) => {
     .skip((Number(pageNumber) - 1) * Number(pageSize));
 };
 
+export const getAllPaymentsForExport = async () => {
+  return Payment.find()
+    .populate("userId", "userName collegeEmail phoneNumber")
+    .sort({ createdAt: -1 });
+};
+
 export const calculateTotalRevenue = async () => {
   const result = await Payment.aggregate([
     { $match: { status: "SUCCESS" } },

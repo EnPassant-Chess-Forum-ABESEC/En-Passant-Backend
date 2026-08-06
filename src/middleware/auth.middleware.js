@@ -41,11 +41,19 @@ export const userAuth = async (req, res, next) => {
         }
       }
 
+      const phoneNumbers = clerkUser.phoneNumbers || [];
+      const phoneNumberObj =
+        phoneNumbers.find(
+          (phone) => phone.id === clerkUser.primaryPhoneNumberId,
+        ) || phoneNumbers[0];
+      const phoneNumber = phoneNumberObj?.phoneNumber;
+
       if (!dbUser) {
         dbUser = await User.create({
           clerkId: userId,
           userName: fullName,
           collegeEmail: email,
+          phoneNumber: phoneNumber,
           profilePictureUrl: clerkUser.imageUrl,
         });
 

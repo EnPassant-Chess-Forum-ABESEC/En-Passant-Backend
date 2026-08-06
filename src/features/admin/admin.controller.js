@@ -22,6 +22,31 @@ export const getAllApplications = async (req, res, next) => {
   }
 };
 
+export const exportApplications = async (req, res, next) => {
+  const { status, departmentId, year } = req.query;
+  try {
+    const excelBuffer = await adminService.exportApplicationsAsExcel({
+      status,
+      departmentId,
+      year: year ? Number(year) : undefined,
+    });
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=" +
+        `applications_export_${new Date().getTime()}.xlsx`,
+    );
+
+    return res.status(200).send(excelBuffer);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getApplicationById = async (req, res, next) => {
   const { id } = req.params;
 
@@ -236,6 +261,25 @@ export const getAllPayments = async (req, res, next) => {
   }
 };
 
+export const exportPayments = async (req, res, next) => {
+  try {
+    const excelBuffer = await adminService.exportPaymentsAsExcel();
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=payments_export_${new Date().getTime()}.xlsx`,
+    );
+
+    return res.status(200).send(excelBuffer);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const verifyPayment = async (req, res, next) => {
   const { id } = req.params;
   const { status } = req.body;
@@ -243,11 +287,18 @@ export const verifyPayment = async (req, res, next) => {
   try {
     const payment = await paymentRepo.getPaymentById(id);
     if (!payment) {
-      return res.status(404).json({ success: false, message: "Payment not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Payment not found" });
     }
 
     if (payment.status !== "PENDING") {
-      return res.status(400).json({ success: false, message: `Payment is already ${payment.status}` });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: `Payment is already ${payment.status}`,
+        });
     }
 
     if (status === "SUCCESS") {
@@ -255,13 +306,17 @@ export const verifyPayment = async (req, res, next) => {
       session.startTransaction();
 
       try {
-        await handleSuccessfulPayment(payment.applicationId, payment.utr || payment.gatewayOrderId, session);
+        await handleSuccessfulPayment(
+          payment.applicationId,
+          payment.utr || payment.gatewayOrderId,
+          session,
+        );
 
         const updatedPayment = await paymentRepo.updatePaymentStatus(
           payment.gatewayOrderId,
           "SUCCESS",
           payment.utr || "MANUAL_VERIFIED",
-          session
+          session,
         );
 
         await session.commitTransaction();
@@ -278,7 +333,11 @@ export const verifyPayment = async (req, res, next) => {
         await session.endSession();
       }
     } else if (status === "FAILED") {
-      await paymentRepo.updatePaymentStatus(payment.gatewayOrderId, "FAILED", null);
+      await paymentRepo.updatePaymentStatus(
+        payment.gatewayOrderId,
+        "FAILED",
+        null,
+      );
     }
 
     return res.status(200).json({

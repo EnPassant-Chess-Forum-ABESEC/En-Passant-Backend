@@ -84,6 +84,12 @@ const userSchema = new mongoose.Schema(
       default: null,
       trim: true,
     },
+    
+    phoneNumber: {
+      type: String,
+      default: null,
+      trim: true,
+    },
 
     year: {
       type: Number,

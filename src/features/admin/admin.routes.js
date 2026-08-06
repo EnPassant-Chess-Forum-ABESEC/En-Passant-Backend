@@ -15,6 +15,8 @@ import {
   updateUserRole,
   getAllPayments,
   verifyPayment,
+  exportApplications,
+  exportPayments,
 } from "./admin.controller.js";
 import { adminAuth } from "../../middleware/auth.middleware.js";
 import { validate } from "../../middleware/validate.middleware.js";
@@ -40,6 +42,11 @@ router.get(
   adminAuth,
   validate(getAllApplicationsSchema),
   getAllApplications,
+);
+router.get(
+  "/applications/export",
+  adminAuth,
+  exportApplications,
 );
 router.get(
   "/applications/:id",
@@ -92,6 +99,7 @@ router.patch(
 
 // payments
 router.get("/payments", adminAuth, getAllPayments);
+router.get("/payments/export", adminAuth, exportPayments);
 router.patch("/payments/:id/verify", adminAuth, validate(verifyPaymentSchema), verifyPayment);
 
 // stats
