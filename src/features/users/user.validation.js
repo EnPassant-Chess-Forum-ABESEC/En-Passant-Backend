@@ -4,6 +4,7 @@ export const updateProfileSchema = z.object({
   body: z.object({
     branch: z.string().min(2, "Branch name is too short").optional(),
     year: z.number().int().min(1).max(5).optional(),
+    collegeEmail: z.string().email("Invalid email format").optional().or(z.literal("")),
     chessAccounts: z
       .object({
         chessCom: z
@@ -25,6 +26,7 @@ export const onboardingSchema = z.object({
   body: z.object({
     branch: z.string().min(2, "Branch name is required"),
     year: z.number().int().min(1).max(5),
+    collegeEmail: z.string().email("Invalid email format").optional().or(z.literal("")),
     chessAccounts: z
       .object({
         chessCom: z
