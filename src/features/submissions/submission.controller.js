@@ -22,35 +22,52 @@ export const uploadTaskSubmission = async (req, res, next) => {
 
     if (
       !application ||
-      application.status !== "ACTIVE" ||
+      (application.status !== "ACTIVE" && application.status !== "TASK_SUBMITTED") ||
       application._id.toString() !== applicationId
-    )
-      throw new Error("application not found or is not active");
+    ) {
+      return res.status(400).json({ success: false, message: "Application not found or is not active" });
+    }
 
     const task = await taskRepo.findById(taskId);
 
-    if (!task) throw new Error("Task not found");
+    if (!task) {
+      return res.status(404).json({ success: false, message: "Task not found" });
+    }
+
+    const preferredId = application.preferredDepartmentId?._id?.toString() || application.preferredDepartmentId?.toString();
+    const secondaryIds = application.secondaryDepartmentId?.map(d => d._id?.toString() || d.toString()) || [];
+    const taskDeptId = task.departmentId?._id?.toString() || task.departmentId?.toString();
+
+    if (taskDeptId !== preferredId && !secondaryIds.includes(taskDeptId)) {
+      return res.status(400).json({ success: false, message: "You have not applied for this department" });
+    }
 
     const { submission } = task;
 
-    if (files.length && !submission.acceptsFiles)
-      throw new Error("File upload is not accepted for this task");
+    if (files.length && !submission.acceptsFiles) {
+      return res.status(400).json({ success: false, message: "File upload is not accepted for this task" });
+    }
 
-    if (links && !submission.acceptsLinks)
-      throw new Error("Link submission is not accepted for this task");
+    if (links && !submission.acceptsLinks) {
+      return res.status(400).json({ success: false, message: "Link submission is not accepted for this task" });
+    }
 
-    if (text && !submission.acceptsText)
-      throw new Error("Text submission is not accepted for this task");
+    if (text && !submission.acceptsText) {
+      return res.status(400).json({ success: false, message: "Text submission is not accepted for this task" });
+    }
 
-    if (files.length > submission.maxFiles)
-      throw new Error("Number of files exceed the maximum upload limit");
+    if (files.length > submission.maxFiles) {
+      return res.status(400).json({ success: false, message: "Number of files exceed the maximum upload limit" });
+    }
 
     for (const file of files) {
-      if (file.size > submission.maxFileSize)
-        throw new Error("File size exceeds the maximum upload limit");
+      if (file.size > submission.maxFileSize) {
+        return res.status(400).json({ success: false, message: "File size exceeds the maximum upload limit" });
+      }
 
-      if (!isValidMimeType(file.mimetype, submission.fileCategory))
-        throw new Error("Invalid file type for this task");
+      if (!isValidMimeType(file.mimetype, submission.fileCategory)) {
+        return res.status(400).json({ success: false, message: "Invalid file type for this task" });
+      }
     }
 
     const uploadedFiles = [];
