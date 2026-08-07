@@ -27,7 +27,7 @@ export const getPaymentById = async (id) => {
 
 export const getAllPayments = async (pageSize = 10, pageNumber = 1) => {
   return Payment.find()
-    .populate("userId", "userName collegeEmail")
+    .populate("userId", "userName email collegeEmail")
     .sort({ createdAt: -1 })
     .limit(Number(pageSize))
     .skip((Number(pageNumber) - 1) * Number(pageSize));
@@ -35,7 +35,7 @@ export const getAllPayments = async (pageSize = 10, pageNumber = 1) => {
 
 export const getAllPaymentsForExport = async () => {
   return Payment.find()
-    .populate("userId", "userName collegeEmail phoneNumber")
+    .populate("userId", "userName email collegeEmail phoneNumber")
     .sort({ createdAt: -1 });
 };
 

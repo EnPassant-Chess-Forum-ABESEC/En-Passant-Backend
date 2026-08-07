@@ -32,7 +32,7 @@ export const userAuth = async (req, res, next) => {
         "Unnamed User";
 
       if (email) {
-        dbUser = await User.findOne({ collegeEmail: email });
+        dbUser = await User.findOne({ email: email });
         if (dbUser) {
           return res.status(403).json({
             message:
@@ -52,7 +52,7 @@ export const userAuth = async (req, res, next) => {
         dbUser = await User.create({
           clerkId: userId,
           userName: fullName,
-          collegeEmail: email,
+          email: email,
           phoneNumber: phoneNumber,
           profilePictureUrl: clerkUser.imageUrl,
         });

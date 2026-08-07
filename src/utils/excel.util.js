@@ -65,7 +65,7 @@ export const generateApplicationsExcel = async (applications) => {
 
   applications.forEach((app, index) => {
     const name = app.userId?.userName || "N/A";
-    const email = app.userId?.collegeEmail || "N/A";
+    const email = app.userId?.email || "N/A";
     const phone = app.userId?.phoneNumber || "N/A";
     const primaryDept = app.preferredDepartmentId?.name || "N/A";
     const secondaryDepts =
@@ -237,7 +237,7 @@ export const generatePaymentsExcel = async (payments) => {
 
   payments.forEach((payment, index) => {
     const name = payment.userId?.userName || "N/A";
-    const email = payment.userId?.collegeEmail || "N/A";
+    const email = payment.userId?.email || "N/A";
     const phone = payment.userId?.phoneNumber || "N/A";
     const utr =
       payment.utr ||

@@ -71,10 +71,16 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
-    collegeEmail: {
+    email: {
       type: String,
       required: true,
       unique: true,
+      trim: true,
+      lowercase: true,
+    },
+
+    collegeEmail: {
+      type: String,
       trim: true,
       lowercase: true,
     },
@@ -122,6 +128,22 @@ const userSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+  },
+);
+
+userSchema.index(
+  { collegeEmail: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { collegeEmail: { $type: "string" } },
+  },
+);
+
+userSchema.index(
+  { phoneNumber: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { phoneNumber: { $type: "string" } },
   },
 );
 

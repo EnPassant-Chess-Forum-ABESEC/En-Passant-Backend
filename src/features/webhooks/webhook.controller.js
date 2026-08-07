@@ -69,14 +69,14 @@ export const clerkWebhook = async (req, res, next) => {
         let dbUser = null;
 
         if (email) {
-          dbUser = await User.findOne({ collegeEmail: email });
+          dbUser = await User.findOne({ email: email });
         }
 
         if (!dbUser) {
           dbUser = await User.create({
             clerkId: id,
             userName: fullName,
-            collegeEmail: email,
+            email: email,
             phoneNumber: phoneNumber,
             profilePictureUrl: imageUrl,
           });
@@ -100,7 +100,7 @@ export const clerkWebhook = async (req, res, next) => {
           { clerkId: id },
           {
             userName: fullName,
-            collegeEmail: email,
+            email: email,
             phoneNumber: phoneNumber,
             profilePictureUrl: imageUrl,
           },

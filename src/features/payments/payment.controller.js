@@ -234,7 +234,7 @@ export const submitManualPayment = async (req, res, next) => {
     import("../email/email.queue.js").then((module) => {
       module.enqueuePaymentPendingEmail(
         req.user._id,
-        req.user.collegeEmail,
+        req.user.email,
         req.user.userName,
       );
     });

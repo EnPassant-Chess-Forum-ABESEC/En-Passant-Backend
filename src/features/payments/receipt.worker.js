@@ -32,7 +32,7 @@ const processReceiptJob = async (job) => {
       paymentId: payment._id.toString(),
       date: new Date(payment.createdAt).toLocaleDateString(),
       userName: user.userName,
-      userEmail: user.collegeEmail,
+      userEmail: user.email,
       purpose:
         payment.purpose === "recruitment" ? "Recruitment Fee" : "Event Fee",
       amount: payment.amount,
@@ -74,7 +74,7 @@ const processReceiptJob = async (job) => {
     import("../email/email.queue.js").then((module) => {
       module.enqueuePaymentSuccessEmail(
         user._id,
-        user.collegeEmail,
+        user.email,
         user.userName,
         receiptLink,
       );

@@ -19,7 +19,7 @@ export const getRecruitmentById = async (recruitmentid) => {
 
 export const findAllRecruitment = async (filter) => {
   return Recruitment.find(filter)
-    .populate("userId", "userName collegeEmail phoneNumber")
+    .populate("userId", "userName email collegeEmail phoneNumber")
     .populate("preferredDepartmentId secondaryDepartmentId");
 };
 
