@@ -1,14 +1,13 @@
 import Settings from "./settings.model.js";
 
-// Helper to get or create the single settings document
 const getSettingsDoc = async () => {
   let settings = await Settings.findOne();
   if (!settings) {
     settings = await Settings.create({
       applicationStartDate: new Date(),
-      applicationEndDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // +1 week
-      taskRevealDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // +1 week
-      submissionEndDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // +2 weeks
+      applicationEndDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      taskRevealDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      submissionEndDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
     });
   }
   return settings;
@@ -42,10 +41,13 @@ export const updateRecruitmentPhases = async (req, res, next) => {
 
     let settings = await getSettingsDoc();
 
-    settings.applicationStartDate = applicationStartDate || settings.applicationStartDate;
-    settings.applicationEndDate = applicationEndDate || settings.applicationEndDate;
+    settings.applicationStartDate =
+      applicationStartDate || settings.applicationStartDate;
+    settings.applicationEndDate =
+      applicationEndDate || settings.applicationEndDate;
     settings.taskRevealDate = taskRevealDate || settings.taskRevealDate;
-    settings.submissionEndDate = submissionEndDate || settings.submissionEndDate;
+    settings.submissionEndDate =
+      submissionEndDate || settings.submissionEndDate;
 
     await settings.save();
 
