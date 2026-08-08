@@ -1,9 +1,21 @@
 import * as recruitmentService from "./recruitment.service.js";
+import Settings from "../settings/settings.model.js";
 
 export const createApplication = async (req, res, next) => {
   const userId = req.user._id;
 
   try {
+    const settings = await Settings.findOne();
+    if (settings) {
+      const now = new Date();
+      if (now < settings.applicationStartDate) {
+        return res.status(403).json({ success: false, message: "Applications have not opened yet" });
+      }
+      if (now > settings.applicationEndDate) {
+        return res.status(403).json({ success: false, message: "Applications have closed" });
+      }
+    }
+
     const newApplication = await recruitmentService.createApplication(
       userId,
       req.body,

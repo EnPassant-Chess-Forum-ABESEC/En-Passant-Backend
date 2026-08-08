@@ -1,4 +1,5 @@
 import * as submissionRepo from "./submission.repository.js";
+import Settings from "../settings/settings.model.js";
 import {
   uploadFile,
   isValidMimeType,
@@ -15,6 +16,11 @@ export const uploadTaskSubmission = async (req, res, next) => {
   const currentYear = new Date().getFullYear();
 
   try {
+    const settings = await Settings.findOne();
+    if (settings && new Date() > settings.submissionEndDate) {
+      return res.status(403).json({ success: false, message: "Submission window has closed" });
+    }
+
     const application = await recruitmentService.getMyApplication(
       req.user._id,
       currentYear,

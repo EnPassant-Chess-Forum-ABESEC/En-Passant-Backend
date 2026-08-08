@@ -1,4 +1,5 @@
 import * as taskRepo from "./task.repository.js";
+import Settings from "../settings/settings.model.js";
 
 export const getAllTasksByDepartment = async (req, res, next) => {
   const { departmentId, year } = req.query;
@@ -10,12 +11,32 @@ export const getAllTasksByDepartment = async (req, res, next) => {
       throw new Error("year is required");
     }
 
-    const tasks = await taskRepo.findByDepartmentAndYear(
+    let tasks = await taskRepo.findByDepartmentAndYear(
       departmentId,
       Number(year),
     );
 
-    return res.status(200).json({ tasks });
+    const settings = await Settings.findOne();
+    let isRevealed = true;
+    let revealDate = null;
+    
+    if (settings) {
+      revealDate = settings.taskRevealDate;
+      if (new Date() < settings.taskRevealDate) {
+        isRevealed = false;
+        tasks = tasks.map(task => {
+          const t = task.toObject ? task.toObject() : { ...task };
+          delete t.summary;
+          delete t.instructions;
+          delete t.assets;
+          delete t.submission;
+          t.title = "Task Details Hidden";
+          return t;
+        });
+      }
+    }
+
+    return res.status(200).json({ tasks, isRevealed, revealDate });
   } catch (error) {
     next(error);
   }
@@ -28,8 +49,29 @@ export const getAllTasksForYear = async (req, res, next) => {
       throw new Error("year is required");
     }
 
-    const tasks = await taskRepo.findAllByYear(Number(year));
-    return res.status(200).json({ tasks });
+    let tasks = await taskRepo.findAllByYear(Number(year));
+
+    const settings = await Settings.findOne();
+    let isRevealed = true;
+    let revealDate = null;
+    
+    if (settings) {
+      revealDate = settings.taskRevealDate;
+      if (new Date() < settings.taskRevealDate) {
+        isRevealed = false;
+        tasks = tasks.map(task => {
+          const t = task.toObject ? task.toObject() : { ...task };
+          delete t.summary;
+          delete t.instructions;
+          delete t.assets;
+          delete t.submission;
+          t.title = "Task Details Hidden";
+          return t;
+        });
+      }
+    }
+
+    return res.status(200).json({ tasks, isRevealed, revealDate });
   } catch (error) {
     next(error);
   }

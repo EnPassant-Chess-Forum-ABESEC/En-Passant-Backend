@@ -13,6 +13,7 @@ import submissionRoutes from "./features/submissions/submission.routes.js";
 import adminRoutes from "./features/admin/admin.routes.js";
 import eventRoutes from "./features/events/event.routes.js";
 import webhookRoutes from "./features/webhooks/webhook.routes.js";
+import settingsRoutes from "./features/settings/settings.routes.js";
 
 const app = express();
 
@@ -52,6 +53,7 @@ app.use("/api/submissions", submissionRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/webhooks", webhookRoutes);
+app.use("/api/settings", settingsRoutes);
 
 app.use(errorHandler);
 
