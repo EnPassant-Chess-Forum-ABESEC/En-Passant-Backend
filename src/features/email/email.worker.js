@@ -17,9 +17,12 @@ const processEmailJob = async (job) => {
 
     const templatePath = path.join(__dirname, "templates", "welcome.ejs");
 
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+    const profileUrl = `${frontendUrl.replace(/\/$/, "")}/profile`;
+
     const html = await ejs.renderFile(templatePath, {
       userName,
-      loginUrl: "http://localhost:3000/login",
+      profileUrl,
       year: new Date().getFullYear(),
     });
 
@@ -28,23 +31,38 @@ const processEmailJob = async (job) => {
 
     await sendEmail({ to: email, subject, text, html });
   } else if (name === "send-payment-pending-email") {
-    const { email, name: userName } = data;
-    
+    const { email, name: userName, primaryDept, secondaryDept } = data;
+
     const subject = "Payment Under Review - En-Passant Recruitment";
-    const text = `Hi ${userName},\n\nWe have received your manual payment details. Your payment is currently under review by our administrators.\n\nYou will receive your official receipt once the payment is verified. You can also check your application status on your dashboard.`;
-    
-    const templatePath = path.join(__dirname, "templates", "payment_pending.ejs");
-    const html = await ejs.renderFile(templatePath, { userName });
+    const text = `Hi ${userName},\n\nWe have received your payment details. Your payment is currently under review by our administrators.\n\nYou will receive your official receipt once the payment is verified. You can also check your application status on your dashboard.`;
+
+    const templatePath = path.join(
+      __dirname,
+      "templates",
+      "payment_pending.ejs",
+    );
+    const html = await ejs.renderFile(templatePath, { userName, primaryDept, secondaryDept });
 
     await sendEmail({ to: email, subject, text, html });
   } else if (name === "send-payment-success-email") {
     const { email, name: userName, receiptUrl } = data;
-    
+
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+    const recruitmentDashboardUrl = `${frontendUrl.replace(/\/$/, "")}/recruitment/dashboard`;
+
     const subject = "Payment Verified & Receipt - En-Passant Recruitment";
-    const text = `Hi ${userName},\n\nYour payment has been successfully verified! You can now proceed with your recruitment tasks.\n\nYou can download your official receipt here: ${receiptUrl}`;
-    
-    const templatePath = path.join(__dirname, "templates", "payment_success.ejs");
-    const html = await ejs.renderFile(templatePath, { userName, receiptUrl });
+    const text = `Hi ${userName},\n\nYour payment has been successfully verified! You can now proceed with your recruitment tasks.\n\nRecruitment Dashboard: ${recruitmentDashboardUrl}\n\nYou can download your official receipt here: ${receiptUrl}`;
+
+    const templatePath = path.join(
+      __dirname,
+      "templates",
+      "payment_success.ejs",
+    );
+    const html = await ejs.renderFile(templatePath, {
+      userName,
+      receiptUrl,
+      recruitmentDashboardUrl,
+    });
 
     await sendEmail({ to: email, subject, text, html });
   }

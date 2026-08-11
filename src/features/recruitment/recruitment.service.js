@@ -7,7 +7,16 @@ export const createApplication = async (userId, data) => {
   const existingApplication =
     await recruitmentRepo.getRecruitmentByUserIdAndYear(userId, currentYear);
 
-  if (existingApplication) throw new Error("Application already exists");
+  if (existingApplication) {
+    if (
+      existingApplication.status === "DRAFT" ||
+      existingApplication.status === "PAYMENT_PENDING" ||
+      existingApplication.status === "PAYMENT_FAILED"
+    ) {
+      return await recruitmentRepo.updateApplication(existingApplication._id, data);
+    }
+    throw new Error("Application already exists and cannot be modified.");
+  }
 
   return await recruitmentRepo.createRecruitment({
     userId,

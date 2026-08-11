@@ -1,9 +1,30 @@
-<div style="font-family: sans-serif; color: #333; line-height: 1.5; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <h2 style="color: #1E3A8A;">Payment Received & Under Review</h2>
+<div
+  style="
+    font-family: sans-serif;
+    color: #333;
+    line-height: 1.5;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+  "
+>
+  <h2 style="color: #1e3a8a">Payment Received & Under Review</h2>
   <p>Hi <strong><%= userName %></strong>,</p>
-  <p>We have successfully received your manual payment details for the En-Passant Recruitment.</p>
-  <p>Your payment is currently under review by our administrators. Once your payment is verified, we will email you your official receipt and your application status will be updated.</p>
+  <p>
+    We have successfully received your payment details for the En-Passant
+    Recruitment.
+  </p>
+  <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 15px 0;">
+    <p style="margin: 0 0 10px 0; font-weight: bold;">Your Application Details:</p>
+    <p style="margin: 5px 0;"><strong>Primary Department:</strong> <%= primaryDept || 'N/A' %></p>
+    <p style="margin: 5px 0;"><strong>Secondary Department:</strong> <%= secondaryDept || 'N/A' %></p>
+  </div>
+  <p>
+    Your payment is currently under review by our administrators. Once your
+    payment is verified, we will email you your official receipt and your
+    application status will be updated.
+  </p>
   <p>If you have any questions, feel free to reply to this email.</p>
-  <br/>
-  <p>Best regards,<br/><strong>En-Passant Team</strong></p>
+  <br />
+  <p>Best regards,<br /><strong>En-Passant Team</strong></p>
 </div>

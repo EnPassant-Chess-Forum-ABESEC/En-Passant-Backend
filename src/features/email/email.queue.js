@@ -27,12 +27,14 @@ export const enqueueWelcomeEmail = async (userId, email, name) => {
   }
 };
 
-export const enqueuePaymentPendingEmail = async (userId, email, name) => {
+export const enqueuePaymentPendingEmail = async (userId, email, name, primaryDept, secondaryDept) => {
   try {
     await emailQueue.add("send-payment-pending-email", {
       userId,
       email,
       name,
+      primaryDept,
+      secondaryDept,
     });
     console.log(`Enqueued payment pending email for user ${userId}`);
   } catch (error) {

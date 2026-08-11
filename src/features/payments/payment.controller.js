@@ -1,6 +1,7 @@
 import {
   getMyApplication,
   handleSuccessfulPayment,
+  transitionStatus,
 } from "../recruitment/recruitment.service.js";
 import { createOrder } from "./gateways/razorpay.gateway.js";
 import Razorpay from "razorpay";
@@ -231,11 +232,15 @@ export const submitManualPayment = async (req, res, next) => {
       paymentScreenshotUrl: uploadResult.secure_url,
     });
 
+    await transitionStatus(application._id, "PAYMENT_PENDING");
+
     import("../email/email.queue.js").then((module) => {
       module.enqueuePaymentPendingEmail(
         req.user._id,
         req.user.email,
         req.user.userName,
+        application.preferredDepartmentId?.name,
+        application.secondaryDepartmentId?.name
       );
     });
 
