@@ -57,7 +57,8 @@ export const getLeaderboard = async (control, limit = 20) => {
 
       return {
         userId: user?.clerkId,
-        username: user?.username,
+        userName: user?.userName,
+        profilePictureUrl: user?.profilePictureUrl,
         chessComUsername: user?.chessAccounts?.chessCom?.username,
         branch: user?.branch,
         year: user?.year,
