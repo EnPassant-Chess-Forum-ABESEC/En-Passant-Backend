@@ -116,6 +116,33 @@ export const clerkWebhook = async (req, res, next) => {
       }
     }
 
+    if (eventType === "user.deleted") {
+      const deletedUser = await User.findOneAndDelete({ clerkId: id });
+      if (deletedUser) {
+        const { default: Recruitment } =
+          await import("../recruitment/recruitment.model.js");
+        const { default: Submission } =
+          await import("../submissions/submission.model.js");
+        const { default: Payment } =
+          await import("../payments/payment.model.js");
+
+        const applications = await Recruitment.find({
+          userId: deletedUser._id,
+        });
+        const appIds = applications.map((app) => app._id);
+
+        if (appIds.length > 0) {
+          await Submission.deleteMany({ applicationId: { $in: appIds } });
+        }
+        await Recruitment.deleteMany({ userId: deletedUser._id });
+        await Payment.deleteMany({ userId: deletedUser._id });
+
+        console.log(
+          `[Webhook] Deleted user ${deletedUser.email} and all linked applications/payments.`,
+        );
+      }
+    }
+
     return res.status(200).json({
       success: true,
       message: "Webhook received",
