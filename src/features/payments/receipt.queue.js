@@ -1,8 +1,8 @@
 import { Queue } from "bullmq";
-import { redisConnection } from "../../redis/redis.client.js";
+import { createRedisConnection } from "../../redis/redis.client.js";
 
 export const receiptQueue = new Queue("receipt-queue", {
-  connection: redisConnection,
+  connection: createRedisConnection(),
   defaultJobOptions: {
     attempts: 3,
     backoff: {

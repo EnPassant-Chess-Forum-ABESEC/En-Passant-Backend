@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { Log } from "../features/logs/log.model.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,15 +20,27 @@ const formatMessage = (args) => {
     .join(" ");
 };
 
+const saveToDb = async (level, message) => {
+  try {
+    await Log.create({ level, message, source: "worker" });
+  } catch (err) {
+    console.error("Failed to save log to DB:", err.message);
+  }
+};
+
 export const workerLogger = {
   log: (...args) => {
-    const msg = `[${new Date().toISOString()}] [INFO] ${formatMessage(args)}\n`;
+    const formatted = formatMessage(args);
+    const msg = `[${new Date().toISOString()}] [INFO] ${formatted}\n`;
     console.log(...args); // Keep console output
     logStream.write(msg);
+    saveToDb("INFO", formatted);
   },
   error: (...args) => {
-    const msg = `[${new Date().toISOString()}] [ERROR] ${formatMessage(args)}\n`;
+    const formatted = formatMessage(args);
+    const msg = `[${new Date().toISOString()}] [ERROR] ${formatted}\n`;
     console.error(...args);
     logStream.write(msg);
+    saveToDb("ERROR", formatted);
   },
 };

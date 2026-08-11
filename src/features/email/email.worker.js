@@ -1,6 +1,6 @@
 import { workerLogger } from "../../utils/logger.js";
 import { Worker } from "bullmq";
-import { redisConnection } from "../../redis/redis.client.js";
+import { createRedisConnection } from "../../redis/redis.client.js";
 import { sendEmail } from "./email.service.js";
 
 import ejs from "ejs";
@@ -71,7 +71,7 @@ const processEmailJob = async (job) => {
 
 export const initEmailWorker = () => {
   const emailWorker = new Worker("email-queue", processEmailJob, {
-    connection: redisConnection,
+    connection: createRedisConnection(),
     concurrency: 5,
   });
 

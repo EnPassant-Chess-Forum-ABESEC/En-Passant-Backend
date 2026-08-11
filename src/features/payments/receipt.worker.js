@@ -1,6 +1,6 @@
 import { workerLogger } from "../../utils/logger.js";
 import { Worker } from "bullmq";
-import { redisConnection } from "../../redis/redis.client.js";
+import { createRedisConnection } from "../../redis/redis.client.js";
 import Payment from "./payment.model.js";
 
 import ejs from "ejs";
@@ -85,7 +85,7 @@ const processReceiptJob = async (job) => {
 
 export const initReceiptWorker = () => {
   const receiptWorker = new Worker("receipt-queue", processReceiptJob, {
-    connection: redisConnection,
+    connection: createRedisConnection(),
     concurrency: 2,
   });
 

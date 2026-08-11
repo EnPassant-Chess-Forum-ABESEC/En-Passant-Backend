@@ -1,9 +1,9 @@
 import { workerLogger } from "../../utils/logger.js";
 import { Queue } from "bullmq";
-import { redisConnection } from "../../redis/redis.client.js";
+import { createRedisConnection } from "../../redis/redis.client.js";
 
 export const syncQueue = new Queue("sync-queue", {
-  connection: redisConnection,
+  connection: createRedisConnection(),
 });
 
 export const enqueueSyncJob = async (userId, triggeredBy = "manual") => {

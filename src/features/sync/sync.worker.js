@@ -1,6 +1,6 @@
 import { workerLogger } from "../../utils/logger.js";
 import { Worker } from "bullmq";
-import { redisConnection } from "../../redis/redis.client.js";
+import { createRedisConnection } from "../../redis/redis.client.js";
 import { syncUserAccounts } from "./sync.engine.js";
 
 export const initSyncWorker = () => {
@@ -40,7 +40,7 @@ export const initSyncWorker = () => {
       }
     },
     {
-      connection: redisConnection,
+      connection: createRedisConnection(),
       concurrency: 5,
     },
   );
