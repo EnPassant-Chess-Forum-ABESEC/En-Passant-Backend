@@ -1,3 +1,4 @@
+import { workerLogger } from "../../utils/logger.js";
 import { Queue } from "bullmq";
 import { redisConnection } from "../../redis/redis.client.js";
 
@@ -14,7 +15,7 @@ export const enqueueSyncJob = async (userId, triggeredBy = "manual") => {
       removeOnFail: 100,
     },
   );
-  console.log(
+  workerLogger.log(
     `[Queue] Enqueued sync job for user ${userId} (trigger: ${triggeredBy})`,
   );
 };

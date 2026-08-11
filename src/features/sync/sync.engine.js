@@ -1,3 +1,4 @@
+import { workerLogger } from "../../utils/logger.js";
 import User from "../users/user.model.js";
 import { fetchChessComRatings } from "./adapters/chesscom.adapter.js";
 import { fetchLichessRatings } from "./adapters/lichess.adapter.js";
@@ -27,7 +28,7 @@ export const syncUserAccounts = async (userId) => {
       results.chessCom.status = "success";
       hasUpdates = true;
     } catch (error) {
-      console.error(
+      workerLogger.error(
         `[SyncEngine] Chess.com sync failed for user ${userId}:`,
         error.message,
       );
@@ -51,7 +52,7 @@ export const syncUserAccounts = async (userId) => {
       results.lichess.status = "success";
       hasUpdates = true;
     } catch (error) {
-      console.error(
+      workerLogger.error(
         `[SyncEngine] Lichess sync failed for user ${userId}:`,
         error.message,
       );
@@ -71,7 +72,7 @@ export const syncUserAccounts = async (userId) => {
         await import("../leaderboard/leaderboard.service.js");
       await updateUserLeaderboard(user);
     } catch (err) {
-      console.error(
+      workerLogger.error(
         `[SyncEngine] Failed to update leaderboard for user ${userId}:`,
         err.message,
       );

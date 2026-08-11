@@ -1,0 +1,5 @@
+[2026-08-11T19:22:22.575Z] [INFO] Email worker initialized
+[2026-08-11T19:22:22.580Z] [INFO] Receipt worker initialized
+[2026-08-11T19:22:34.881Z] [INFO] Email worker initialized
+[2026-08-11T19:22:34.883Z] [INFO] Receipt worker initialized
+[2026-08-11T19:23:09.410Z] [INFO] Email job 52 of type send-welcome-email completed successfully.

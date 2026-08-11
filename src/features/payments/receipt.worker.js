@@ -1,3 +1,4 @@
+import { workerLogger } from "../../utils/logger.js";
 import { Worker } from "bullmq";
 import { redisConnection } from "../../redis/redis.client.js";
 import Payment from "./payment.model.js";
@@ -67,7 +68,7 @@ const processReceiptJob = async (job) => {
     payment.receiptUrl = receiptLink;
     await payment.save();
 
-    console.log(
+    workerLogger.log(
       `Successfully generated and saved receipt to DB for payment ${payment._id}`,
     );
 
@@ -89,12 +90,12 @@ export const initReceiptWorker = () => {
   });
 
   receiptWorker.on("completed", (job) => {
-    console.log(`Receipt job ${job.id} completed successfully.`);
+    workerLogger.log(`Receipt job ${job.id} completed successfully.`);
   });
 
   receiptWorker.on("failed", (job, err) => {
-    console.error(`Receipt job ${job?.id} failed:`, err);
+    workerLogger.error(`Receipt job ${job?.id} failed:`, err);
   });
 
-  console.log("Receipt worker initialized");
+  workerLogger.log("Receipt worker initialized");
 };

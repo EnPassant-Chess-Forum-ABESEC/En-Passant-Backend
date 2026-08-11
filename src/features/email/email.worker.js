@@ -1,3 +1,4 @@
+import { workerLogger } from "../../utils/logger.js";
 import { Worker } from "bullmq";
 import { redisConnection } from "../../redis/redis.client.js";
 import { sendEmail } from "./email.service.js";
@@ -75,14 +76,14 @@ export const initEmailWorker = () => {
   });
 
   emailWorker.on("completed", (job) => {
-    console.log(
+    workerLogger.log(
       `Email job ${job.id} of type ${job.name} completed successfully.`,
     );
   });
 
   emailWorker.on("failed", (job, err) => {
-    console.error(`Email job ${job?.id} failed:`, err);
+    workerLogger.error(`Email job ${job?.id} failed:`, err);
   });
 
-  console.log("Email worker initialized");
+  workerLogger.log("Email worker initialized");
 };
