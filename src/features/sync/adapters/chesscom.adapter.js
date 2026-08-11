@@ -1,7 +1,12 @@
 export const fetchChessComRatings = async (username) => {
   const url = `https://api.chess.com/pub/player/${encodeURIComponent(username)}/stats`;
 
-  const response = await fetch(url);
+  const response = await fetch(url, {
+    headers: {
+      "User-Agent": "EnPassantApp (kaustubh.24b0101134@abes.ac.in)",
+    },
+    signal: AbortSignal.timeout(10000),
+  });
 
   if (!response.ok) {
     if (response.status === 404) {
