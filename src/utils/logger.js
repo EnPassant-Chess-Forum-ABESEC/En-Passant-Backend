@@ -1,18 +1,4 @@
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
 import { Log } from "../features/logs/log.model.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const logDir = path.join(__dirname, "../../logs");
-
-if (!fs.existsSync(logDir)) {
-  fs.mkdirSync(logDir, { recursive: true });
-}
-
-const logFile = path.join(logDir, "workers.log");
-const logStream = fs.createWriteStream(logFile, { flags: "a" });
 
 const formatMessage = (args) => {
   return args
@@ -31,16 +17,12 @@ const saveToDb = async (level, message) => {
 export const workerLogger = {
   log: (...args) => {
     const formatted = formatMessage(args);
-    const msg = `[${new Date().toISOString()}] [INFO] ${formatted}\n`;
-    console.log(...args); // Keep console output
-    logStream.write(msg);
+    console.log(`[${new Date().toISOString()}] [INFO] ${formatted}`);
     saveToDb("INFO", formatted);
   },
   error: (...args) => {
     const formatted = formatMessage(args);
-    const msg = `[${new Date().toISOString()}] [ERROR] ${formatted}\n`;
-    console.error(...args);
-    logStream.write(msg);
+    console.error(`[${new Date().toISOString()}] [ERROR] ${formatted}`);
     saveToDb("ERROR", formatted);
   },
 };
