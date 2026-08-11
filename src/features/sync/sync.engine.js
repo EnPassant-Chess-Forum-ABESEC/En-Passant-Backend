@@ -21,6 +21,9 @@ export const syncUserAccounts = async (userId) => {
       const ratings = await fetchChessComRatings(username);
 
       user.chessAccounts.chessCom.ratings = ratings;
+      user.chessAccounts.chessCom.status = "synced";
+      user.chessAccounts.chessCom.lastSync = new Date();
+      user.chessAccounts.chessCom.lastError = null;
       results.chessCom.status = "success";
       hasUpdates = true;
     } catch (error) {
@@ -28,8 +31,11 @@ export const syncUserAccounts = async (userId) => {
         `[SyncEngine] Chess.com sync failed for user ${userId}:`,
         error.message,
       );
+      user.chessAccounts.chessCom.status = "failed";
+      user.chessAccounts.chessCom.lastError = error.message;
       results.chessCom.status = "failed";
       results.chessCom.error = error.message;
+      hasUpdates = true;
     }
   }
 
@@ -39,6 +45,9 @@ export const syncUserAccounts = async (userId) => {
       const ratings = await fetchLichessRatings(username);
 
       user.chessAccounts.lichess.ratings = ratings;
+      user.chessAccounts.lichess.status = "synced";
+      user.chessAccounts.lichess.lastSync = new Date();
+      user.chessAccounts.lichess.lastError = null;
       results.lichess.status = "success";
       hasUpdates = true;
     } catch (error) {
@@ -46,13 +55,15 @@ export const syncUserAccounts = async (userId) => {
         `[SyncEngine] Lichess sync failed for user ${userId}:`,
         error.message,
       );
+      user.chessAccounts.lichess.status = "failed";
+      user.chessAccounts.lichess.lastError = error.message;
       results.lichess.status = "failed";
       results.lichess.error = error.message;
+      hasUpdates = true;
     }
   }
 
   if (hasUpdates) {
-    user.chessAccounts.lastSync = new Date();
     await user.save();
 
     try {
