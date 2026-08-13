@@ -22,7 +22,7 @@ export const getAllTasksByDepartment = async (req, res, next) => {
     
     if (settings) {
       revealDate = settings.taskRevealDate;
-      if (new Date() < settings.taskRevealDate) {
+      if (new Date() < settings.taskRevealDate && req.user?.role !== "admin") {
         isRevealed = false;
         tasks = tasks.map(task => {
           const t = task.toObject ? task.toObject() : { ...task };
@@ -57,7 +57,7 @@ export const getAllTasksForYear = async (req, res, next) => {
     
     if (settings) {
       revealDate = settings.taskRevealDate;
-      if (new Date() < settings.taskRevealDate) {
+      if (new Date() < settings.taskRevealDate && req.user?.role !== "admin") {
         isRevealed = false;
         tasks = tasks.map(task => {
           const t = task.toObject ? task.toObject() : { ...task };
