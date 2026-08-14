@@ -18,12 +18,7 @@ const taskSchema = new mongoose.Schema({
   instructions: [{ type: String, required: true }],
   order: { type: Number, required: true },
   isRequired: { type: Boolean, default: true },
-  assets: [
-    {
-      name: { type: String, required: true },
-      url: { type: String, required: true },
-    },
-  ],
+  containsAssets: { type: Boolean, default: false },
   submission: {
     acceptsText: { type: Boolean, default: false },
     acceptsLinks: { type: Boolean, default: false },

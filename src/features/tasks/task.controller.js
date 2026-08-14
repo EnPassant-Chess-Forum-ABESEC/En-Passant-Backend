@@ -19,16 +19,15 @@ export const getAllTasksByDepartment = async (req, res, next) => {
     const settings = await Settings.findOne();
     let isRevealed = true;
     let revealDate = null;
-    
+
     if (settings) {
       revealDate = settings.taskRevealDate;
       if (new Date() < settings.taskRevealDate && req.user?.role !== "admin") {
         isRevealed = false;
-        tasks = tasks.map(task => {
+        tasks = tasks.map((task) => {
           const t = task.toObject ? task.toObject() : { ...task };
           delete t.summary;
           delete t.instructions;
-          delete t.assets;
           delete t.submission;
           t.title = "Task Details Hidden";
           return t;
@@ -54,16 +53,15 @@ export const getAllTasksForYear = async (req, res, next) => {
     const settings = await Settings.findOne();
     let isRevealed = true;
     let revealDate = null;
-    
+
     if (settings) {
       revealDate = settings.taskRevealDate;
       if (new Date() < settings.taskRevealDate && req.user?.role !== "admin") {
         isRevealed = false;
-        tasks = tasks.map(task => {
+        tasks = tasks.map((task) => {
           const t = task.toObject ? task.toObject() : { ...task };
           delete t.summary;
           delete t.instructions;
-          delete t.assets;
           delete t.submission;
           t.title = "Task Details Hidden";
           return t;
