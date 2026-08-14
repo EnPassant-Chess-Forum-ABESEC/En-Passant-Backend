@@ -15,7 +15,14 @@ export const updateProfileSchema = z.object({
       .length(10, "Phone number must be exactly 10 digits")
       .regex(/^\d+$/, "Phone number must contain only numbers")
       .optional()
-      .or(z.literal("")),
+      .or(z.literal(""))
+      .transform(val => val === "" ? null : val),
+    phoneNo: z.string()
+      .length(10, "Phone number must be exactly 10 digits")
+      .regex(/^\d+$/, "Phone number must contain only numbers")
+      .optional()
+      .or(z.literal(""))
+      .transform(val => val === "" ? null : val),
     chessAccounts: z
       .object({
         chessCom: z
@@ -30,6 +37,12 @@ export const updateProfileSchema = z.object({
           .optional(),
       })
       .optional(),
+  }).transform(data => {
+    if (data.phoneNo !== undefined && data.phoneNumber === undefined) {
+      data.phoneNumber = data.phoneNo;
+    }
+    delete data.phoneNo;
+    return data;
   }),
 });
 
@@ -48,7 +61,14 @@ export const onboardingSchema = z.object({
       .length(10, "Phone number must be exactly 10 digits")
       .regex(/^\d+$/, "Phone number must contain only numbers")
       .optional()
-      .or(z.literal("")),
+      .or(z.literal(""))
+      .transform(val => val === "" ? null : val),
+    phoneNo: z.string()
+      .length(10, "Phone number must be exactly 10 digits")
+      .regex(/^\d+$/, "Phone number must contain only numbers")
+      .optional()
+      .or(z.literal(""))
+      .transform(val => val === "" ? null : val),
     chessAccounts: z
       .object({
         chessCom: z
@@ -63,5 +83,11 @@ export const onboardingSchema = z.object({
           .optional(),
       })
       .optional(),
+  }).transform(data => {
+    if (data.phoneNo !== undefined && data.phoneNumber === undefined) {
+      data.phoneNumber = data.phoneNo;
+    }
+    delete data.phoneNo;
+    return data;
   }),
 });

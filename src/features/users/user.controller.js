@@ -1,9 +1,20 @@
 import * as userRepo from "./user.repository.js";
 import { enqueueSyncJob } from "../sync/sync.queue.js";
+import { getUserRanks } from "../leaderboard/leaderboard.service.js";
 
 export const me = async (req, res, next) => {
   try {
-    res.json({ success: true, user: req.user });
+    const userObj = req.user.toObject();
+    
+    try {
+      const ranks = await getUserRanks(req.clerkId);
+      userObj.ranks = ranks;
+    } catch (err) {
+      console.error("Failed to fetch user ranks from Redis:", err);
+      userObj.ranks = null;
+    }
+
+    res.json({ success: true, user: userObj });
   } catch (error) {
     next(error);
   }
