@@ -59,6 +59,7 @@ export const createTaskSchema = z.object({
           acceptsLinks: z.boolean().optional(),
           acceptsFiles: z.boolean().optional(),
           fileCategory: z.enum(["image", "video", "raw"]).optional(),
+          maxLinks: z.number().int().optional(),
           maxFiles: z.number().int().optional(),
           maxFileSize: z.number().int().optional(),
         })
@@ -76,12 +77,16 @@ export const createTaskSchema = z.object({
             maxFileSize > 0
           );
         }
+        if (data.submission?.acceptsLinks) {
+          const { maxLinks } = data.submission;
+          if (maxLinks === undefined || maxLinks <= 0) return false;
+        }
         return true;
       },
       {
         message:
-          "If acceptsFiles is true, fileCategory, maxFiles (>0), and maxFileSize (>0) must be provided in submission object",
-        path: ["submission", "acceptsFiles"],
+          "If acceptsFiles is true, fileCategory, maxFiles (>0), and maxFileSize (>0) must be provided. If acceptsLinks is true, maxLinks (>0) must be provided.",
+        path: ["submission"],
       },
     ),
 });
@@ -122,6 +127,7 @@ export const updateTaskSchema = z.object({
           acceptsLinks: z.boolean().optional(),
           acceptsFiles: z.boolean().optional(),
           fileCategory: z.enum(["image", "video", "raw"]).optional(),
+          maxLinks: z.number().int().optional(),
           maxFiles: z.number().int().optional(),
           maxFileSize: z.number().int().optional(),
         })
@@ -139,12 +145,16 @@ export const updateTaskSchema = z.object({
             maxFileSize > 0
           );
         }
+        if (data.submission?.acceptsLinks) {
+          const { maxLinks } = data.submission;
+          if (maxLinks === undefined || maxLinks <= 0) return false;
+        }
         return true;
       },
       {
         message:
-          "If acceptsFiles is true, fileCategory, maxFiles (>0), and maxFileSize (>0) must be provided in submission object",
-        path: ["submission", "acceptsFiles"],
+          "If acceptsFiles is true, fileCategory, maxFiles (>0), and maxFileSize (>0) must be provided. If acceptsLinks is true, maxLinks (>0) must be provided.",
+        path: ["submission"],
       },
     ),
 });

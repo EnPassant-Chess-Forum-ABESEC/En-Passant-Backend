@@ -346,3 +346,23 @@ export const getDashboardStats = async (req, res, next) => {
     next(error);
   }
 };
+
+export const syncAllUsers = async (req, res, next) => {
+  try {
+    const { syncQueue } = await import("../sync/sync.queue.js");
+    await syncQueue.add(
+      "dispatch-daily-sync",
+      {},
+      {
+        jobId: `manual-sync-dispatcher-${Date.now()}`,
+        removeOnComplete: true,
+      },
+    );
+    res.status(200).json({
+      success: true,
+      message: "Sync job for all users has been triggered successfully.",
+    });
+  } catch (error) {
+    next(error);
+  }
+};

@@ -23,6 +23,7 @@ const taskSchema = new mongoose.Schema({
     acceptsText: { type: Boolean, default: false },
     acceptsLinks: { type: Boolean, default: false },
     acceptsFiles: { type: Boolean, default: false },
+    maxLinks: { type: Number },
     fileCategory: {
       type: String,
       enum: ["image", "video", "raw"],

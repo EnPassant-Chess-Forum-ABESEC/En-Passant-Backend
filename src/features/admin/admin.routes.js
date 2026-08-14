@@ -17,6 +17,7 @@ import {
   verifyPayment,
   exportApplications,
   exportPayments,
+  syncAllUsers,
 } from "./admin.controller.js";
 import { adminAuth } from "../../middleware/auth.middleware.js";
 import { validate } from "../../middleware/validate.middleware.js";
@@ -88,6 +89,7 @@ router.patch("/tasks/:id", adminAuth, validate(updateTaskSchema), updateTask);
 router.delete("/tasks/:id", adminAuth, validate(deleteTaskSchema), deleteTask);
 
 // user management
+router.post("/users/sync-all", adminAuth, syncAllUsers);
 router.get("/users", adminAuth, getAllUsers);
 router.get("/users/:id", adminAuth, getUserById);
 router.patch(
