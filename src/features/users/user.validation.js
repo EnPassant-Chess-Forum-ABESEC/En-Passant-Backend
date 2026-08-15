@@ -11,18 +11,24 @@ export const updateProfileSchema = z.object({
       })
       .optional()
       .or(z.literal("")),
-    phoneNumber: z.string()
-      .length(10, "Phone number must be exactly 10 digits")
-      .regex(/^\d+$/, "Phone number must contain only numbers")
-      .optional()
-      .or(z.literal(""))
-      .transform(val => val === "" ? null : val),
-    phoneNo: z.string()
-      .length(10, "Phone number must be exactly 10 digits")
-      .regex(/^\d+$/, "Phone number must contain only numbers")
-      .optional()
-      .or(z.literal(""))
-      .transform(val => val === "" ? null : val),
+    phoneNumber: z.preprocess(
+      (val) => (typeof val === "string" ? val.replace(/^\+91/, "").replace(/[\s-]/g, "") : val),
+      z.string()
+        .length(10, "Phone number must be exactly 10 digits")
+        .regex(/^\d+$/, "Phone number must contain only numbers")
+        .optional()
+        .or(z.literal(""))
+        .transform(val => val === "" ? null : val)
+    ),
+    phoneNo: z.preprocess(
+      (val) => (typeof val === "string" ? val.replace(/^\+91/, "").replace(/[\s-]/g, "") : val),
+      z.string()
+        .length(10, "Phone number must be exactly 10 digits")
+        .regex(/^\d+$/, "Phone number must contain only numbers")
+        .optional()
+        .or(z.literal(""))
+        .transform(val => val === "" ? null : val)
+    ),
     chessAccounts: z
       .object({
         chessCom: z
@@ -57,18 +63,24 @@ export const onboardingSchema = z.object({
       })
       .optional()
       .or(z.literal("")),
-    phoneNumber: z.string()
-      .length(10, "Phone number must be exactly 10 digits")
-      .regex(/^\d+$/, "Phone number must contain only numbers")
-      .optional()
-      .or(z.literal(""))
-      .transform(val => val === "" ? null : val),
-    phoneNo: z.string()
-      .length(10, "Phone number must be exactly 10 digits")
-      .regex(/^\d+$/, "Phone number must contain only numbers")
-      .optional()
-      .or(z.literal(""))
-      .transform(val => val === "" ? null : val),
+    phoneNumber: z.preprocess(
+      (val) => (typeof val === "string" ? val.replace(/^\+91/, "").replace(/[\s-]/g, "") : val),
+      z.string()
+        .length(10, "Phone number must be exactly 10 digits")
+        .regex(/^\d+$/, "Phone number must contain only numbers")
+        .optional()
+        .or(z.literal(""))
+        .transform(val => val === "" ? null : val)
+    ),
+    phoneNo: z.preprocess(
+      (val) => (typeof val === "string" ? val.replace(/^\+91/, "").replace(/[\s-]/g, "") : val),
+      z.string()
+        .length(10, "Phone number must be exactly 10 digits")
+        .regex(/^\d+$/, "Phone number must contain only numbers")
+        .optional()
+        .or(z.literal(""))
+        .transform(val => val === "" ? null : val)
+    ),
     chessAccounts: z
       .object({
         chessCom: z
