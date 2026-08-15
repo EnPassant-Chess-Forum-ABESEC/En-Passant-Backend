@@ -4,6 +4,15 @@ import Settings from "../settings/settings.model.js";
 export const createApplication = async (req, res, next) => {
   const userId = req.user._id;
 
+  const { name, collegeEmail, phone } = req.body;
+  if (
+    (req.user.userName && name && req.user.userName !== name) ||
+    (req.user.collegeEmail && collegeEmail && req.user.collegeEmail !== collegeEmail) ||
+    (req.user.phoneNumber && phone && req.user.phoneNumber !== phone)
+  ) {
+    return res.status(400).json({ success: false, message: "Mismatch data: Your details do not match your profile. Please use the correct details." });
+  }
+
   try {
     const settings = await Settings.findOne();
     if (settings) {
@@ -46,7 +55,12 @@ export const getMyApplication = async (req, res, next) => {
       myApplication,
     });
   } catch (error) {
+    if (error.message === "Application not found") {
+      return res.status(200).json({
+        success: true,
+        myApplication: null,
+      });
+    }
     next(error);
   }
 };
-
