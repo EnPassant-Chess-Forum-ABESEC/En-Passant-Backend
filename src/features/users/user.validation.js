@@ -6,19 +6,16 @@ export const updateProfileSchema = z.object({
     year: z.number().int().min(1).max(5).optional(),
     collegeEmail: z.string()
       .email("Invalid email format")
-      .refine(email => email === "" || email.endsWith("@abes.ac.in"), {
+      .refine(email => email.endsWith("@abes.ac.in"), {
         message: "College email must end with @abes.ac.in"
       })
-      .optional()
-      .or(z.literal("")),
+      .optional(),
     phoneNumber: z.preprocess(
       (val) => (typeof val === "string" ? val.replace(/^\+91/, "").replace(/[\s-]/g, "") : val),
       z.string()
         .length(10, "Phone number must be exactly 10 digits")
         .regex(/^\d+$/, "Phone number must contain only numbers")
         .optional()
-        .or(z.literal(""))
-        .transform(val => val === "" ? null : val)
     ),
     phoneNo: z.preprocess(
       (val) => (typeof val === "string" ? val.replace(/^\+91/, "").replace(/[\s-]/g, "") : val),
@@ -26,8 +23,6 @@ export const updateProfileSchema = z.object({
         .length(10, "Phone number must be exactly 10 digits")
         .regex(/^\d+$/, "Phone number must contain only numbers")
         .optional()
-        .or(z.literal(""))
-        .transform(val => val === "" ? null : val)
     ),
     chessAccounts: z
       .object({
@@ -58,19 +53,14 @@ export const onboardingSchema = z.object({
     year: z.number().int().min(1).max(5),
     collegeEmail: z.string()
       .email("Invalid email format")
-      .refine(email => email === "" || email.endsWith("@abes.ac.in"), {
+      .refine(email => email.endsWith("@abes.ac.in"), {
         message: "College email must end with @abes.ac.in"
-      })
-      .optional()
-      .or(z.literal("")),
+      }),
     phoneNumber: z.preprocess(
       (val) => (typeof val === "string" ? val.replace(/^\+91/, "").replace(/[\s-]/g, "") : val),
       z.string()
         .length(10, "Phone number must be exactly 10 digits")
         .regex(/^\d+$/, "Phone number must contain only numbers")
-        .optional()
-        .or(z.literal(""))
-        .transform(val => val === "" ? null : val)
     ),
     phoneNo: z.preprocess(
       (val) => (typeof val === "string" ? val.replace(/^\+91/, "").replace(/[\s-]/g, "") : val),
@@ -78,8 +68,6 @@ export const onboardingSchema = z.object({
         .length(10, "Phone number must be exactly 10 digits")
         .regex(/^\d+$/, "Phone number must contain only numbers")
         .optional()
-        .or(z.literal(""))
-        .transform(val => val === "" ? null : val)
     ),
     chessAccounts: z
       .object({
