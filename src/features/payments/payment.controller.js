@@ -1,3 +1,4 @@
+import { AppError } from "../../utils/AppError.js";
 import {
   getMyApplication,
   handleSuccessfulPayment,
@@ -6,7 +7,6 @@ import {
 import { createOrder } from "./gateways/razorpay.gateway.js";
 import Razorpay from "razorpay";
 import * as paymentRepo from "./payment.repository.js";
-import mongoose from "mongoose";
 import { uploadFile } from "../storage/storage.service.js";
 
 export const createCheckoutSession = async (req, res, next) => {
@@ -15,18 +15,20 @@ export const createCheckoutSession = async (req, res, next) => {
   try {
     const currentYear = new Date().getFullYear();
     const application = await getMyApplication(userId, currentYear);
-    if (!application) throw new Error("Application not found");
+    if (!application) throw new AppError("Application not found", 404);
 
     if (
       application.status === "ACTIVE" ||
       application.paymentStatus === "SUCCESS"
     )
-      throw new Error(
+      throw new AppError(
         "Application is already active or payment is already done",
+        409,
       );
 
     const recruitmentAmount = process.env.RECRUITMENT_AMOUNT;
-    if (!recruitmentAmount) throw new Error("Recruitment amount not found");
+    if (!recruitmentAmount)
+      throw new AppError("Recruitment amount not found", 404);
 
     const recruitmentAmountInPaise = parseInt(recruitmentAmount) * 100;
 
@@ -95,7 +97,7 @@ export const razorpayWebhook = async (req, res, next) => {
           const updatedPayment = await paymentRepo.updatePaymentStatus(
             orderId,
             "SUCCESS",
-            paymentId
+            paymentId,
           );
 
           if (updatedPayment) {
@@ -166,7 +168,10 @@ export const downloadReceiptPdf = async (req, res, next) => {
     }
 
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `inline; filename="receipt_${id}.pdf"`);
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="receipt_${id}.pdf"`,
+    );
     res.send(payment.receiptFile);
   } catch (error) {
     next(error);
@@ -192,14 +197,15 @@ export const submitManualPayment = async (req, res, next) => {
 
     const currentYear = new Date().getFullYear();
     const application = await getMyApplication(userId, currentYear);
-    if (!application) throw new Error("Application not found");
+    if (!application) throw new AppError("Application not found", 404);
 
     if (
       application.status === "ACTIVE" ||
       application.paymentStatus === "SUCCESS"
     ) {
-      throw new Error(
+      throw new AppError(
         "Application is already active or payment is already done",
+        409,
       );
     }
 
@@ -215,7 +221,8 @@ export const submitManualPayment = async (req, res, next) => {
     });
 
     const recruitmentAmount = process.env.RECRUITMENT_AMOUNT;
-    if (!recruitmentAmount) throw new Error("Recruitment amount not found");
+    if (!recruitmentAmount)
+      throw new AppError("Recruitment amount not found", 404);
 
     const recruitmentAmountInPaise = parseInt(recruitmentAmount) * 100;
 
@@ -240,7 +247,7 @@ export const submitManualPayment = async (req, res, next) => {
         req.user.email,
         req.user.userName,
         application.preferredDepartmentId?.name,
-        application.secondaryDepartmentId?.name
+        application.secondaryDepartmentId?.name,
       );
     });
 

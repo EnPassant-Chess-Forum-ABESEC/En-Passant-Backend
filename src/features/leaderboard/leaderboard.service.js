@@ -1,3 +1,4 @@
+import { AppError } from "../../utils/AppError.js";
 import { redisConnection as redisClient } from "../../redis/redis.client.js";
 import User from "../users/user.model.js";
 
@@ -24,7 +25,8 @@ export const updateUserLeaderboard = async (user) => {
       }
     }
   } catch (error) {
-    throw new Error(`updateUserLeaderboard failed: ${error.message}`);
+    if (error instanceof AppError) throw error;
+    throw new AppError(`updateUserLeaderboard failed: ${error.message}`, 500);
   }
 };
 
@@ -66,7 +68,8 @@ export const getLeaderboard = async (control, limit = 20) => {
       };
     });
   } catch (error) {
-    throw new Error(`getLeaderboard failed: ${error.message}`);
+    if (error instanceof AppError) throw error;
+    throw new AppError(`getLeaderboard failed: ${error.message}`, 500);
   }
 };
 
@@ -89,6 +92,7 @@ export const getUserRanks = async (clerkId) => {
     }
     return ranks;
   } catch (error) {
-    throw new Error(`getUserRanks failed: ${error.message}`);
+    if (error instanceof AppError) throw error;
+    throw new AppError(`getUserRanks failed: ${error.message}`, 500);
   }
 };

@@ -1,3 +1,4 @@
+import { AppError } from "../../../utils/AppError.js";
 export const fetchLichessRatings = async (username) => {
   const url = `https://lichess.org/api/user/${encodeURIComponent(username)}`;
 
@@ -10,11 +11,9 @@ export const fetchLichessRatings = async (username) => {
 
   if (!response.ok) {
     if (response.status === 404) {
-      throw new Error(`Lichess user '${username}' not found`);
+      throw new AppError(`Lichess user '${username}' not found`, 404);
     }
-    throw new Error(
-      `Lichess API error: ${response.status} ${response.statusText}`,
-    );
+    throw new AppError(`Lichess API error: ${response.status} ${response.statusText}`, 502);
   }
 
   const data = await response.json();

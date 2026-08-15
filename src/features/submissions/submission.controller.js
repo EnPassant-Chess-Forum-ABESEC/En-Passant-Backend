@@ -1,3 +1,4 @@
+import { AppError } from "../../utils/AppError.js";
 import * as submissionRepo from "./submission.repository.js";
 import Settings from "../settings/settings.model.js";
 import {
@@ -18,7 +19,9 @@ export const uploadTaskSubmission = async (req, res, next) => {
   try {
     const settings = await Settings.findOne();
     if (settings && new Date() > settings.submissionEndDate) {
-      return res.status(403).json({ success: false, message: "Submission window has closed" });
+      return res
+        .status(403)
+        .json({ success: false, message: "Submission window has closed" });
     }
 
     const application = await recruitmentService.getMyApplication(
@@ -28,51 +31,97 @@ export const uploadTaskSubmission = async (req, res, next) => {
 
     if (
       !application ||
-      (application.status !== "ACTIVE" && application.status !== "TASK_SUBMITTED") ||
+      (application.status !== "ACTIVE" &&
+        application.status !== "TASK_SUBMITTED") ||
       application._id.toString() !== applicationId
     ) {
-      return res.status(400).json({ success: false, message: "Application not found or is not active" });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Application not found or is not active",
+        });
     }
 
     const task = await taskRepo.findById(taskId);
 
     if (!task) {
-      return res.status(404).json({ success: false, message: "Task not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Task not found" });
     }
 
-    const preferredId = application.preferredDepartmentId?._id?.toString() || application.preferredDepartmentId?.toString();
-    const secondaryIds = application.secondaryDepartmentId?.map(d => d._id?.toString() || d.toString()) || [];
-    const taskDeptId = task.departmentId?._id?.toString() || task.departmentId?.toString();
+    const preferredId =
+      application.preferredDepartmentId?._id?.toString() ||
+      application.preferredDepartmentId?.toString();
+    const secondaryIds =
+      application.secondaryDepartmentId?.map(
+        (d) => d._id?.toString() || d.toString(),
+      ) || [];
+    const taskDeptId =
+      task.departmentId?._id?.toString() || task.departmentId?.toString();
 
     if (taskDeptId !== preferredId && !secondaryIds.includes(taskDeptId)) {
-      return res.status(400).json({ success: false, message: "You have not applied for this department" });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "You have not applied for this department",
+        });
     }
 
     const { submission } = task;
 
     if (files.length && !submission.acceptsFiles) {
-      return res.status(400).json({ success: false, message: "File upload is not accepted for this task" });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "File upload is not accepted for this task",
+        });
     }
 
     if (links && !submission.acceptsLinks) {
-      return res.status(400).json({ success: false, message: "Link submission is not accepted for this task" });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Link submission is not accepted for this task",
+        });
     }
 
     if (text && !submission.acceptsText) {
-      return res.status(400).json({ success: false, message: "Text submission is not accepted for this task" });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Text submission is not accepted for this task",
+        });
     }
 
     if (files.length > submission.maxFiles) {
-      return res.status(400).json({ success: false, message: "Number of files exceed the maximum upload limit" });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Number of files exceed the maximum upload limit",
+        });
     }
 
     for (const file of files) {
       if (file.size > submission.maxFileSize) {
-        return res.status(400).json({ success: false, message: "File size exceeds the maximum upload limit" });
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message: "File size exceeds the maximum upload limit",
+          });
       }
 
       if (!isValidMimeType(file.mimetype, submission.fileCategory)) {
-        return res.status(400).json({ success: false, message: "Invalid file type for this task" });
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid file type for this task" });
       }
     }
 
@@ -129,7 +178,7 @@ export const getTaskSubmission = async (req, res, next) => {
       currentYear,
     );
     if (!application || application._id.toString() !== applicationId) {
-      throw new Error("Unauthorized");
+      throw new AppError("Unauthorized", 403);
     }
 
     const submission = await submissionRepo.findSubmission(

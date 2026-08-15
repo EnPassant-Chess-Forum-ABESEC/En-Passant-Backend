@@ -1,3 +1,4 @@
+import { AppError } from "../../utils/AppError.js";
 import * as taskRepo from "./task.repository.js";
 import Settings from "../settings/settings.model.js";
 
@@ -5,10 +6,10 @@ export const getAllTasksByDepartment = async (req, res, next) => {
   const { departmentId, year } = req.query;
   try {
     if (!departmentId) {
-      throw new Error("departmentId is required");
+      throw new AppError("departmentId is required", 400);
     }
     if (!year) {
-      throw new Error("year is required");
+      throw new AppError("year is required", 400);
     }
 
     let tasks = await taskRepo.findByDepartmentAndYear(
@@ -45,7 +46,7 @@ export const getAllTasksForYear = async (req, res, next) => {
   const { year } = req.query;
   try {
     if (!year) {
-      throw new Error("year is required");
+      throw new AppError("year is required", 400);
     }
 
     let tasks = await taskRepo.findAllByYear(Number(year));

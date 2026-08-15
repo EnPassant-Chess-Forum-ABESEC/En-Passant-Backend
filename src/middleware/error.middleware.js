@@ -1,7 +1,13 @@
 import { ZodError } from "zod";
+import { AppError } from "../utils/AppError.js";
 
 export const errorHandler = (err, req, res, next) => {
-  console.error(err);
+  if (err instanceof AppError && err.isOperational) {
+    return res.status(err.statusCode).json({
+      success: false,
+      message: err.message,
+    });
+  }
 
   if (err instanceof ZodError) {
     return res.status(400).json({
@@ -11,9 +17,10 @@ export const errorHandler = (err, req, res, next) => {
     });
   }
 
-  const statusCode = err.statusCode || 500;
-  res.status(statusCode).json({
+  console.error("ERROR", err);
+
+  return res.status(500).json({
     success: false,
-    message: err.message || "Internal server error",
+    message: "Internal server error",
   });
 };

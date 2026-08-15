@@ -1,3 +1,4 @@
+import { AppError } from "../../utils/AppError.js";
 import { Webhook } from "svix";
 import User from "../users/user.model.js";
 import { enqueueWelcomeEmail } from "../email/email.queue.js";
@@ -7,7 +8,7 @@ export const clerkWebhook = async (req, res, next) => {
     const SIGNING_SECRET = process.env.CLERK_WEBHOOK_SECRET;
 
     if (!SIGNING_SECRET) {
-      throw new Error("Error: CLERK_WEBHOOK_SECRET missing");
+      throw new AppError("Error: CLERK_WEBHOOK_SECRET missing", 500);
     }
 
     const wh = new Webhook(SIGNING_SECRET);

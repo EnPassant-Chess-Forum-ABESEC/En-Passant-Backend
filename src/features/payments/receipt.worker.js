@@ -1,3 +1,4 @@
+import { AppError } from "../../utils/AppError.js";
 import { workerLogger } from "../../utils/logger.js";
 import { Worker } from "bullmq";
 import { createRedisConnection } from "../../redis/redis.client.js";
@@ -19,12 +20,12 @@ const processReceiptJob = async (job) => {
 
     const payment = await Payment.findById(paymentId).populate("userId");
     if (!payment) {
-      throw new Error(`Payment with ID ${paymentId} not found`);
+      throw new AppError(`Payment with ID ${paymentId} not found`, 404);
     }
 
     const user = payment.userId;
     if (!user) {
-      throw new Error(`User not found for payment ${paymentId}`);
+      throw new AppError(`User not found for payment ${paymentId}`, 404);
     }
 
     const templatePath = path.join(__dirname, "templates", "receipt.ejs");

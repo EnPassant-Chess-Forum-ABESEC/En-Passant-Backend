@@ -1,3 +1,4 @@
+import { AppError } from "../../../utils/AppError.js";
 export const fetchChessComRatings = async (username) => {
   const url = `https://api.chess.com/pub/player/${encodeURIComponent(username)}/stats`;
 
@@ -10,11 +11,9 @@ export const fetchChessComRatings = async (username) => {
 
   if (!response.ok) {
     if (response.status === 404) {
-      throw new Error(`Chess.com user '${username}' not found`);
+      throw new AppError(`Chess.com user '${username}' not found`, 404);
     }
-    throw new Error(
-      `Chess.com API error: ${response.status} ${response.statusText}`,
-    );
+    throw new AppError(`Chess.com API error: ${response.status} ${response.statusText}`, 502);
   }
 
   const data = await response.json();

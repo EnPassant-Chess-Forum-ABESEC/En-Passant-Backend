@@ -1,3 +1,4 @@
+import { AppError } from "../../utils/AppError.js";
 import { workerLogger } from "../../utils/logger.js";
 import User from "../users/user.model.js";
 import { fetchChessComRatings } from "./adapters/chesscom.adapter.js";
@@ -6,7 +7,7 @@ import { fetchLichessRatings } from "./adapters/lichess.adapter.js";
 export const syncUserAccounts = async (userId) => {
   const user = await User.findById(userId);
   if (!user) {
-    throw new Error(`Sync Error: User with ID ${userId} not found in DB`);
+    throw new AppError(`Sync Error: User with ID ${userId} not found in DB`, 404);
   }
 
   const results = {

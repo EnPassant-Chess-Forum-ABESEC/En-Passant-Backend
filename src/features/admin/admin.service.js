@@ -1,3 +1,4 @@
+import { AppError } from "../../utils/AppError.js";
 import * as recruitmentRepo from "../recruitment/recruitment.repository.js";
 import * as recruitmentService from "../recruitment/recruitment.service.js";
 import * as storageService from "../storage/storage.service.js";
@@ -24,7 +25,8 @@ export const getAllApplications = async (filters) => {
   try {
     return await recruitmentRepo.findAllRecruitment(query);
   } catch (error) {
-    throw new Error(`getAllApplications failed: ${error.message}`);
+    if (error instanceof AppError) throw error;
+    throw new AppError(`getAllApplications failed: ${error.message}`, 500);
   }
 };
 
@@ -32,7 +34,8 @@ export const getAllDepartments = async () => {
   try {
     return await taskRepo.findAllDepartments();
   } catch (error) {
-    throw new Error(`getAllDepartments failed: ${error.message}`);
+    if (error instanceof AppError) throw error;
+    throw new AppError(`getAllDepartments failed: ${error.message}`, 500);
   }
 };
 
@@ -40,26 +43,29 @@ export const updatePaymentStatus = async (paymentId, status) => {
   try {
     return await paymentRepo.updatePaymentStatus(paymentId, status);
   } catch (error) {
-    throw new Error(`updatePaymentStatus failed: ${error.message}`);
+    if (error instanceof AppError) throw error;
+    throw new AppError(`updatePaymentStatus failed: ${error.message}`, 500);
   }
 };
 
 export const getDashboardStats = async () => {
   try {
-    const [totalApplications, activeTasks, totalMembers, totalRevenue] = await Promise.all([
-      recruitmentRepo.countRecruitments(),
-      taskRepo.countTasks(),
-      userRepo.countUsers(),
-      paymentRepo.calculateTotalRevenue()
-    ]);
+    const [totalApplications, activeTasks, totalMembers, totalRevenue] =
+      await Promise.all([
+        recruitmentRepo.countRecruitments(),
+        taskRepo.countTasks(),
+        userRepo.countUsers(),
+        paymentRepo.calculateTotalRevenue(),
+      ]);
     return {
       totalApplications,
       activeTasks,
       totalMembers,
-      totalRevenue
+      totalRevenue,
     };
   } catch (error) {
-    throw new Error(`getDashboardStats failed: ${error.message}`);
+    if (error instanceof AppError) throw error;
+    throw new AppError(`getDashboardStats failed: ${error.message}`, 500);
   }
 };
 
@@ -67,7 +73,8 @@ export const updateApplicationStatus = async (applicationId, newStatus) => {
   try {
     return await recruitmentService.transitionStatus(applicationId, newStatus);
   } catch (error) {
-    throw new Error(`updateApplicationStatus failed: ${error.message}`);
+    if (error instanceof AppError) throw error;
+    throw new AppError(`updateApplicationStatus failed: ${error.message}`, 500);
   }
 };
 
@@ -76,7 +83,7 @@ export const getApplicationById = async (applicationId) => {
     const application = await recruitmentRepo.getRecruitmentById(applicationId);
 
     if (!application) {
-      throw new Error("Application not found");
+      throw new AppError("Application not found", 404);
     }
 
     const userSubmission =
@@ -94,7 +101,8 @@ export const getApplicationById = async (applicationId) => {
 
     return { application, submission };
   } catch (error) {
-    throw new Error(`getApplicationById failed: ${error.message}`);
+    if (error instanceof AppError) throw error;
+    throw new AppError(`getApplicationById failed: ${error.message}`, 500);
   }
 };
 
@@ -103,12 +111,13 @@ export const createDepartment = async (departmentData) => {
     const existing = await taskRepo.findDepartmentByCode(departmentData.code);
 
     if (existing) {
-      throw new Error("Department with this code already exists");
+      throw new AppError("Department with this code already exists", 409);
     }
 
     return await taskRepo.createDepartment(departmentData);
   } catch (error) {
-    throw new Error(`createDepartment failed: ${error.message}`);
+    if (error instanceof AppError) throw error;
+    throw new AppError(`createDepartment failed: ${error.message}`, 500);
   }
 };
 
@@ -116,7 +125,8 @@ export const createTask = async (taskData) => {
   try {
     return await taskRepo.createTask(taskData);
   } catch (error) {
-    throw new Error(`createTask failed: ${error.message}`);
+    if (error instanceof AppError) throw error;
+    throw new AppError(`createTask failed: ${error.message}`, 500);
   }
 };
 
@@ -125,12 +135,13 @@ export const updateDepartment = async (departmentId, departmentData) => {
     const department = await taskRepo.findDepartmentById(departmentId);
 
     if (!department) {
-      throw new Error("Department not found");
+      throw new AppError("Department not found", 404);
     }
 
     return await taskRepo.updateDepartment(departmentId, departmentData);
   } catch (error) {
-    throw new Error(`updateDepartment failed: ${error.message}`);
+    if (error instanceof AppError) throw error;
+    throw new AppError(`updateDepartment failed: ${error.message}`, 500);
   }
 };
 
@@ -139,12 +150,13 @@ export const deleteDepartment = async (departmentId) => {
     const department = await taskRepo.findDepartmentById(departmentId);
 
     if (!department) {
-      throw new Error("Department not found");
+      throw new AppError("Department not found", 404);
     }
 
     return await taskRepo.deleteDepartment(departmentId);
   } catch (error) {
-    throw new Error(`deleteDepartment failed: ${error.message}`);
+    if (error instanceof AppError) throw error;
+    throw new AppError(`deleteDepartment failed: ${error.message}`, 500);
   }
 };
 
@@ -153,12 +165,13 @@ export const updateTask = async (taskId, taskData) => {
     const task = await taskRepo.findById(taskId);
 
     if (!task) {
-      throw new Error("Task not found");
+      throw new AppError("Task not found", 404);
     }
 
     return await taskRepo.updateTask(taskId, taskData);
   } catch (error) {
-    throw new Error(`updateTask failed: ${error.message}`);
+    if (error instanceof AppError) throw error;
+    throw new AppError(`updateTask failed: ${error.message}`, 500);
   }
 };
 
@@ -167,12 +180,13 @@ export const deleteTask = async (taskId) => {
     const task = await taskRepo.findById(taskId);
 
     if (!task) {
-      throw new Error("Task not found");
+      throw new AppError("Task not found", 404);
     }
 
     return await taskRepo.deleteTask(taskId);
   } catch (error) {
-    throw new Error(`deleteTask failed: ${error.message}`);
+    if (error instanceof AppError) throw error;
+    throw new AppError(`deleteTask failed: ${error.message}`, 500);
   }
 };
 
@@ -181,12 +195,13 @@ export const getUserById = async (id) => {
     const user = await userRepo.findByClerkId(id);
 
     if (!user) {
-      throw new Error("User not found");
+      throw new AppError("User not found", 404);
     }
 
     return user;
   } catch (error) {
-    throw new Error(`getUserById failed: ${error.message}`);
+    if (error instanceof AppError) throw error;
+    throw new AppError(`getUserById failed: ${error.message}`, 500);
   }
 };
 
@@ -196,7 +211,8 @@ export const getAllUsers = async (pageSize, pageNumber) => {
 
     return users;
   } catch (error) {
-    throw new Error(`getAllUsers failed: ${error.message}`);
+    if (error instanceof AppError) throw error;
+    throw new AppError(`getAllUsers failed: ${error.message}`, 500);
   }
 };
 
@@ -205,12 +221,13 @@ export const updateUserRole = async (userId, role) => {
     const user = await userRepo.updateUser(userId, { role });
 
     if (!user) {
-      throw new Error("User not found");
+      throw new AppError("User not found", 404);
     }
 
     return user;
   } catch (error) {
-    throw new Error(`updateUserRole failed: ${error.message}`);
+    if (error instanceof AppError) throw error;
+    throw new AppError(`updateUserRole failed: ${error.message}`, 500);
   }
 };
 
@@ -218,22 +235,30 @@ export const getAllPayments = async (pageSize, pageNumber) => {
   try {
     const payments = await paymentRepo.getAllPayments(pageSize, pageNumber);
 
-    if (!payments) throw new Error("Payments not found");
+    if (!payments) throw new AppError("Payments not found", 404);
 
     return payments;
   } catch (error) {
-    throw new Error(`getAllPayments failed: ${error.message}`);
+    if (error instanceof AppError) throw error;
+    throw new AppError(`getAllPayments failed: ${error.message}`, 500);
   }
 };
 
-import { generateApplicationsExcel, generatePaymentsExcel } from "../../utils/excel.util.js";
+import {
+  generateApplicationsExcel,
+  generatePaymentsExcel,
+} from "../../utils/excel.util.js";
 
 export const exportApplicationsAsExcel = async (filters) => {
   try {
     const applications = await getAllApplications(filters);
     return await generateApplicationsExcel(applications);
   } catch (error) {
-    throw new Error(`exportApplicationsAsExcel failed: ${error.message}`);
+    if (error instanceof AppError) throw error;
+    throw new AppError(
+      `exportApplicationsAsExcel failed: ${error.message}`,
+      500,
+    );
   }
 };
 
@@ -242,6 +267,7 @@ export const exportPaymentsAsExcel = async () => {
     const payments = await paymentRepo.getAllPaymentsForExport();
     return await generatePaymentsExcel(payments);
   } catch (error) {
-    throw new Error(`exportPaymentsAsExcel failed: ${error.message}`);
+    if (error instanceof AppError) throw error;
+    throw new AppError(`exportPaymentsAsExcel failed: ${error.message}`, 500);
   }
 };
