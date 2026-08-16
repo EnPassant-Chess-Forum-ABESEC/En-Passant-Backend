@@ -2,13 +2,13 @@ import ContactQuery from "./contact.model.js";
 
 export const createContactQuery = async (req, res, next) => {
   try {
-    const { name, email, message } = req.body;
+    const { name, email, subject, message } = req.body;
 
-    const newQuery = await ContactQuery.create({ name, email, message });
+    const newQuery = await ContactQuery.create({ name, email, subject, message });
 
     // Enqueue email
     import("../email/email.queue.js").then((module) => {
-      module.enqueueContactUsEmail(name, email, message);
+      module.enqueueContactUsEmail(name, email, subject, message);
     });
 
     return res.status(201).json({

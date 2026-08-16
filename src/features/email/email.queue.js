@@ -70,11 +70,12 @@ export const enqueuePaymentFailedEmail = async (userId, email, name, reason) => 
   }
 };
 
-export const enqueueContactUsEmail = async (name, email, message) => {
+export const enqueueContactUsEmail = async (name, email, subject, message) => {
   try {
     await emailQueue.add("send-contact-us-email", {
       name,
       email,
+      subject,
       message,
     });
     console.log(`Enqueued contact us email from ${email}`);

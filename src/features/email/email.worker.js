@@ -94,21 +94,22 @@ const processEmailJob = async (job) => {
 
     await sendEmail({ to: email, subject, text, html });
   } else if (name === "send-contact-us-email") {
-    const { name: userName, email: userEmail, message } = data;
+    const { name: userName, email: userEmail, subject, message } = data;
 
-    const subject = `Contact Form: ${userName}`;
-    const text = `New message from ${userName} (${userEmail}):\n\n${message}`;
+    const emailSubject = `Contact Form: [${subject}] ${userName}`;
+    const text = `New message from ${userName} (${userEmail})\nSubject: ${subject}\n\n${message}`;
 
     const templatePath = path.join(__dirname, "templates", "contact_us.ejs");
     const html = await ejs.renderFile(templatePath, {
       userName,
       userEmail,
+      subject,
       message,
     });
 
     await sendEmail({
       to: "enpassantabes@gmail.com",
-      subject,
+      subject: emailSubject,
       text,
       html,
       replyTo: userEmail,
