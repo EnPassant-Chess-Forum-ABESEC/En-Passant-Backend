@@ -25,6 +25,11 @@ export const getPaymentById = async (id) => {
   return Payment.findById(id);
 };
 
+export const hasPendingPaymentByApplicationId = async (applicationId) => {
+  const pendingPayment = await Payment.findOne({ applicationId, status: "PENDING" });
+  return !!pendingPayment;
+};
+
 export const getAllPayments = async (pageSize = 10, pageNumber = 1) => {
   return Payment.find()
     .populate("userId", "userName email collegeEmail")

@@ -27,6 +27,14 @@ export const createCheckoutSession = async (req, res, next) => {
         409,
       );
 
+    const hasPending = await paymentRepo.hasPendingPaymentByApplicationId(application._id);
+    if (hasPending) {
+      throw new AppError(
+        "A payment is already pending for this application. Please wait for verification or contact support.",
+        409,
+      );
+    }
+
     const recruitmentAmount = process.env.RECRUITMENT_AMOUNT;
     if (!recruitmentAmount)
       throw new AppError("Recruitment amount not found", 404);
@@ -209,6 +217,14 @@ export const submitManualPayment = async (req, res, next) => {
     ) {
       throw new AppError(
         "Application is already active or payment is already done",
+        409,
+      );
+    }
+
+    const hasPending = await paymentRepo.hasPendingPaymentByApplicationId(application._id);
+    if (hasPending) {
+      throw new AppError(
+        "A payment is already pending for this application. Please wait for verification or contact support.",
         409,
       );
     }
