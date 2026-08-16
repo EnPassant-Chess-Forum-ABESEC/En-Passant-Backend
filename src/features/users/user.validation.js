@@ -6,6 +6,9 @@ export const updateProfileSchema = z.object({
     year: z.number().int().min(1).max(5).optional(),
     collegeEmail: z.string()
       .email("Invalid email format")
+      .refine(email => /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(email), {
+        message: "Invalid email format"
+      })
       .refine(email => email.endsWith("@abes.ac.in"), {
         message: "College email must end with @abes.ac.in"
       })
@@ -53,6 +56,9 @@ export const onboardingSchema = z.object({
     year: z.number().int().min(1).max(5),
     collegeEmail: z.string()
       .email("Invalid email format")
+      .refine(email => /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(email), {
+        message: "Invalid email format"
+      })
       .refine(email => email.endsWith("@abes.ac.in"), {
         message: "College email must end with @abes.ac.in"
       }),
