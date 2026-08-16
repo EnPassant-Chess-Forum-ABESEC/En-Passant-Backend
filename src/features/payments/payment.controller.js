@@ -2,6 +2,7 @@ import { AppError } from "../../utils/AppError.js";
 import {
   getMyApplication,
   handleSuccessfulPayment,
+  handleFailedPayment,
   transitionStatus,
 } from "../recruitment/recruitment.service.js";
 import { createOrder } from "./gateways/razorpay.gateway.js";
@@ -119,7 +120,10 @@ export const razorpayWebhook = async (req, res, next) => {
       const paymentId = payment.id;
       const orderId = payment.order_id;
 
-      await paymentRepo.updatePaymentStatus(orderId, "FAILED", paymentId);
+      const updatedPayment = await paymentRepo.updatePaymentStatus(orderId, "FAILED", paymentId);
+      if (updatedPayment && updatedPayment.applicationId) {
+        await handleFailedPayment(updatedPayment.applicationId);
+      }
     }
 
     return res.status(200).send("OK");
@@ -247,7 +251,9 @@ export const submitManualPayment = async (req, res, next) => {
         req.user.email,
         req.user.userName,
         application.preferredDepartmentId?.name,
-        application.secondaryDepartmentId?.name,
+        application.secondaryDepartmentId && application.secondaryDepartmentId.length > 0 
+          ? application.secondaryDepartmentId[0]?.name 
+          : undefined,
       );
     });
 

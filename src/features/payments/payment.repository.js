@@ -46,3 +46,7 @@ export const calculateTotalRevenue = async () => {
   ]);
   return result[0]?.total || 0;
 };
+
+export const deletePaymentByApplicationId = async (applicationId) => {
+  return Payment.deleteMany({ applicationId });
+};

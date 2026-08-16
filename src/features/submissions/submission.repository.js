@@ -19,3 +19,7 @@ export const findSubmissionsByApplicationId = async (applicationId) => {
     })
     .lean();
 };
+
+export const deleteSubmissionsByApplicationId = async (applicationId) => {
+  return Submission.deleteMany({ applicationId });
+};

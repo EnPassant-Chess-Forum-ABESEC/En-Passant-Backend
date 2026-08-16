@@ -106,6 +106,24 @@ export const getApplicationById = async (applicationId) => {
   }
 };
 
+export const deleteApplication = async (applicationId) => {
+  try {
+    const application = await recruitmentRepo.getRecruitmentById(applicationId);
+
+    if (!application) {
+      throw new AppError("Application not found", 404);
+    }
+
+    await submissionRepo.deleteSubmissionsByApplicationId(applicationId);
+    await paymentRepo.deletePaymentByApplicationId(applicationId);
+
+    return await recruitmentRepo.deleteApplication(applicationId);
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    throw new AppError(`deleteApplication failed: ${error.message}`, 500);
+  }
+};
+
 export const createDepartment = async (departmentData) => {
   try {
     const existing = await taskRepo.findDepartmentByCode(departmentData.code);

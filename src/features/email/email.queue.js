@@ -55,3 +55,30 @@ export const enqueuePaymentSuccessEmail = async (userId, email, name, receiptUrl
     console.error(`Failed to enqueue payment success email for ${userId}:`, error);
   }
 };
+
+export const enqueuePaymentFailedEmail = async (userId, email, name, reason) => {
+  try {
+    await emailQueue.add("send-payment-failed-email", {
+      userId,
+      email,
+      name,
+      reason,
+    });
+    console.log(`Enqueued payment failed email for user ${userId}`);
+  } catch (error) {
+    console.error(`Failed to enqueue payment failed email for ${userId}:`, error);
+  }
+};
+
+export const enqueueContactUsEmail = async (name, email, message) => {
+  try {
+    await emailQueue.add("send-contact-us-email", {
+      name,
+      email,
+      message,
+    });
+    console.log(`Enqueued contact us email from ${email}`);
+  } catch (error) {
+    console.error(`Failed to enqueue contact us email from ${email}:`, error);
+  }
+};

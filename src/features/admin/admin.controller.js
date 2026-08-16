@@ -1,6 +1,6 @@
 import * as adminService from "./admin.service.js";
 import * as paymentRepo from "../payments/payment.repository.js";
-import { handleSuccessfulPayment } from "../recruitment/recruitment.service.js";
+import { handleSuccessfulPayment, handleFailedPayment } from "../recruitment/recruitment.service.js";
 import mongoose from "mongoose";
 
 export const getAllApplications = async (req, res, next) => {
@@ -59,6 +59,21 @@ export const getApplicationById = async (req, res, next) => {
       message: "Application fetched successfully",
       application,
       submission,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteApplication = async (req, res, next) => {
+  const { id } = req.params;
+
+  try {
+    await adminService.deleteApplication(id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Application and associated data deleted successfully",
     });
   } catch (error) {
     next(error);
@@ -282,7 +297,7 @@ export const exportPayments = async (req, res, next) => {
 
 export const verifyPayment = async (req, res, next) => {
   const { id } = req.params;
-  const { status } = req.body;
+  const { status, reason } = req.body;
 
   try {
     const payment = await paymentRepo.getPaymentById(id);
@@ -319,11 +334,11 @@ export const verifyPayment = async (req, res, next) => {
           });
         }
     } else if (status === "FAILED") {
-      await paymentRepo.updatePaymentStatus(
-        payment.gatewayOrderId,
-        "FAILED",
-        null,
-      );
+      await handleFailedPayment(payment.applicationId, reason);
+      
+      payment.status = "FAILED";
+      if (reason) payment.rejectionReason = reason;
+      await payment.save();
     }
 
     return res.status(200).json({

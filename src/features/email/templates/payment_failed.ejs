@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Welcome to En-Passant</title>
+    <title>Payment Verification Failed</title>
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap");
 
@@ -68,20 +68,40 @@
         margin-bottom: 0;
       }
 
-      .cta {
-        margin: 28px 0 0;
+      .details-box {
+        background: #fff5f5;
+        border: 1px solid #fed7d7;
+        border-radius: 6px;
+        padding: 20px;
+        margin: 24px 0;
       }
 
-      .cta a {
+      .details-box p {
+        margin: 0 0 8px;
+        font-size: 14px;
+        color: #c53030;
+      }
+
+      .details-box p:last-child {
+        margin-bottom: 0;
+      }
+
+      .details-box strong {
+        color: #9b2c2c;
+        font-weight: 600;
+        margin-right: 4px;
+      }
+
+      .btn {
         display: inline-block;
         background: #111;
         color: #fff !important;
         text-decoration: none;
+        padding: 12px 24px;
         font-size: 14px;
         font-weight: 500;
-        padding: 11px 24px;
         border-radius: 6px;
-        letter-spacing: 0.01em;
+        margin: 8px 0 24px;
       }
 
       .divider {
@@ -115,34 +135,36 @@
         </div>
 
         <div class="body">
-          <h1>Welcome to En-Passant, <%= userName %>.</h1>
+          <h1>Payment Issue, <%= userName %>.</h1>
 
           <p>
-            You're now part of the official chess community at ABESEC. We're
-            glad to have you with us.
+            We were unable to verify your payment for the En-Passant
+            Recruitment. Your application is currently paused until payment is
+            successfully processed.
           </p>
 
+          <div class="details-box">
+            <p>
+              <strong>Reason:</strong> <%= reason || 'Verification failed.
+              Please check your details.' %>
+            </p>
+          </div>
+
           <p>
-            To get the full experience, please complete your onboarding.<br />
-            During onboarding, you'll set up your profile, connect your
-            Chess.com or Lichess account after which you'll be listed on the
-            leaderboard.
+            <strong>Note on Refunds:</strong>If money left your account, please
+            reply to this email with your transaction reference.
           </p>
+
+          <a href="<%= applyUrl %>" class="btn">Try Again</a>
 
           <p>
             If you have any questions, please reach out via our
             <a
-              href="<%= onboardingUrl.split('?')[0].replace('/profile', '/contact') %>"
+              href="<%= applyUrl.replace('/recruitment/apply', '/contact') %>"
               style="color: #111; font-weight: 500"
-              >Contact Us page</a
+              >Contact Us Page</a
             >.
           </p>
-
-          <div class="cta">
-            <a href="<%= onboardingUrl %>"
-              >Complete Onboarding &nbsp;&#x276F;</a
-            >
-          </div>
         </div>
 
         <div class="divider"></div>

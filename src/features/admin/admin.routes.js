@@ -18,6 +18,7 @@ import {
   exportApplications,
   exportPayments,
   syncAllUsers,
+  deleteApplication,
 } from "./admin.controller.js";
 import { adminAuth } from "../../middleware/auth.middleware.js";
 import { validate } from "../../middleware/validate.middleware.js";
@@ -33,6 +34,7 @@ import {
   deleteTaskSchema,
   updateUserRoleSchema,
   verifyPaymentSchema,
+  deleteApplicationSchema,
 } from "./admin.validation.js";
 
 const router = express.Router();
@@ -60,6 +62,12 @@ router.patch(
   adminAuth,
   validate(updateApplicationStatusSchema),
   updateApplicationStatus,
+);
+router.delete(
+  "/applications/:id",
+  adminAuth,
+  validate(deleteApplicationSchema),
+  deleteApplication,
 );
 
 // department management

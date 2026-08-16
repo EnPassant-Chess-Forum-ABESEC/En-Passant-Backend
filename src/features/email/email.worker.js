@@ -44,7 +44,11 @@ const processEmailJob = async (job) => {
       "templates",
       "payment_pending.ejs",
     );
-    const html = await ejs.renderFile(templatePath, { userName, primaryDept, secondaryDept });
+    const html = await ejs.renderFile(templatePath, {
+      userName,
+      primaryDept,
+      secondaryDept,
+    });
 
     await sendEmail({ to: email, subject, text, html });
   } else if (name === "send-payment-success-email") {
@@ -68,6 +72,47 @@ const processEmailJob = async (job) => {
     });
 
     await sendEmail({ to: email, subject, text, html });
+  } else if (name === "send-payment-failed-email") {
+    const { email, name: userName, reason } = data;
+
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+    const applyUrl = `${frontendUrl.replace(/\/$/, "")}/recruitment/apply`;
+
+    const subject = "Payment Issue - En-Passant Recruitment";
+    const text = `Hi ${userName},\n\nThere was an issue verifying your payment for the En-Passant recruitment. \n\nReason: ${reason || "Verification failed."}\n\nPlease try again at ${applyUrl}`;
+
+    const templatePath = path.join(
+      __dirname,
+      "templates",
+      "payment_failed.ejs",
+    );
+    const html = await ejs.renderFile(templatePath, {
+      userName,
+      reason,
+      applyUrl,
+    });
+
+    await sendEmail({ to: email, subject, text, html });
+  } else if (name === "send-contact-us-email") {
+    const { name: userName, email: userEmail, message } = data;
+
+    const subject = `Contact Form: ${userName}`;
+    const text = `New message from ${userName} (${userEmail}):\n\n${message}`;
+
+    const templatePath = path.join(__dirname, "templates", "contact_us.ejs");
+    const html = await ejs.renderFile(templatePath, {
+      userName,
+      userEmail,
+      message,
+    });
+
+    await sendEmail({
+      to: "enpassantabes@gmail.com",
+      subject,
+      text,
+      html,
+      replyTo: userEmail,
+    });
   }
 };
 

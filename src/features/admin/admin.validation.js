@@ -31,6 +31,12 @@ export const getApplicationByIdSchema = z.object({
   }),
 });
 
+export const deleteApplicationSchema = z.object({
+  params: z.object({
+    id: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid Application ID format"),
+  }),
+});
+
 export const createDepartmentSchema = z.object({
   body: z.object({
     name: z.string().min(1, "Name is required").trim(),
@@ -190,5 +196,6 @@ export const verifyPaymentSchema = z.object({
     status: z.enum(["SUCCESS", "FAILED"], {
       errorMap: () => ({ message: "Status must be 'SUCCESS' or 'FAILED'" }),
     }),
+    reason: z.string().optional(),
   }),
 });

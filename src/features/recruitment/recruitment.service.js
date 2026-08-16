@@ -102,3 +102,43 @@ export const handleSuccessfulPayment = async (
     session,
   );
 };
+
+export const handleFailedPayment = async (applicationId, reason = null, session = null) => {
+  const currentApplication =
+    await recruitmentRepo.getRecruitmentById(applicationId);
+
+  if (!currentApplication) throw new AppError("Application not found", 404);
+  
+  if (currentApplication.paymentStatus === "SUCCESS") return currentApplication;
+
+  const newStatus = "PAYMENT_FAILED";
+  const currentStatus = currentApplication.status;
+  const transition = VALID_TRANSITIONS[currentStatus];
+
+  if (!transition || !transition.includes(newStatus)) {
+    throw new AppError("Invalid transition to PAYMENT_FAILED", 400);
+  }
+
+  const updatedApplication = await recruitmentRepo.updateApplication(
+    applicationId,
+    {
+      status: newStatus,
+      paymentStatus: "FAILED",
+    },
+    session,
+  );
+
+  try {
+    await currentApplication.populate("userId", "userName email");
+    const user = currentApplication.userId;
+    if (user && user.email) {
+      import("../email/email.queue.js").then((module) => {
+        module.enqueuePaymentFailedEmail(user._id, user.email, user.userName, reason);
+      });
+    }
+  } catch (err) {
+    console.error("Failed to populate user for failed payment email:", err);
+  }
+
+  return updatedApplication;
+};

@@ -6,9 +6,9 @@ export const createApplication = async (req, res, next) => {
 
   const { name, collegeEmail, phone } = req.body;
   if (
-    (req.user.userName && name && req.user.userName !== name) ||
-    (req.user.collegeEmail && collegeEmail && req.user.collegeEmail !== collegeEmail) ||
-    (req.user.phoneNumber && phone && req.user.phoneNumber !== phone)
+    (req.user.userName && name && req.user.userName.trim().toLowerCase() !== name.trim().toLowerCase()) ||
+    (req.user.collegeEmail && collegeEmail && req.user.collegeEmail.trim().toLowerCase() !== collegeEmail.trim().toLowerCase()) ||
+    (req.user.phoneNumber && phone && req.user.phoneNumber.trim() !== phone.trim())
   ) {
     return res.status(400).json({ success: false, message: "Mismatch data: Your details do not match your profile. Please use the correct details." });
   }
