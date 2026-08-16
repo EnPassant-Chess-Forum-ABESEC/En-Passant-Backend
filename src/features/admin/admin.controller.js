@@ -1,7 +1,11 @@
 import * as adminService from "./admin.service.js";
 import * as paymentRepo from "../payments/payment.repository.js";
-import { handleSuccessfulPayment, handleFailedPayment } from "../recruitment/recruitment.service.js";
+import {
+  handleSuccessfulPayment,
+  handleFailedPayment,
+} from "../recruitment/recruitment.service.js";
 import mongoose from "mongoose";
+import { redisConnection } from "../../redis/redis.client.js";
 
 export const getAllApplications = async (req, res, next) => {
   const { status, departmentId, year } = req.query;
@@ -308,34 +312,32 @@ export const verifyPayment = async (req, res, next) => {
     }
 
     if (payment.status !== "PENDING") {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: `Payment is already ${payment.status}`,
-        });
+      return res.status(400).json({
+        success: false,
+        message: `Payment is already ${payment.status}`,
+      });
     }
 
     if (status === "SUCCESS") {
-        await handleSuccessfulPayment(
-          payment.applicationId,
-          payment.utr || payment.gatewayOrderId
-        );
+      await handleSuccessfulPayment(
+        payment.applicationId,
+        payment.utr || payment.gatewayOrderId,
+      );
 
-        const updatedPayment = await paymentRepo.updatePaymentStatus(
-          payment.gatewayOrderId,
-          "SUCCESS",
-          payment.utr || "MANUAL_VERIFIED"
-        );
+      const updatedPayment = await paymentRepo.updatePaymentStatus(
+        payment.gatewayOrderId,
+        "SUCCESS",
+        payment.utr || "MANUAL_VERIFIED",
+      );
 
-        if (updatedPayment) {
-          import("../payments/receipt.queue.js").then((module) => {
-            module.enqueueReceiptGeneration(updatedPayment._id);
-          });
-        }
+      if (updatedPayment) {
+        import("../payments/receipt.queue.js").then((module) => {
+          module.enqueueReceiptGeneration(updatedPayment._id);
+        });
+      }
     } else if (status === "FAILED") {
       await handleFailedPayment(payment.applicationId, reason);
-      
+
       payment.status = "FAILED";
       if (reason) payment.rejectionReason = reason;
       await payment.save();
@@ -376,6 +378,24 @@ export const syncAllUsers = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: "Sync job for all users has been triggered successfully.",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const cleanRedisSets = async (req, res, next) => {
+  try {
+    const keysToDelete = [
+      "leaderboard:rapid",
+      "leaderboard:blitz",
+      "leaderboard:bullet",
+    ];
+    await redisConnection.del(...keysToDelete);
+
+    return res.status(200).json({
+      success: true,
+      message: "Leaderboard Redis sets cleaned successfully",
     });
   } catch (error) {
     next(error);

@@ -19,6 +19,7 @@ import {
   exportPayments,
   syncAllUsers,
   deleteApplication,
+  cleanRedisSets,
 } from "./admin.controller.js";
 import { adminAuth } from "../../middleware/auth.middleware.js";
 import { validate } from "../../middleware/validate.middleware.js";
@@ -46,11 +47,7 @@ router.get(
   validate(getAllApplicationsSchema),
   getAllApplications,
 );
-router.get(
-  "/applications/export",
-  adminAuth,
-  exportApplications,
-);
+router.get("/applications/export", adminAuth, exportApplications);
 router.get(
   "/applications/:id",
   adminAuth,
@@ -107,10 +104,18 @@ router.patch(
   updateUserRole,
 );
 
+// system management
+router.post("/redis/clean", adminAuth, cleanRedisSets);
+
 // payments
 router.get("/payments", adminAuth, getAllPayments);
 router.get("/payments/export", adminAuth, exportPayments);
-router.patch("/payments/:id/verify", adminAuth, validate(verifyPaymentSchema), verifyPayment);
+router.patch(
+  "/payments/:id/verify",
+  adminAuth,
+  validate(verifyPaymentSchema),
+  verifyPayment,
+);
 
 // stats
 import { getDashboardStats } from "./admin.controller.js";
