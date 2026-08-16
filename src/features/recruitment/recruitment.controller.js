@@ -5,6 +5,21 @@ export const createApplication = async (req, res, next) => {
   const userId = req.user._id;
 
   const { name, collegeEmail, phone } = req.body;
+  
+  if (collegeEmail) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(collegeEmail) || !collegeEmail.endsWith("@abes.ac.in")) {
+      return res.status(400).json({ success: false, message: "Invalid college email. Must end with @abes.ac.in" });
+    }
+  }
+
+  if (phone) {
+    const sanitizedPhone = phone.replace(/\D/g, "");
+    if (sanitizedPhone.length !== 10) {
+      return res.status(400).json({ success: false, message: "Phone number must be exactly 10 digits" });
+    }
+  }
+
   if (
     (req.user.userName && name && req.user.userName.trim().toLowerCase() !== name.trim().toLowerCase()) ||
     (req.user.collegeEmail && collegeEmail && req.user.collegeEmail.trim().toLowerCase() !== collegeEmail.trim().toLowerCase()) ||
