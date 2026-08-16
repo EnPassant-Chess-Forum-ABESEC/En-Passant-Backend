@@ -126,6 +126,8 @@ export const clerkWebhook = async (req, res, next) => {
           await import("../submissions/submission.model.js");
         const { default: Payment } =
           await import("../payments/payment.model.js");
+        const { removeUserFromLeaderboard } =
+          await import("../leaderboard/leaderboard.service.js");
 
         const applications = await Recruitment.find({
           userId: deletedUser._id,
@@ -137,9 +139,10 @@ export const clerkWebhook = async (req, res, next) => {
         }
         await Recruitment.deleteMany({ userId: deletedUser._id });
         await Payment.deleteMany({ userId: deletedUser._id });
+        await removeUserFromLeaderboard(id);
 
         console.log(
-          `[Webhook] Deleted user ${deletedUser.email} and all linked applications/payments.`,
+          `[Webhook] Deleted user ${deletedUser.email} and all linked applications/payments/leaderboard entries.`,
         );
       }
     }

@@ -96,3 +96,15 @@ export const getUserRanks = async (clerkId) => {
     throw new AppError(`getUserRanks failed: ${error.message}`, 500);
   }
 };
+
+export const removeUserFromLeaderboard = async (clerkId) => {
+  try {
+    for (const control of TIME_CONTROLS) {
+      const key = getKey(control);
+      await redisClient.zrem(key, clerkId);
+    }
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    throw new AppError(`removeUserFromLeaderboard failed: ${error.message}`, 500);
+  }
+};
