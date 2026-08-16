@@ -46,3 +46,15 @@ export const generateSignedUrl = (publicId, options = {}) => {
     ...(options.resource_type === "raw" && { flags: "attachment" }),
   });
 };
+
+export const deleteAllCloudFiles = async () => {
+  try {
+    await cloudinary.api.delete_all_resources({ resource_type: "image" });
+    await cloudinary.api.delete_all_resources({ resource_type: "raw" });
+    await cloudinary.api.delete_all_resources({ resource_type: "video" });
+    return { success: true };
+  } catch (error) {
+    console.error("Cloudinary cleanup error:", error);
+    throw error;
+  }
+};

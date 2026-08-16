@@ -20,6 +20,7 @@ import {
   syncAllUsers,
   deleteApplication,
   cleanRedisSets,
+  cleanCloudFiles,
 } from "./admin.controller.js";
 import { adminAuth } from "../../middleware/auth.middleware.js";
 import { validate } from "../../middleware/validate.middleware.js";
@@ -106,6 +107,7 @@ router.patch(
 
 // system management
 router.post("/redis/clean", adminAuth, cleanRedisSets);
+router.post("/cloud/clean", adminAuth, cleanCloudFiles);
 
 // payments
 router.get("/payments", adminAuth, getAllPayments);

@@ -6,6 +6,7 @@ import {
 } from "../recruitment/recruitment.service.js";
 import mongoose from "mongoose";
 import { redisConnection } from "../../redis/redis.client.js";
+import { deleteAllCloudFiles } from "../storage/storage.service.js";
 
 export const getAllApplications = async (req, res, next) => {
   const { status, departmentId, year } = req.query;
@@ -396,6 +397,19 @@ export const cleanRedisSets = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: "Leaderboard Redis sets cleaned successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const cleanCloudFiles = async (req, res, next) => {
+  try {
+    await deleteAllCloudFiles();
+
+    return res.status(200).json({
+      success: true,
+      message: "All Cloudinary files cleaned successfully",
     });
   } catch (error) {
     next(error);
