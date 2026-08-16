@@ -9,7 +9,9 @@ export const createUser = async (userData) => {
 };
 
 export const updateUser = async (clerkId, userData) => {
-  return User.findOneAndUpdate({ clerkId }, userData, { returnDocument: 'after' });
+  return User.findOneAndUpdate({ clerkId }, userData, {
+    returnDocument: "after",
+  });
 };
 
 export const countUsers = async () => {
