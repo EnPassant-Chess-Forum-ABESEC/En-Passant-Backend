@@ -1,47 +1,187 @@
-<div
-  style="
-    font-family: sans-serif;
-    color: #333;
-    line-height: 1.5;
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 20px;
-  "
->
-  <h2 style="color: #15803d">Payment Verified</h2>
-  <p>Hi <strong><%= userName %></strong>,</p>
-  <p>
-    Great news! Your payment for the En-Passant Recruitment has been
-    successfully verified.
-  </p>
-  <p>
-    You can now view your
-    <a href="<%= recruitmentDashboardUrl %>" style="color: #1e3a8a; text-decoration: underline; font-weight: bold;">recruitment dashboard</a>
-    and proceed with your assigned recruitment tasks, once they are revealed.
-  </p>
-  <p>
-    Your official payment receipt has been generated. You can download it using
-    the link below:
-  </p>
-  <div style="margin: 30px 0">
-    <a
-      href="<%= receiptUrl %>"
-      style="
-        background-color: #1e3a8a;
-        color: white;
-        padding: 12px 24px;
-        text-decoration: none;
-        border-radius: 6px;
-        font-weight: bold;
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Payment Verified</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap");
+
+      body {
+        margin: 0;
+        padding: 0;
+        background: #ffffff;
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+        color: #111;
+      }
+
+      .wrapper {
+        background: #ffffff;
+        padding: 48px 16px;
+      }
+
+      .container {
+        max-width: 560px;
+        margin: 0 auto;
+        background: #ffffff;
+      }
+
+      /* Logo strip */
+      .top {
+        padding: 36px 40px 0;
+        text-align: left;
+      }
+
+      .top img {
+        width: 40px;
+        height: 40px;
+        object-fit: contain;
+      }
+
+      /* Body */
+      .body {
+        padding: 32px 40px 36px;
+      }
+
+      .body h1 {
+        font-size: 22px;
+        font-weight: 600;
+        color: #111;
+        margin: 0 0 20px;
+        line-height: 1.3;
+      }
+
+      .body p {
+        font-size: 15px;
+        line-height: 1.7;
+        color: #444;
+        margin: 0 0 16px;
+      }
+
+      .body p:last-of-type {
+        margin-bottom: 0;
+      }
+
+      .cta-group {
+        margin: 28px 0 0;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .cta-group a {
         display: inline-block;
-      "
-      >Download Receipt</a
-    >
-  </div>
-  <p style="font-size: 0.9em; color: #666">
-    Recruitment Dashboard: <a href="<%= recruitmentDashboardUrl %>" style="color: #1e3a8a;"><%= recruitmentDashboardUrl %></a><br />
-    Or copy receipt link: <a href="<%= receiptUrl %>" style="color: #1e3a8a;"><%= receiptUrl %></a>
-  </p>
-  <br />
-  <p>Best regards,<br /><strong>En-Passant Team</strong></p>
-</div>
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        padding: 11px 24px;
+        border-radius: 6px;
+        letter-spacing: 0.01em;
+      }
+
+      .cta-primary {
+        background: #111;
+        color: #fff !important;
+      }
+
+      .cta-secondary {
+        background: #f4f4f4;
+        color: #111 !important;
+        border: 1px solid #eaeaea;
+      }
+
+      .links {
+        margin-top: 24px;
+      }
+
+      .links a {
+        display: block;
+        font-size: 11px;
+        color: #999;
+        margin-top: 6px;
+        text-decoration: none;
+        word-break: break-all;
+      }
+
+      .divider {
+        height: 1px;
+        background: #f0f0f0;
+        margin: 0 40px;
+      }
+
+      /* Footer */
+      .footer {
+        padding: 24px 40px;
+        text-align: left;
+      }
+
+      .footer p {
+        font-size: 12px;
+        color: #aaa;
+        margin: 0;
+        line-height: 1.6;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="container">
+        <div class="top">
+          <img
+            src="https://i.ibb.co/KcFKKwf3/En-Passant-New-Logo.png"
+            alt="En-Passant"
+          />
+        </div>
+
+        <div class="body">
+          <h1>Payment Verified, <%= userName %>.</h1>
+
+          <p>
+            Great news! Your payment for the En-Passant Recruitment has been
+            successfully verified.
+          </p>
+
+          <p>
+            You can now view your recruitment dashboard and proceed with your
+            assigned tasks. Your official payment receipt has also been
+            generated.
+          </p>
+
+          <div class="cta-group">
+            <a href="<%= recruitmentDashboardUrl %>" class="cta-primary"
+              >Recruitment Dashboard</a
+            >
+            <a href="<%= receiptUrl %>" class="cta-secondary"
+              >Download Receipt</a
+            >
+          </div>
+
+          <div class="links">
+            <a href="<%= recruitmentDashboardUrl %>"
+              >Dashboard: <%= recruitmentDashboardUrl %></a
+            >
+            <a href="<%= receiptUrl %>">Receipt: <%= receiptUrl %></a>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="footer">
+          <p>
+            En-Passant Chess Forum · ABESEC<br />
+            © <%= new Date().getFullYear() %> ·
+            <a href="mailto:support@enpassant.co.in" style="color: #aaa"
+              >support@enpassant.co.in</a
+            >
+          </p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

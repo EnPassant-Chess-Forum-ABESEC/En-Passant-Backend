@@ -3,242 +3,297 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
     <title>Payment Receipt</title>
-
     <style>
-      * {
+      @page {
+        size: A4;
         margin: 0;
-        padding: 0;
+      }
+
+      * {
         box-sizing: border-box;
       }
 
       body {
-        background: #f4f6f9;
-        font-family: Arial, Helvetica, sans-serif;
-        color: #374151;
-        padding: 40px 15px;
+        margin: 0;
+        background: #fff;
+        color: #202020;
+        font-family: "Poppins", "Segoe UI", Arial, sans-serif;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        display: flex;
+        justify-content: center;
       }
 
-      .container {
-        max-width: 650px;
-        margin: auto;
-        background: #ffffff;
-        border-radius: 14px;
-        overflow: hidden;
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+      .page {
+        width: 595.92px;
+        min-height: 841.92px;
+        margin: 0 auto;
+        padding: 76px 65px 40px 65px;
+        background: #fff;
       }
 
-      .header {
-        padding: 35px 40px;
-        border-bottom: 1px solid #eceff3;
+      .top {
         display: flex;
         justify-content: space-between;
-        align-items: center;
+        align-items: flex-start;
+        height: 70px;
       }
 
       .brand {
-        display: flex;
-        align-items: center;
-        gap: 16px;
+        width: 280px;
       }
 
-      .logo {
-        width: 60px;
-        height: 60px;
-        border: 2px dashed #d1d5db;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+      .brand-logo {
+        width: 18px;
+        height: 18px;
+        display: block;
+        margin-bottom: 3px;
+      }
+
+      .brand-name {
+        font-size: 16px;
+        line-height: 18px;
+        font-weight: 700;
+        color: #303030;
+      }
+
+      .brand-address {
         font-size: 11px;
-        color: #9ca3af;
-        background: #fafafa;
+        line-height: 15px;
+        color: #777;
       }
 
-      .brand h2 {
-        color: #111827;
-        margin-bottom: 4px;
+      .title {
+        margin-top: 4px;
+        font-size: 21px;
+        line-height: 26px;
+        font-weight: 450;
+        color: #555555;
+        letter-spacing: 0.1px;
+        white-space: nowrap;
       }
 
-      .brand p {
-        color: #6b7280;
-        font-size: 14px;
+      hr {
+        border: 0;
+        border-top: 1px solid #e7e7e7;
+        margin: 3px 0 17px;
       }
 
-      .receipt-meta {
-        text-align: right;
-        font-size: 14px;
-        line-height: 1.7;
-        color: #6b7280;
-      }
-
-      /* Body */
-
-      .content {
-        padding: 40px;
-      }
-
-      .success {
-        font-size: 24px;
-        color: #111827;
-        margin-bottom: 10px;
-      }
-
-      .subtitle {
-        color: #6b7280;
-        margin-bottom: 35px;
-        line-height: 1.6;
+      .section {
+        margin-bottom: 16px;
       }
 
       .section-title {
-        font-size: 14px;
-        color: #9ca3af;
-        text-transform: uppercase;
-        margin-bottom: 10px;
-        letter-spacing: 0.08em;
+        color: #555555;
+        font-size: 13.5px;
+        line-height: 18px;
+        font-weight: 600;
+        margin-bottom: 6px;
       }
 
-      .customer {
-        margin-bottom: 35px;
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        column-gap: 38px;
       }
 
-      .customer strong {
-        display: block;
-        color: #111827;
-        margin-bottom: 4px;
+      .field {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        column-gap: 8px;
+        min-height: 19px;
+        font-size: 11.5px;
+        line-height: 17px;
+      }
+
+      .label {
+        font-weight: 700;
+        color: #303030;
+      }
+
+      .value {
+        color: #303030;
+      }
+
+      .divider {
+        border-top: 1px solid #e7e7e7;
+        margin-top: 14px;
       }
 
       table {
         width: 100%;
         border-collapse: collapse;
-      }
-
-      thead {
-        background: #f8fafc;
+        font-size: 11.5px;
+        table-layout: fixed;
       }
 
       th {
+        height: 29px;
+        padding: 6px 8px;
+        background: #e8e8e8;
         text-align: left;
-        padding: 14px;
-        font-size: 14px;
-        color: #6b7280;
+        font-weight: 600;
+        color: #111;
+        border-bottom: 1px solid #e1e1e1;
       }
 
       td {
-        padding: 18px 14px;
-        border-bottom: 1px solid #edf1f5;
+        height: 29px;
+        padding: 6px 8px;
+        color: #333;
+        border-bottom: none;
+        vertical-align: middle;
       }
 
-      .text-right {
+      th:nth-child(1),
+      td:nth-child(1) {
+        width: 55%;
+      }
+      th:nth-child(2),
+      td:nth-child(2) {
+        width: 15%;
+        text-align: center;
+      }
+      th:nth-child(3),
+      td:nth-child(3) {
+        width: 30%;
         text-align: right;
       }
 
-      .total {
-        font-weight: bold;
-        color: #111827;
-        background: #fafafa;
+      .financial {
+        margin-top: 1px;
       }
 
-      /* Footer */
+      .financial-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        min-height: 29px;
+        padding: 5px 6px;
+        border-bottom: 1px solid #e8e8e8;
+        font-size: 11.5px;
+      }
+
+      .financial-row strong {
+        font-weight: 700;
+      }
 
       .footer {
-        border-top: 1px solid #eceff3;
-        padding: 30px 40px;
         text-align: center;
-        font-size: 13px;
-        color: #9ca3af;
-        line-height: 1.8;
+        margin-top: 18px;
+        color: #999;
+        font-size: 10.5px;
+        line-height: 14px;
       }
 
-      @media (max-width: 600px) {
-        .header {
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 20px;
-        }
-
-        .receipt-meta {
-          text-align: left;
-        }
-
-        .content,
-        .footer {
-          padding: 28px 22px;
+      @media print {
+        .page {
+          margin: 0;
         }
       }
     </style>
   </head>
-
   <body>
-    <div class="container">
-      <div class="header">
+    <main class="page">
+      <div class="top">
         <div class="brand">
           <img
+            class="brand-logo"
             src="https://i.ibb.co/KcFKKwf3/En-Passant-New-Logo.png"
-            alt="En Passant Logo"
-            width="72"
-            style="margin: 0 auto 20px"
+            alt="En-Passant"
+            style="width: 32px; height: 32px; margin-bottom: 4px"
           />
-
-          <div>
-            <h2>En-Passant</h2>
-            <p>Official Payment Receipt</p>
+          <div class="brand-name">En-Passant</div>
+          <div class="brand-address">
+            ABES Engineering College, Ghaziabad, UP, India
           </div>
         </div>
-
-        <div class="receipt-meta">
-          <div><strong>Receipt #</strong> <%= paymentId %></div>
-          <div><strong>Date</strong> <%= date %></div>
-        </div>
+        <div class="title">OFFICIAL RECEIPT</div>
       </div>
 
-      <div class="content">
-        <h1 class="success">Payment Received</h1>
+      <hr />
 
-        <p class="subtitle">
-          Thank you for your payment. Your transaction has been successfully
-          processed and recorded.
-        </p>
-
-        <div class="customer">
-          <div class="section-title">Billed To</div>
-
-          <strong><%= userName %></strong>
-          <div><%= userEmail %></div>
+      <section class="section">
+        <div class="section-title">Receipt Details</div>
+        <div class="grid">
+          <div>
+            <div class="field">
+              <div class="label">Receipt ID:</div>
+              <div class="value"><%= paymentId %></div>
+            </div>
+            <div class="field">
+              <div class="label">Date:</div>
+              <div class="value"><%= date %></div>
+            </div>
+          </div>
         </div>
+      </section>
 
+      <div class="divider"></div>
+
+      <section class="section" style="margin-top: 14px">
+        <div class="section-title">Customer Information</div>
+        <div class="grid">
+          <div>
+            <div class="field">
+              <div class="label">Name:</div>
+              <div class="value"><%= userName %></div>
+            </div>
+          </div>
+          <div>
+            <div class="field">
+              <div class="label">Email:</div>
+              <div class="value"><%= userEmail %></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <section class="section" style="margin-top: 14px">
+        <div class="section-title">Transaction Details</div>
         <table>
           <thead>
             <tr>
               <th>Description</th>
-              <th class="text-right">Amount</th>
+              <th style="text-align: center">Qty</th>
+              <th style="text-align: right">Price</th>
             </tr>
           </thead>
-
           <tbody>
             <tr>
               <td><%= purpose %></td>
-              <td class="text-right">₹<%= amount %></td>
-            </tr>
-
-            <tr class="total">
-              <td>Total Paid</td>
-              <td class="text-right">₹<%= amount %></td>
+              <td style="text-align: center">1</td>
+              <td style="text-align: right">₹<%= amount %></td>
             </tr>
           </tbody>
         </table>
-      </div>
+      </section>
 
-      <div class="footer">
-        This receipt serves as confirmation that your payment has been
-        received.<br />
+      <div class="divider"></div>
 
-        If you have any questions regarding this payment, simply reply to this
-        email.<br />
+      <section class="section" style="margin-top: 14px">
+        <div class="section-title">Financial Summary</div>
+        <div class="financial">
+          <div class="financial-row">
+            <strong>Total Amount:</strong>
+            <strong>₹<%= amount %></strong>
+          </div>
+          <div class="financial-row">
+            <strong>Payment Status:</strong>
+            <span style="color: #16a34a; font-weight: 600">Success</span>
+          </div>
+        </div>
+      </section>
 
-        <strong>Thank you.</strong>
-      </div>
-    </div>
+      <footer class="footer">
+        <div>
+          © <%= new Date().getFullYear() %> En-Passant Chess Forum. All rights
+          reserved.
+        </div>
+      </footer>
+    </main>
   </body>
 </html>

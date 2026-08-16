@@ -20,10 +20,12 @@ const processEmailJob = async (job) => {
 
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
     const profileUrl = `${frontendUrl.replace(/\/$/, "")}/profile`;
+    const onboardingUrl = `${profileUrl}?onboarding=true`;
 
     const html = await ejs.renderFile(templatePath, {
       userName,
       profileUrl,
+      onboardingUrl,
       year: new Date().getFullYear(),
     });
 

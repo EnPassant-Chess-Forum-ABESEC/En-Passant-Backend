@@ -57,7 +57,7 @@ const processReceiptJob = async (job) => {
     const pdfBuffer = await page.pdf({
       format: "A4",
       printBackground: true,
-      margin: { top: "40px", bottom: "40px" },
+      margin: { top: "0", right: "0", bottom: "0", left: "0" },
     });
 
     await browser.close();

@@ -4,169 +4,153 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Welcome to En-Passant</title>
-
     <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap");
+
       body {
         margin: 0;
         padding: 0;
-        background: #f5f7fb;
-        font-family: Arial, Helvetica, sans-serif;
-        color: #374151;
-      }
-
-      table {
-        border-spacing: 0;
-      }
-
-      img {
-        border: 0;
-        display: block;
+        background: #ffffff;
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+        color: #111;
       }
 
       .wrapper {
-        width: 100%;
-        background: #f5f7fb;
-        padding: 40px 20px;
+        background: #ffffff;
+        padding: 48px 16px;
       }
 
       .container {
-        max-width: 600px;
+        max-width: 560px;
         margin: 0 auto;
         background: #ffffff;
-        border-radius: 14px;
-        overflow: hidden;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
       }
 
-      .header {
-        padding: 40px 30px 24px;
-        text-align: center;
-        border-bottom: 1px solid #eef2f7;
+      /* Logo strip */
+      .top {
+        padding: 36px 40px 0;
+        text-align: left;
       }
 
-      .logo {
-        width: 72px;
-        height: 72px;
-        margin: 0 auto 18px;
-        border: 2px dashed #d1d5db;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #9ca3af;
-        font-size: 12px;
-        background: #fafafa;
+      .top img {
+        width: 40px;
+        height: 40px;
+        object-fit: contain;
       }
 
-      h1 {
-        margin: 0;
-        font-size: 28px;
-        color: #111827;
+      /* Body */
+      .body {
+        padding: 32px 40px 36px;
       }
 
-      .subtitle {
-        margin-top: 10px;
-        font-size: 16px;
-        color: #6b7280;
-        line-height: 1.6;
-      }
-
-      .content {
-        padding: 40px 30px;
-      }
-
-      .content p {
-        margin: 0 0 18px;
-        line-height: 1.7;
-        font-size: 15px;
-        color: #4b5563;
-      }
-
-      .button-container {
-        text-align: center;
-        margin: 35px 0;
-      }
-
-      .button {
-        display: inline-block;
-        padding: 14px 34px;
-        background: #111827;
-        color: #ffffff !important;
-        text-decoration: none;
-        border-radius: 8px;
+      .body h1 {
+        font-size: 22px;
         font-weight: 600;
+        color: #111;
+        margin: 0 0 20px;
+        line-height: 1.3;
+      }
+
+      .body p {
         font-size: 15px;
+        line-height: 1.7;
+        color: #444;
+        margin: 0 0 16px;
       }
 
+      .body p:last-of-type {
+        margin-bottom: 0;
+      }
+
+      .cta {
+        margin: 28px 0 0;
+      }
+
+      .cta a {
+        display: inline-block;
+        background: #111;
+        color: #fff !important;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        padding: 11px 24px;
+        border-radius: 6px;
+        letter-spacing: 0.01em;
+      }
+
+      .divider {
+        height: 1px;
+        background: #f0f0f0;
+        margin: 0 40px;
+      }
+
+      /* Footer */
       .footer {
-        border-top: 1px solid #eef2f7;
-        padding: 24px 30px;
-        text-align: center;
-        font-size: 13px;
-        color: #9ca3af;
+        padding: 24px 40px;
+        text-align: left;
       }
 
-      @media only screen and (max-width: 600px) {
-        .wrapper {
-          padding: 20px 10px;
-        }
-
-        .header,
-        .content,
-        .footer {
-          padding: 28px 22px;
-        }
-
-        h1 {
-          font-size: 24px;
-        }
+      .footer p {
+        font-size: 12px;
+        color: #aaa;
+        margin: 0;
+        line-height: 1.6;
       }
     </style>
   </head>
-
   <body>
     <div class="wrapper">
       <div class="container">
-        <div class="header">
+        <div class="top">
           <img
             src="https://i.ibb.co/KcFKKwf3/En-Passant-New-Logo.png"
-            alt="En Passant Logo"
-            width="72"
-            style="margin: 0 auto 20px"
+            alt="En-Passant"
           />
+        </div>
 
-          <h1>Welcome, <%= userName %>!</h1>
+        <div class="body">
+          <h1>Welcome to En-Passant, <%= userName %>.</h1>
 
-          <div class="subtitle">
-            Thanks for joining <strong>En-Passant</strong>. We're excited to
-            have you in our chess community.
+          <p>
+            You're now part of the official chess community at ABESEC. We're
+            glad to have you with us.
+          </p>
+
+          <p>
+            To get the full experience, please complete your onboarding.<br />
+            During onboarding, you'll set up your profile, connect your
+            Chess.com or Lichess account after which you'll be listed on the
+            leaderboard.
+          </p>
+
+          <p>
+            If you have any questions, just reply to this email — we're always
+            around.
+          </p>
+
+          <div class="cta">
+            <a href="<%= onboardingUrl %>"
+              >Complete Onboarding &nbsp;&#x276F;</a
+            >
           </div>
         </div>
 
-        <div class="content">
-          <p>
-            Whether you're just getting started or already an experienced
-            player, you've joined a community built to help you improve,
-            compete, and enjoy the game.
-          </p>
-
-          <p>
-            Explore tournaments, climb the leaderboard, challenge other players,
-            and continue sharpening your chess skills.
-          </p>
-
-          <div class="button-container">
-            <a href="<%= profileUrl %>" class="button"> Go to Dashboard </a>
-          </div>
-
-          <p>
-            Happy playing,<br />
-            <strong>The En-Passant Team</strong>
-          </p>
-        </div>
+        <div class="divider"></div>
 
         <div class="footer">
-          © <%= new Date().getFullYear() %> En-Passant Chess Forum.<br />
+          <p>
+            En-Passant Chess Forum · ABESEC<br />
+            © <%= new Date().getFullYear() %> ·
+            <a href="mailto:support@enpassant.co.in" style="color: #aaa"
+              >support@enpassant.co.in</a
+            >
+          </p>
         </div>
       </div>
     </div>
