@@ -43,5 +43,6 @@ export const generateSignedUrl = (publicId, options = {}) => {
     secure: true,
     sign_url: true,
     expires_at: Math.floor(Date.now() / 1000) + 15 * 60,
+    ...(options.resource_type === "raw" && { flags: "attachment" }),
   });
 };

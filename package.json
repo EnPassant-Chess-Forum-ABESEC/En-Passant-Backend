@@ -21,6 +21,7 @@
     "ejs": "^6.0.1",
     "exceljs": "^4.4.0",
     "express": "^5.2.1",
+    "file-type": "^22.0.2",
     "ioredis": "^5.11.1",
     "mongoose": "^9.7.3",
     "multer": "^2.2.0",

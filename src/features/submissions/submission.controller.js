@@ -8,11 +8,35 @@ import {
 } from "../storage/storage.service.js";
 import * as recruitmentService from "../recruitment/recruitment.service.js";
 import * as taskRepo from "../tasks/task.repository.js";
+import { fileTypeFromBuffer } from "file-type";
 
 export const uploadTaskSubmission = async (req, res, next) => {
   const { applicationId, taskId } = req.params;
   const { text, links } = req.body;
   const files = req.files || [];
+  const hasText = text && text.trim().length > 0;
+  const hasLinks = Array.isArray(links) ? links.length > 0 : (links && links.trim().length > 0);
+
+  if (!hasText && !hasLinks && files.length === 0) {
+    return res.status(400).json({
+      success: false,
+      message: "Submission cannot be empty. Please provide at least one text, link, or file.",
+    });
+  }
+
+  const linksArray = Array.isArray(links) ? links : (links ? [links] : []);
+  for (const link of linksArray) {
+    if (link.trim() !== "") {
+      try {
+        const urlObj = new URL(link);
+        if (urlObj.protocol !== "http:" && urlObj.protocol !== "https:") {
+          return res.status(400).json({ success: false, message: "Only HTTP/HTTPS links are allowed" });
+        }
+      } catch (err) {
+        return res.status(400).json({ success: false, message: "Invalid URL provided" });
+      }
+    }
+  }
 
   const currentYear = new Date().getFullYear();
 
@@ -122,6 +146,13 @@ export const uploadTaskSubmission = async (req, res, next) => {
         return res
           .status(400)
           .json({ success: false, message: "Invalid file type for this task" });
+      }
+
+      const detectedType = await fileTypeFromBuffer(file.buffer);
+      if (!detectedType || !isValidMimeType(detectedType.mime, submission.fileCategory)) {
+        return res
+          .status(400)
+          .json({ success: false, message: "File signature validation failed. Malicious file detected." });
       }
     }
 
