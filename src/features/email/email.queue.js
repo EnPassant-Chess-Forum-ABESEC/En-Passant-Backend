@@ -83,3 +83,16 @@ export const enqueueContactUsEmail = async (name, email, subject, message) => {
     console.error(`Failed to enqueue contact us email from ${email}:`, error);
   }
 };
+
+export const enqueueDraftReminderEmail = async (userId, email, name) => {
+  try {
+    await emailQueue.add("send-draft-reminder-email", {
+      userId,
+      email,
+      name,
+    });
+    console.log(`Enqueued draft reminder email for user ${userId}`);
+  } catch (error) {
+    console.error(`Failed to enqueue draft reminder email for ${userId}:`, error);
+  }
+};

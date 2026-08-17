@@ -6,7 +6,8 @@ import * as submissionRepo from "../submissions/submission.repository.js";
 import * as taskRepo from "../tasks/task.repository.js";
 import * as userRepo from "../users/user.repository.js";
 import * as paymentRepo from "../payments/payment.repository.js";
-
+import { enqueueDraftReminderEmail } from "../email/email.queue.js";
+import { APPLICATION_STATUS } from "../recruitment/recruitment.constants.js";
 export const getAllApplications = async (filters) => {
   const query = {};
 
@@ -287,5 +288,27 @@ export const exportPaymentsAsExcel = async () => {
   } catch (error) {
     if (error instanceof AppError) throw error;
     throw new AppError(`exportPaymentsAsExcel failed: ${error.message}`, 500);
+  }
+};
+
+export const sendDraftReminders = async () => {
+  try {
+    const draftApplications = await recruitmentRepo.findAllRecruitment({
+      status: APPLICATION_STATUS.DRAFT,
+    });
+
+    let sentCount = 0;
+    for (const app of draftApplications) {
+      if (app.userId && app.userId.email) {
+        const userName = app.userId.userName || app.userId.firstName || "Applicant";
+        await enqueueDraftReminderEmail(app.userId._id, app.userId.email, userName);
+        sentCount++;
+      }
+    }
+    
+    return { count: sentCount };
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    throw new AppError(`sendDraftReminders failed: ${error.message}`, 500);
   }
 };

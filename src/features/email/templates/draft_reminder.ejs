@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Payment Verified</title>
+    <title>Action Required: Complete Your Application</title>
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap");
 
@@ -68,47 +68,6 @@
         margin-bottom: 0;
       }
 
-      .cta-group {
-        margin: 28px 0 0;
-        text-align: left;
-      }
-
-      .cta-group a {
-        display: inline-block;
-        text-decoration: none;
-        font-size: 14px;
-        font-weight: 500;
-        padding: 11px 24px;
-        border-radius: 6px;
-        letter-spacing: 0.01em;
-      }
-
-      .cta-primary {
-        background: #111;
-        color: #fff !important;
-        margin-right: 12px;
-        margin-bottom: 8px;
-      }
-
-      .cta-secondary {
-        background: #f4f4f4;
-        color: #111 !important;
-        border: 1px solid #eaeaea;
-      }
-
-      .links {
-        margin-top: 24px;
-      }
-
-      .links a {
-        display: block;
-        font-size: 11px;
-        color: #999;
-        margin-top: 6px;
-        text-decoration: none;
-        word-break: break-all;
-      }
-
       .divider {
         height: 1px;
         background: #f0f0f0;
@@ -127,6 +86,18 @@
         margin: 0;
         line-height: 1.6;
       }
+
+      .button {
+        display: inline-block;
+        background: #111;
+        color: #ffffff !important;
+        font-weight: 500;
+        font-size: 14px;
+        text-decoration: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        margin: 16px 0 24px;
+      }
     </style>
   </head>
   <body>
@@ -140,42 +111,37 @@
         </div>
 
         <div class="body">
-          <h1>Payment Verified, <%= userName %>.</h1>
+          <h1>Action Required, <%= userName %>.</h1>
 
           <p>
-            Great news! Your payment for the En-Passant Recruitment has been
-            successfully verified.
+            We noticed that you've started your recruitment application for
+            <strong>En-Passant</strong>, but you haven't completed the final
+            step: the registration fee payment.
           </p>
 
           <p>
-            You can now view your recruitment dashboard and proceed with your
-            assigned tasks. Your official payment receipt has also been
-            generated.
+            To unlock access to your department tasks and officially begin the
+            recruitment process, please complete the Rs. 40 payment on your
+            dashboard.
           </p>
 
+          <a href="<%= applyUrl %>" class="button">Complete Application</a>
+
           <p>
-            If you have any questions, please reach out via our
+            If you're facing any issues with the payment, please reach out via
+            our
             <a
-              href="<%= recruitmentDashboardUrl.replace('/recruitment/dashboard', '/contact') %>"
+              href="https://enpassant.co.in/contact"
               style="color: #111; font-weight: 500"
               >Contact Us page</a
-            >.
+            >. We're here to help!
           </p>
 
-          <div class="cta-group">
-            <a href="<%= recruitmentDashboardUrl %>" class="cta-primary"
-              >Recruitment Dashboard</a
-            >
-            <a href="<%= receiptUrl %>" class="cta-secondary"
-              >Download Receipt</a
-            >
-          </div>
-
-          <div class="links">
-            <a href="<%= recruitmentDashboardUrl %>"
-              >Dashboard: <%= recruitmentDashboardUrl %></a
-            >
-            <a href="<%= receiptUrl %>">Receipt: <%= receiptUrl %></a>
+          <div style="margin-top: 32px">
+            <p>
+              Best Regards,<br />
+              <strong>En-Passant Core Team</strong>
+            </p>
           </div>
         </div>
 
@@ -185,10 +151,9 @@
           <p>
             En-Passant Chess Forum · ABESEC<br />
             © <%= new Date().getFullYear() %> ·
-            <a href="mailto:support@enpassant.co.in" style="color: #aaa"
-              >support@enpassant.co.in</a
-            >
           </p>
+
+          <p style="color: #aaa">support@enpassant.co.in</p>
         </div>
       </div>
     </div>

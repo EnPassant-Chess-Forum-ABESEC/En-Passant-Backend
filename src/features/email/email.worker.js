@@ -114,6 +114,22 @@ const processEmailJob = async (job) => {
       html,
       replyTo: userEmail,
     });
+  } else if (name === "send-draft-reminder-email") {
+    const { email, name: userName } = data;
+
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+    const applyUrl = `${frontendUrl.replace(/\/$/, "")}/recruitment/apply`;
+
+    const subject = "Action Required: Complete your En Passant Application";
+    const text = `Hi ${userName},\n\nPlease complete your payment to continue the En Passant recruitment process.`;
+
+    const templatePath = path.join(__dirname, "templates", "draft_reminder.ejs");
+    const html = await ejs.renderFile(templatePath, {
+      userName: userName || "Applicant",
+      applyUrl,
+    });
+
+    await sendEmail({ to: email, subject, text, html });
   }
 };
 

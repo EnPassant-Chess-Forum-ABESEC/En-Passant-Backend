@@ -415,3 +415,15 @@ export const cleanCloudFiles = async (req, res, next) => {
     next(error);
   }
 };
+
+export const sendDraftReminders = async (req, res, next) => {
+  try {
+    const result = await adminService.sendDraftReminders();
+    return res.status(200).json({
+      success: true,
+      message: `Successfully enqueued draft reminder emails for ${result.count} users.`,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

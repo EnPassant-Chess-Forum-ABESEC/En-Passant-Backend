@@ -62,8 +62,8 @@ const processReceiptJob = async (job) => {
 
     await browser.close();
 
-    const backendUrl = process.env.BACKEND_URL || "http://localhost:8080";
-    const receiptLink = `${backendUrl}/api/payments/${payment._id}/receipt.pdf`;
+    const backendUrl = process.env.BACKEND_URL || "https://en-passant-backend.onrender.com";
+    const receiptLink = `${backendUrl.replace(/\/$/, "").replace(/\/api$/, "")}/api/payments/${payment._id}/receipt.pdf`;
 
     payment.receiptFile = Buffer.from(pdfBuffer);
     payment.receiptUrl = receiptLink;

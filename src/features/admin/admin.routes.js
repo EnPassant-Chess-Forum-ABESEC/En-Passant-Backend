@@ -21,6 +21,7 @@ import {
   deleteApplication,
   cleanRedisSets,
   cleanCloudFiles,
+  sendDraftReminders,
 } from "./admin.controller.js";
 import { adminAuth } from "../../middleware/auth.middleware.js";
 import { validate } from "../../middleware/validate.middleware.js";
@@ -66,6 +67,11 @@ router.delete(
   adminAuth,
   validate(deleteApplicationSchema),
   deleteApplication,
+);
+router.post(
+  "/applications/remind-drafts",
+  adminAuth,
+  sendDraftReminders,
 );
 
 // department management
