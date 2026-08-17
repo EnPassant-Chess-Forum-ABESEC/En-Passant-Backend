@@ -77,6 +77,7 @@ export const generateApplicationsExcel = async (applications) => {
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      timeZone: "Asia/Kolkata",
     });
     const paymentDate =
       app.paymentStatus === "SUCCESS"
@@ -86,6 +87,7 @@ export const generateApplicationsExcel = async (applications) => {
             year: "numeric",
             hour: "2-digit",
             minute: "2-digit",
+            timeZone: "Asia/Kolkata",
           })
         : "—";
 
@@ -251,6 +253,7 @@ export const generatePaymentsExcel = async (payments) => {
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      timeZone: "Asia/Kolkata",
     });
 
     const row = worksheet.addRow({
