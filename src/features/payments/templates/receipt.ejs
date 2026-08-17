@@ -110,6 +110,7 @@
       .label {
         font-weight: 700;
         color: #303030;
+        white-space: nowrap;
       }
 
       .value {
@@ -266,7 +267,7 @@
             <tr>
               <td><%= purpose %></td>
               <td style="text-align: center">1</td>
-              <td style="text-align: right">₹<%= amount %></td>
+              <td style="text-align: right">Rs. <%= amount %></td>
             </tr>
           </tbody>
         </table>
@@ -279,7 +280,7 @@
         <div class="financial">
           <div class="financial-row">
             <strong>Total Amount:</strong>
-            <strong>₹<%= amount %></strong>
+            <strong>Rs. <%= amount %></strong>
           </div>
           <div class="financial-row">
             <strong>Payment Status:</strong>

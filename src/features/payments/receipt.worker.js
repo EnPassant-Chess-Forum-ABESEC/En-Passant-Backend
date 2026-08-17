@@ -37,7 +37,7 @@ const processReceiptJob = async (job) => {
       userEmail: user.email,
       purpose:
         payment.purpose === "recruitment" ? "Recruitment Fee" : "Event Fee",
-      amount: payment.amount,
+      amount: payment.amount / 100,
     });
 
     const launchOptions = {
