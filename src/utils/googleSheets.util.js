@@ -9,9 +9,17 @@ const SCOPES = [
   'https://www.googleapis.com/auth/drive.file',
 ];
 
+let rawKey = process.env.GOOGLE_PRIVATE_KEY || '';
+if (rawKey.startsWith('"') && rawKey.endsWith('"')) {
+  rawKey = rawKey.slice(1, -1);
+} else if (rawKey.startsWith("'") && rawKey.endsWith("'")) {
+  rawKey = rawKey.slice(1, -1);
+}
+rawKey = rawKey.replace(/\\n/g, '\n');
+
 const jwt = new JWT({
   email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-  key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+  key: rawKey,
   scopes: SCOPES,
 });
 
