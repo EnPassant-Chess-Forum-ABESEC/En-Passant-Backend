@@ -119,6 +119,7 @@ export const syncApplicationsToSheets = async (applications) => {
   await sheet.setHeaderRow(allRows[0]);
   await sheet.addRows(allRows.slice(1), { raw: true, insert: false });
   await applyFormatting(sheet, allRows.length, allRows[1].length, 'Recruitment-2026 Applications', true);
+  await sheet.autoResizeDimensions('COLUMNS');
 };
 
 export const syncPaymentsToSheets = async (payments) => {
@@ -152,4 +153,5 @@ export const syncPaymentsToSheets = async (payments) => {
   await sheet.setHeaderRow(allRows[0]);
   await sheet.addRows(allRows.slice(1), { raw: true, insert: false });
   await applyFormatting(sheet, allRows.length, allRows[1].length, 'Recruitment-2026 Payments', false);
+  await sheet.autoResizeDimensions('COLUMNS');
 };
