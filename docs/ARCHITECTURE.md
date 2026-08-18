@@ -16,9 +16,12 @@
 - [Background Sync Flow (Chess Accounts)](#background-sync-flow-chess-accounts)
 - [Leaderboard Flow](#leaderboard-flow)
 - [Recruitment Service Flow](#recruitment-service-flow)
-- [Payment Flow](#payment-flow)
+- [Manual Payment & Receipt Flow](#manual-payment--receipt-flow)
+- [Email Notification Flow](#email-notification-flow)
+- [Events Management Flow](#events-management-flow)
 - [Task Service Flow](#task-service-flow)
 - [Submission Service Flow](#submission-service-flow)
+- [Admin System Services](#admin-system-services)
 - [Adding a New Feature](#adding-a-new-feature)
 
 ## Overview
@@ -47,17 +50,35 @@ src/
 │   │   ├─ admin.routes.js
 │   │   ├─ admin.service.js
 │   │   └─ admin.validation.js
+│   ├─ contact/
+│   │   ├─ contact.controller.js
+│   │   ├─ contact.model.js
+│   │   └─ contact.routes.js
+│   ├─ email/
+│   │   ├─ email.service.js
+│   │   ├─ email.queue.js
+│   │   ├─ email.worker.js
+│   │   └─ templates/
+│   ├─ events/
+│   │   ├─ event.controller.js
+│   │   ├─ event.model.js
+│   │   ├─ event.repository.js
+│   │   ├─ event.routes.js
+│   │   └─ event.service.js
 │   ├─ leaderboard/
 │   │   ├─ leaderboard.controller.js
 │   │   ├─ leaderboard.routes.js
 │   │   └─ leaderboard.service.js
-│   ├── payments/
-│   │   ├── gateways/
-│   │   │   └── razorpay.gateway.js        # Razorpay SDK wrapper
-│   │   ├── payment.controller.js          # createCheckoutSession, razorpayWebhook
-│   │   ├── payment.model.js               # Payment ledger schema
-│   │   ├── payment.repository.js          # Database queries for payments
-│   │   └── payment.routes.js
+│   ├─ logs/
+│   │   └─ log.model.js
+│   ├─ payments/
+│   │   ├─ payment.controller.js          # manual submission, admin verification
+│   │   ├─ payment.model.js               # manual payment ledger schema
+│   │   ├─ payment.repository.js
+│   │   ├─ payment.routes.js
+│   │   ├─ receipt.queue.js               # Queue for receipt generation
+│   │   ├─ receipt.worker.js              # PDF generation worker (Puppeteer)
+│   │   └─ templates/
 │   ├─ recruitment/
 │   │   ├─ recruitment.constants.js       # Enums + VALID_TRANSITIONS state machine
 │   │   ├─ recruitment.controller.js      # createApplication, getMyApplication
@@ -69,6 +90,10 @@ src/
 │   │   ├─ recruitment.service.js         # Business logic + state transitions
 │   │   ├─ recruitment.validation.js      # Zod validation schemas
 │   │   └─ recruitment.worker.js          # BullMQ worker: autoRejectExpiredApplications
+│   ├─ settings/
+│   │   ├─ settings.controller.js
+│   │   ├─ settings.model.js
+│   │   └─ settings.routes.js
 │   ├─ storage/
 │   │   ├─ providers/
 │   │   │   └─ cloudinary.provider.js     # Cloudinary SDK init
@@ -76,27 +101,30 @@ src/
 │   ├─ submissions/
 │   │   ├─ submission.controller.js       # uploadTaskSubmission, getTaskSubmission
 │   │   ├─ submission.model.js            # Mongoose Submission schema
-|   |   ├─ submission.repository.js       # Data access layer
+│   │   ├─ submission.repository.js       # Data access layer
 │   │   └─ submission.routes.js           # Express router
-│   ├─ tasks/
-│   │   ├─ task.controller.js
-│   │   ├─ task.model.js                  # Department + Task schemas
-│   │   ├─ task.repository.js
-│   │   ├─ task.routes.js
-│   │   └─ task.service.js
 │   ├─ sync/
 │   │   ├─ adapters/                      # Chess.com + Lichess adapters
 │   │   ├─ sync.engine.js                 # Core sync + leaderboard update logic
 │   │   ├─ sync.queue.js
 │   │   ├─ sync.scheduler.js              # Cron: daily sync dispatcher
 │   │   └─ sync.worker.js
-│   └─ users/
-│       ├─ user.model.js
-│       ├─ user.repository.js
-│       ├─ user.service.js
-│       ├─ user.controller.js
-│       ├─ user.routes.js
-│       └─ user.validation.js
+│   ├─ tasks/
+│   │   ├─ task.controller.js
+│   │   ├─ task.model.js                  # Department + Task schemas
+│   │   ├─ task.repository.js
+│   │   ├─ task.routes.js
+│   │   └─ task.service.js
+│   ├─ users/
+│   │   ├─ user.model.js
+│   │   ├─ user.repository.js
+│   │   ├─ user.service.js
+│   │   ├─ user.controller.js
+│   │   ├─ user.routes.js
+│   │   └─ user.validation.js
+│   └─ webhooks/
+│       ├─ webhook.controller.js          # external service webhooks (e.g. Clerk)
+│       └─ webhook.routes.js
 ├─ middleware/
 │   ├─ auth.middleware.js      # Clerk JWT authentication (userAuth, adminAuth)
 │   ├─ upload.middleware.js    # Multer memory storage (10 MB limit)
@@ -202,16 +230,29 @@ The recruitment pipeline enforces a strict finite state machine.
 - **State Transitions**: All status changes go through `transitionStatus()` in `recruitment.service.js`, which validates against `VALID_TRANSITIONS` before writing.
 - **Background Expiry**: A daily cron (via BullMQ + Redis) fires `autoRejectExpiredApplications()` at midnight, deleting any `PAYMENT_PENDING` applications older than 24 hours.
 
-## Payment Flow
+## Manual Payment & Receipt Flow
 
-The payment flow integrates Razorpay with the recruitment state machine and maintains a robust transaction ledger:
-<img src="/docs//diagrams//payment_flow.svg" alt="Payment Flow Diagram" width="100%"/>
+The application has switched to a fully manual payment verification process, removing the legacy Razorpay gateway.
 
-1. `POST /api/payments/checkout` - Creates a Razorpay order, creates a `PENDING` record in the `Payments` collection, and transitions application `DRAFT -> PAYMENT_PENDING`.
-2. Razorpay redirects the user through their hosted checkout.
-3. `POST /api/payments/webhook` - Receives webhook events and verifies the **HMAC-SHA256 signature**.
-   - On `payment.captured`: A **MongoDB Transaction** is started. It updates the `Payment` ledger to `SUCCESS` and transitions the application `PAYMENT_PENDING -> ACTIVE`. The transaction ensures both updates succeed or fail together (atomicity).
-   - On `payment.failed`: The `Payment` ledger is updated to `FAILED`, but the application remains `PAYMENT_PENDING` allowing retry.
+1. **Submission**: `POST /api/payments/manual` - The applicant uploads a screenshot of their transaction along with the UTR number. The screenshot is uploaded to Cloudinary, a `PENDING` record is created in the `Payments` collection, and the application transitions to `PAYMENT_PENDING`. An email is queued notifying them that their payment is under review.
+2. **Verification**: `PATCH /api/admin/payments/:id/verify` - An admin reviews the screenshot and UTR. 
+   - **On Success**: A MongoDB Transaction is used to update the `Payment` ledger to `SUCCESS` and transition the application to `ACTIVE`. A background job is enqueued to generate a receipt.
+   - **On Failure**: The ledger is marked `FAILED` with a rejection reason, the application remains `PAYMENT_PENDING`, and an email is queued to notify the candidate.
+3. **Receipt Generation**: The `receipt-queue` (BullMQ worker) uses Puppeteer to render a PDF receipt from an EJS template, uploads/stores it, and triggers a success email with the receipt attached.
+
+## Email Notification Flow
+
+Email notifications are offloaded to a background worker to ensure fast API responses.
+- **Queue**: Uses BullMQ (`email-queue`).
+- **Worker**: The worker uses `Nodemailer` and EJS templates (`src/features/email/templates/`) to render and send responsive emails.
+- **Use Cases**: Payment success (with receipts), payment failure notices, draft application reminders.
+
+## Events Management Flow
+
+The `events` feature allows the club to host, display, and manage chess tournaments or offline events.
+- **Models**: Defines an `Event` with capacities, deadlines, and a `status` (upcoming, ongoing, completed, cancelled).
+- **Admin**: Admins create and modify events.
+- **Public**: End-users can query the list of active events to participate or view details.
 
 ## Task Service Flow
 
@@ -244,6 +285,14 @@ On fetch (`GET /api/submissions/:appId/:taskId`):
 
 - Generates a **signed Cloudinary URL** (15-minute TTL) per stored file so admins and the applicant can securely view uploaded assets.
 
+## Admin System Services
+
+The admin module is highly privileged and handles beyond simple CRUD:
+- **`POST /api/admin/redis/clean`**: Clears out stale leaderboard sorted sets.
+- **`POST /api/admin/cloud/clean`**: Purges unused or orphaned assets from Cloudinary.
+- **`POST /api/admin/users/sync-all`**: Dispatches a global queue job to re-sync all chess ratings from external APIs.
+- **`POST /api/admin/applications/remind-drafts`**: Enqueues reminder emails for users sitting on `DRAFT` applications.
+
 ## Adding a New Feature
 
 To add a new domain (e.g., tournaments):
@@ -257,5 +306,3 @@ To add a new domain (e.g., tournaments):
    - `tournament.routes.js`
    - `tournament.validation.js`
 3. Register the router in `src/app.js`.
-
----

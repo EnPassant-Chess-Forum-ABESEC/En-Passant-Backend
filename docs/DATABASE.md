@@ -18,6 +18,11 @@
 | `tasks`        | `features/tasks/task.model.js`              | Recruitment task definitions per year       |
 | `recruitments` | `features/recruitment/recruitment.model.js` | Candidate applications per year             |
 | `submissions`  | `features/submissions/submission.model.js`  | Task submission records and Cloudinary refs |
+| `payments`     | `features/payments/payment.model.js`        | Ledger for manual payments and receipts     |
+| `events`       | `features/events/event.model.js`            | Club events, tournaments, and timelines     |
+| `settings`     | `features/settings/settings.model.js`       | Global application date settings            |
+| `contactqueries`| `features/contact/contact.model.js`        | User inquiries and contact form submissions |
+| `logs`         | `features/logs/log.model.js`                | System audit logs                           |
 
 ---
 
@@ -40,29 +45,6 @@
 | `profilePictureUrl`    | String  | No       | —        | Avatar URL.                                     |
 | `isOnboardingComplete` | Boolean | No       | `false`  | Whether the user finished profile setup.        |
 | `role`                 | String  | No       | `"user"` | Permissions. Allowed: `"user"`, `"admin"`.      |
-
-#### `chessAccounts` Sub-Schema
-
-```
-chessAccounts: {
-  chessCom: {
-    username: String,
-    ratings: {
-      blitz:  Number | null,
-      bullet: Number | null,
-      rapid:  Number | null,
-    }
-  },
-  lichess: {
-    username: String,
-    ratings: {
-      blitz:  Number | null,
-      bullet: Number | null,
-      rapid:  Number | null,
-    }
-  }
-}
-```
 
 ### Indexes
 
@@ -87,7 +69,6 @@ chessAccounts: {
 | `description` | String | No       | Human-readable summary of the department's role.                                                       |
 
 ### Indexes
-
 | Index  | Type   | Purpose                          |
 | ------ | ------ | -------------------------------- |
 | `code` | Unique | One department per code globally |
@@ -110,21 +91,9 @@ chessAccounts: {
 | `instructions` | Array of String | Yes      | Full instructions shown to the applicant.               |
 | `order`        | Number          | Yes      | Display order within a department (1, 2, 3...).         |
 | `isRequired`   | Boolean         | No       | Default `true`. `false` = optional bonus task.          |
-| `submission`   | Object          | No       | Rules for what responses this task accepts (see below). |
-
-#### `submission` Sub-Schema
-
-| Field          | Type    | Default | Notes                                                                                                      |
-| -------------- | ------- | ------- | ---------------------------------------------------------------------------------------------------------- |
-| `acceptsText`  | Boolean | `false` | Whether a free-text response is accepted.                                                                  |
-| `acceptsLinks` | Boolean | `false` | Whether a URL/link is accepted (e.g. GitHub, Figma).                                                       |
-| `acceptsFiles` | Boolean | `false` | Whether file uploads are accepted.                                                                         |
-| `fileCategory` | String  | —       | Required when `acceptsFiles: true`. Allowed: `"image"`, `"video"`, `"raw"`. Controls MIME type validation. |
-| `maxFiles`     | Number  | —       | Maximum number of files per submission.                                                                    |
-| `maxFileSize`  | Number  | —       | Maximum size in **bytes** per file (e.g. `5242880` = 5 MB).                                                |
+| `submission`   | Object          | No       | Rules for what responses this task accepts.             |
 
 ### Indexes
-
 | Index                           | Type     | Purpose                              |
 | ------------------------------- | -------- | ------------------------------------ |
 | `{ departmentId, year, order }` | Compound | Fast ordered task list per dept/year |
@@ -153,9 +122,9 @@ All status transitions are validated by `recruitment.service.js` against the `VA
 
 ```
 DRAFT
-  └─→ PAYMENT_PENDING
-        ├─→ ACTIVE             (payment.captured webhook)
-        └─→ PAYMENT_FAILED
+  └─→ PAYMENT_PENDING (Manual payment submitted)
+        ├─→ ACTIVE             (Admin verifies successfully)
+        └─→ PAYMENT_FAILED     (Admin rejects verification)
               └─→ PAYMENT_PENDING  (retry)
 
 ACTIVE
@@ -182,7 +151,7 @@ ACTIVE
 ## Submissions Collection
 
 **Model:** `features/submissions/submission.model.js`  
-**Purpose:** Stores a candidate's response to a single task. Each document can contain text, links, and/or Cloudinary file references.
+**Purpose:** Stores a candidate's response to a single task.
 
 ### Schema
 
@@ -192,22 +161,9 @@ ACTIVE
 | `taskId`        | ObjectId | Yes      | Ref: `Task`. Compound unique with `applicationId`. |
 | `text`          | String   | No       | Free-text answer.                                  |
 | `links`         | String[] | No       | Array of submitted URLs.                           |
-| `files`         | Object[] | No       | Array of uploaded file references (see below).     |
-
-#### `files` Array — File Object
-
-| Field          | Type   | Required | Notes                                                                              |
-| -------------- | ------ | -------- | ---------------------------------------------------------------------------------- |
-| `publicId`     | String | Yes      | Cloudinary `public_id`. Path: `recruitment/{year}/{DEPT_CODE}/{applicationId}/...` |
-| `resourceType` | String | Yes      | Cloudinary resource type. Allowed: `"image"`, `"video"`, `"raw"`.                  |
-| `format`       | String | Yes      | File format string returned by Cloudinary (e.g. `"png"`, `"mp4"`, `"pdf"`).        |
-| `originalName` | String | Yes      | Original filename from the user's device.                                          |
-| `size`         | Number | Yes      | File size in bytes.                                                                |
-
-> **Note:** Files are stored on **Cloudinary**, not in MongoDB. Only metadata is saved here. To access a file, call `GET /api/submissions/:appId/:taskId` which generates signed, time-limited URLs.
+| `files`         | Object[] | No       | Array of uploaded file metadata from Cloudinary.   |
 
 ### Indexes
-
 | Index                       | Type   | Purpose                                                    |
 | --------------------------- | ------ | ---------------------------------------------------------- |
 | `{ applicationId, taskId }` | Unique | One submission document per application+task (upsert-safe) |
@@ -216,38 +172,95 @@ ACTIVE
 
 ## Payments Collection
 
-**Model:** features/payments/payment.model.js  
-**Purpose:** Tracks Razorpay orders and their payment status. Used for the admin payment ledger and audit logs.
+**Model:** `features/payments/payment.model.js`  
+**Purpose:** Tracks manual payments and generated receipts.
 
 ### Schema
 
-| Field            | Type     | Required | Default  | Notes                                             |
-| ---------------- | -------- | -------- | -------- | ------------------------------------------------- |
-| userId           | ObjectId | Yes      | —        | Ref: User. The user making the payment.           |
-| applicationId    | ObjectId | No       | —        | Ref: Recruitment. The application being paid for. |
-| purpose          | String   | No       | —        | purpose for payment, recruitment, event, etc      |
-| amount           | Number   | Yes      | —        | The amount in the smallest currency unit (paise). |
-| status           | String   | Yes      | PENDING  | PENDING, SUCCESS, or FAILED.                      |
-| gateway          | String   | No       | RAZORPAY | gateway selected for payment                      |
-| gatewayOrderId   | String   | Yes      | —        | The order ID generated by Razorpay. Unique.       |
-| gatewayPaymentId | String   | No       | —        | The payment ID generated upon successful payment. |
+| Field                     | Type     | Required | Default  | Notes                                             |
+| ------------------------- | -------- | -------- | -------- | ------------------------------------------------- |
+| `userId`                  | ObjectId | Yes      | —        | Ref: User. The user making the payment.           |
+| `applicationId`           | ObjectId | No       | —        | Ref: Recruitment. The application being paid for. |
+| `purpose`                 | String   | No       | —        | `recruitment` or `event`                          |
+| `amount`                  | Number   | Yes      | —        | The amount in the smallest currency unit (paise). |
+| `status`                  | String   | Yes      | PENDING  | `PENDING`, `SUCCESS`, or `FAILED`.                |
+| `gateway`                 | String   | No       | MANUAL   | Hardcoded or selected gateway.                    |
+| `gatewayOrderId`          | String   | Yes      | —        | Random generated ID for tracking. Unique.         |
+| `utr`                     | String   | No       | —        | Unique Transaction Reference for manual UPI.      |
+| `paymentScreenshotPublicId`| String   | No       | —        | Cloudinary ID for the uploaded screenshot.        |
+| `paymentScreenshotUrl`    | String   | No       | —        | URL of the uploaded screenshot.                   |
+| `receiptPublicId`         | String   | No       | —        | Cloudinary ID of the generated receipt.           |
+| `receiptUrl`              | String   | No       | —        | Backend URL to fetch the receipt PDF.             |
+| `receiptFile`             | Buffer   | No       | —        | PDF buffer if stored directly.                    |
+| `rejectionReason`         | String   | No       | —        | Reason provided by Admin if payment is rejected.  |
 
 ### Indexes
-
 | Index              | Type   | Purpose                                       |
 | ------------------ | ------ | --------------------------------------------- |
-| { gatewayOrderId } | Unique | Lookup by order ID during webhook processing. |
+| `{ gatewayOrderId }`| Unique | Lookup by internal order ID.                  |
+
+---
+
+## Events Collection
+
+**Model:** `features/events/event.model.js`  
+**Purpose:** Manages club events and tournaments.
+
+### Schema
+| Field                  | Type     | Required | Default     | Notes                               |
+| ---------------------- | -------- | -------- | ----------- | ----------------------------------- |
+| `title`                | String   | Yes      | —           | Name of the event                   |
+| `description`          | String   | Yes      | —           | Details of the event                |
+| `date`                 | Date     | Yes      | —           | When it happens                     |
+| `venue`                | String   | Yes      | —           | Location                            |
+| `status`               | String   | No       | `upcoming`  | `upcoming`, `ongoing`, `completed`, `cancelled` |
+| `capacity`             | Number   | No       | null        | Maximum attendees allowed           |
+| `isPaid`               | Boolean  | No       | false       | If the event requires a fee         |
+| `amount`               | Number   | No       | 0           | Fee in paise                        |
+
+---
+
+## Settings Collection
+
+**Model:** `features/settings/settings.model.js`  
+**Purpose:** Defines global timestamps and deadlines for the platform.
+
+### Schema
+| Field                  | Type     | Required |
+| ---------------------- | -------- | -------- |
+| `applicationStartDate` | Date     | Yes      |
+| `applicationEndDate`   | Date     | Yes      |
+| `taskRevealDate`       | Date     | Yes      |
+| `submissionEndDate`    | Date     | Yes      |
+
+---
+
+## Contact Collection
+
+**Model:** `features/contact/contact.model.js`  
+**Purpose:** Stores user inquiries submitted via the platform.
+
+### Schema
+| Field     | Type   | Required | Default  | Notes |
+| --------- | ------ | -------- | -------- | ----- |
+| `name`    | String | Yes      | —        |       |
+| `email`   | String | Yes      | —        |       |
+| `subject` | String | Yes      | —        |       |
+| `message` | String | Yes      | —        |       |
+| `status`  | String | No       | `UNREAD` | `UNREAD`, `READ`, `RESOLVED` |
 
 ---
 
 ## Redis Usage
 
-Redis is used by **BullMQ** for job queue management (not direct data storage). It is **not** a persistence layer.
+Redis is used by **BullMQ** for job queue management.
 
 | Key Pattern / Queue          | Purpose                                                                         |
 | ---------------------------- | ------------------------------------------------------------------------------- |
-| `sync-queue` (BullMQ)        | Background jobs: sync a user's chess ratings from external APIs                 |
-| `recruitment-queue` (BullMQ) | Background jobs: auto-expire `PAYMENT_PENDING` applications older than 24 hours |
+| `sync-queue`                 | Background jobs: sync a user's chess ratings from external APIs                 |
+| `recruitment-queue`          | Background jobs: auto-expire `PAYMENT_PENDING` applications older than 24 hours |
+| `email-queue`                | Background jobs: rendering and dispatching automated emails via Nodemailer      |
+| `receipt-queue`              | Background jobs: generate PDF receipts via Puppeteer                            |
 | `leaderboard:{timeControl}`  | Redis Sorted Set: maps `userId → rating` for fast rank queries                  |
 
 ### Leaderboard Sorted Sets
@@ -259,7 +272,3 @@ ZADD leaderboard:rapid  1200 "userId123"
 ZADD leaderboard:blitz  1050 "userId123"
 ZADD leaderboard:bullet  900 "userId123"
 ```
-
-- **`ZREVRANGE`** — returns top N user IDs for the leaderboard page
-- **`ZREVRANK`** — returns a specific user's rank (0-indexed → shifted to 1-indexed)
-- User details are fetched from MongoDB using the returned IDs (hydration step)

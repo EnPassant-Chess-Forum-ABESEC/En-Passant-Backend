@@ -22,6 +22,7 @@ import {
   cleanRedisSets,
   cleanCloudFiles,
   sendDraftReminders,
+  getDashboardStats,
 } from "./admin.controller.js";
 import { adminAuth } from "../../middleware/auth.middleware.js";
 import { validate } from "../../middleware/validate.middleware.js";
@@ -68,11 +69,7 @@ router.delete(
   validate(deleteApplicationSchema),
   deleteApplication,
 );
-router.post(
-  "/applications/remind-drafts",
-  adminAuth,
-  sendDraftReminders,
-);
+router.post("/applications/remind-drafts", adminAuth, sendDraftReminders);
 
 // department management
 router.get("/departments", adminAuth, getAllDepartments);
@@ -125,8 +122,7 @@ router.patch(
   verifyPayment,
 );
 
-// stats
-import { getDashboardStats } from "./admin.controller.js";
+// admin stats
 router.get("/stats", adminAuth, getDashboardStats);
 
 export default router;
