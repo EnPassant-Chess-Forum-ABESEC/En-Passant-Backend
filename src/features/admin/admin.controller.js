@@ -7,7 +7,8 @@ import {
 import mongoose from "mongoose";
 import { redisConnection } from "../../redis/redis.client.js";
 import { deleteAllCloudFiles } from "../storage/storage.service.js";
-
+import Payment from "../payments/payment.model.js";
+import { enqueueReceiptGeneration } from "../payments/receipt.queue.js";
 export const getAllApplications = async (req, res, next) => {
   const { status, departmentId, year } = req.query;
   try {
@@ -422,6 +423,26 @@ export const sendDraftReminders = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: `Successfully enqueued draft reminder emails for ${result.count} users.`,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const retryMissingReceipts = async (req, res, next) => {
+  try {
+    const paymentsWithoutReceipts = await Payment.find({
+      status: "SUCCESS",
+      $or: [{ receiptUrl: null }, { receiptUrl: "" }],
+    });
+
+    for (const payment of paymentsWithoutReceipts) {
+      await enqueueReceiptGeneration(payment._id);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Enqueued receipt generation for ${paymentsWithoutReceipts.length} payments.`,
     });
   } catch (error) {
     next(error);

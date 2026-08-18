@@ -12,6 +12,25 @@ import puppeteer from "puppeteer";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+let globalBrowser = null;
+
+const getBrowser = async () => {
+  if (!globalBrowser) {
+    const launchOptions = {
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    };
+    if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+      launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+    }
+    globalBrowser = await puppeteer.launch(launchOptions);
+    globalBrowser.on("disconnected", () => {
+      globalBrowser = null;
+    });
+  }
+  return globalBrowser;
+};
+
 const processReceiptJob = async (job) => {
   const { name, data } = job;
 
@@ -40,19 +59,10 @@ const processReceiptJob = async (job) => {
       amount: payment.amount / 100,
     });
 
-    const launchOptions = {
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    };
-
-    if (process.env.PUPPETEER_EXECUTABLE_PATH) {
-      launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
-    }
-
-    const browser = await puppeteer.launch(launchOptions);
+    const browser = await getBrowser();
 
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "networkidle0" });
+    await page.setContent(html, { waitUntil: "networkidle2", timeout: 60000 });
 
     const pdfBuffer = await page.pdf({
       format: "A4",
@@ -60,7 +70,7 @@ const processReceiptJob = async (job) => {
       margin: { top: "0", right: "0", bottom: "0", left: "0" },
     });
 
-    await browser.close();
+    await page.close();
 
     const backendUrl = process.env.BACKEND_URL || "https://en-passant-backend.onrender.com";
     const receiptLink = `${backendUrl.replace(/\/$/, "").replace(/\/api$/, "")}/api/payments/${payment._id}/receipt.pdf`;

@@ -18,6 +18,7 @@ import settingsRoutes from "./features/settings/settings.routes.js";
 import contactRoutes from "./features/contact/contact.routes.js";
 
 const app = express();
+app.set("trust proxy", 1);
 
 connectDb();
 

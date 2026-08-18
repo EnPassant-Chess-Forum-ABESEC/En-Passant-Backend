@@ -23,6 +23,7 @@ import {
   cleanCloudFiles,
   sendDraftReminders,
   getDashboardStats,
+  retryMissingReceipts,
 } from "./admin.controller.js";
 import { adminAuth } from "../../middleware/auth.middleware.js";
 import { validate } from "../../middleware/validate.middleware.js";
@@ -121,6 +122,7 @@ router.patch(
   validate(verifyPaymentSchema),
   verifyPayment,
 );
+router.post("/payments/retry-receipts", adminAuth, retryMissingReceipts);
 
 // admin stats
 router.get("/stats", adminAuth, getDashboardStats);
