@@ -85,6 +85,13 @@ const applyFormatting = async (sheet, rowCount, colCount, title, isApplications)
     }
   }
   await sheet.saveUpdatedCells();
+
+  const colWidths = isApplications ? [50, 150, 240, 120, 150, 200, 140, 130, 180, 180] : [50, 150, 240, 120, 200, 100, 130, 120, 180];
+  for (let i = 0; i < colWidths.length; i++) {
+    await sheet.updateDimensionProperties('COLUMNS', { pixelSize: colWidths[i] }, { startIndex: i, endIndex: i + 1 });
+  }
+  await sheet.updateDimensionProperties('ROWS', { pixelSize: 40 }, { startIndex: 0, endIndex: 1 });
+  await sheet.updateDimensionProperties('ROWS', { pixelSize: 30 }, { startIndex: 1, endIndex: rowCount });
 };
 
 export const syncApplicationsToSheets = async (applications) => {
@@ -119,7 +126,6 @@ export const syncApplicationsToSheets = async (applications) => {
   await sheet.setHeaderRow(allRows[0]);
   await sheet.addRows(allRows.slice(1), { raw: true, insert: false });
   await applyFormatting(sheet, allRows.length, allRows[1].length, 'Recruitment-2026 Applications', true);
-  await sheet.autoResizeDimensions('COLUMNS');
 };
 
 export const syncPaymentsToSheets = async (payments) => {
@@ -153,5 +159,4 @@ export const syncPaymentsToSheets = async (payments) => {
   await sheet.setHeaderRow(allRows[0]);
   await sheet.addRows(allRows.slice(1), { raw: true, insert: false });
   await applyFormatting(sheet, allRows.length, allRows[1].length, 'Recruitment-2026 Payments', false);
-  await sheet.autoResizeDimensions('COLUMNS');
 };
