@@ -264,14 +264,15 @@ export const getAllPayments = async (pageSize, pageNumber) => {
 };
 
 import {
-  generateApplicationsExcel,
-  generatePaymentsExcel,
-} from "../../utils/excel.util.js";
+  syncApplicationsToSheets,
+  syncPaymentsToSheets,
+} from "../../utils/googleSheets.util.js";
 
 export const exportApplicationsAsExcel = async (filters) => {
   try {
     const applications = await getAllApplications(filters);
-    return await generateApplicationsExcel(applications);
+    await syncApplicationsToSheets(applications);
+    return { success: true, message: "Google Sheet updated successfully" };
   } catch (error) {
     if (error instanceof AppError) throw error;
     throw new AppError(
@@ -284,7 +285,8 @@ export const exportApplicationsAsExcel = async (filters) => {
 export const exportPaymentsAsExcel = async () => {
   try {
     const payments = await paymentRepo.getAllPaymentsForExport();
-    return await generatePaymentsExcel(payments);
+    await syncPaymentsToSheets(payments);
+    return { success: true, message: "Google Sheet updated successfully" };
   } catch (error) {
     if (error instanceof AppError) throw error;
     throw new AppError(`exportPaymentsAsExcel failed: ${error.message}`, 500);

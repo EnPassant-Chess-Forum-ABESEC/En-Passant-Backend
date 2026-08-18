@@ -31,23 +31,13 @@ export const getAllApplications = async (req, res, next) => {
 export const exportApplications = async (req, res, next) => {
   const { status, departmentId, year } = req.query;
   try {
-    const excelBuffer = await adminService.exportApplicationsAsExcel({
+    const result = await adminService.exportApplicationsAsExcel({
       status,
       departmentId,
       year: year ? Number(year) : undefined,
     });
 
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    );
-    res.setHeader(
-      "Content-Disposition",
-      "attachment; filename=" +
-        `applications_export_${new Date().getTime()}.xlsx`,
-    );
-
-    return res.status(200).send(excelBuffer);
+    return res.status(200).json(result);
   } catch (error) {
     next(error);
   }
@@ -284,18 +274,8 @@ export const getAllPayments = async (req, res, next) => {
 
 export const exportPayments = async (req, res, next) => {
   try {
-    const excelBuffer = await adminService.exportPaymentsAsExcel();
-
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    );
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=payments_export_${new Date().getTime()}.xlsx`,
-    );
-
-    return res.status(200).send(excelBuffer);
+    const result = await adminService.exportPaymentsAsExcel();
+    return res.status(200).json(result);
   } catch (error) {
     next(error);
   }
