@@ -39,7 +39,7 @@ const applyFormatting = async (sheet, rowCount, colCount, title, isApplications)
   titleCell.backgroundColor = { red: 30/255, green: 58/255, blue: 138/255 };
   titleCell.horizontalAlignment = 'CENTER';
   titleCell.verticalAlignment = 'MIDDLE';
-  await sheet.mergeCells(`A1:${endCol}1`);
+  await sheet.mergeCells({ startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: colCount });
 
   for (let c = 0; c < colCount; c++) {
     const cell = sheet.getCell(1, c);
@@ -116,7 +116,8 @@ export const syncApplicationsToSheets = async (applications) => {
       app.paymentStatus === "SUCCESS" ? new Date(app.updatedAt).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata" }) : "—"
     ]);
   });
-  await sheet.addRows(allRows, { raw: true, insert: false });
+  await sheet.setHeaderRow(allRows[0]);
+  await sheet.addRows(allRows.slice(1), { raw: true, insert: false });
   await applyFormatting(sheet, allRows.length, allRows[1].length, 'Recruitment-2026 Applications', true);
 };
 
@@ -148,6 +149,7 @@ export const syncPaymentsToSheets = async (payments) => {
       new Date(payment.createdAt).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata" })
     ]);
   });
-  await sheet.addRows(allRows, { raw: true, insert: false });
+  await sheet.setHeaderRow(allRows[0]);
+  await sheet.addRows(allRows.slice(1), { raw: true, insert: false });
   await applyFormatting(sheet, allRows.length, allRows[1].length, 'Recruitment-2026 Payments', false);
 };
