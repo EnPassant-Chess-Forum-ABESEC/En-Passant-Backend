@@ -55,6 +55,7 @@ export const clerkWebhook = async (req, res, next) => {
 
       const fullName =
         [evt.data.first_name, evt.data.last_name].filter(Boolean).join(" ") ||
+        evt.data.username ||
         "Unnamed User";
 
       const phoneNumbers = evt.data.phone_numbers || [];
