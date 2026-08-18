@@ -5,7 +5,7 @@ import { getUserRanks } from "../leaderboard/leaderboard.service.js";
 export const me = async (req, res, next) => {
   try {
     const userObj = req.user.toObject();
-    
+
     try {
       const ranks = await getUserRanks(req.clerkId);
       userObj.ranks = ranks;
@@ -15,6 +15,45 @@ export const me = async (req, res, next) => {
     }
 
     res.json({ success: true, user: userObj });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getPublicProfile = async (req, res, next) => {
+  try {
+    const { userName } = req.params;
+    const user = await userRepo.findByUserName(userName);
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    const userObj = user.toObject();
+
+    const publicProfile = {
+      userName: userObj.userName,
+      firstName: userObj.firstName,
+      lastName: userObj.lastName,
+      fullName: userObj.fullName,
+      branch: userObj.branch,
+      year: userObj.year,
+      chessAccounts: userObj.chessAccounts,
+      avatarUrl: userObj.profilePictureUrl,
+      createdAt: userObj.createdAt,
+    };
+
+    try {
+      const ranks = await getUserRanks(userObj.clerkId);
+      publicProfile.ranks = ranks;
+    } catch (err) {
+      console.error("Failed to fetch user ranks from Redis:", err);
+      publicProfile.ranks = null;
+    }
+
+    res.json({ success: true, user: publicProfile });
   } catch (error) {
     next(error);
   }

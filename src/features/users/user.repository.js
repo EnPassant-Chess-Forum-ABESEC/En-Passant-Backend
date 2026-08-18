@@ -4,6 +4,10 @@ export const findByClerkId = async (clerkId) => {
   return User.findOne({ clerkId });
 };
 
+export const findByUserName = async (userName) => {
+  return User.findOne({ userName });
+};
+
 export const createUser = async (userData) => {
   return User.create(userData);
 };
