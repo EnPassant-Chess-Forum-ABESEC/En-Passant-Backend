@@ -13,25 +13,31 @@ src/middleware/error.middleware.js
 # Error Flow
 
 ```text
-Controller
+Controller / Service
     ↓
-throws error
-    ↓
-next(error)
+throw new AppError("Message", Status)
     ↓
 errorMiddleware
     ↓
 Response
 ```
 
-Example:
+Example using the central `AppError` class (`src/utils/AppError.js`):
 
 ```js
-try {
-  // logic
-} catch (error) {
-  next(error);
-}
+import { AppError } from "../utils/AppError.js";
+
+export const someControllerFunction = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
+    res.status(200).json({ success: true, user });
+  } catch (error) {
+    next(error);
+  }
+};
 ```
 
 ---

@@ -32,47 +32,7 @@ The backend follows a **feature‑based architecture**. Instead of grouping file
 
 The application follows a modular monolith architecture where features are isolated as independent domains with clear boundaries, allowing future extraction into services if needed.
 
-<img src="/docs/diagrams/En_passant_backend_architecture.svg" alt="Backend Architecture Diagram(subsystem/components)" width="100%"/>
-
-```mermaid
-flowchart TD
-    Client((Frontend / Next.js)) -->|REST API| Express[Express API Server]
-    
-    subgraph Backend Core [Modular Monolith API]
-        Express --> Auth[Auth Middleware]
-        Express --> Controllers[Feature Controllers]
-        Controllers --> Services[Business Services]
-        Services --> Repos[Repositories]
-    end
-    
-    Auth -.->|Validates| Clerk[Clerk Auth API]
-    Repos -->|Mongoose| MongoDB[(MongoDB)]
-    
-    subgraph Background Workers [BullMQ Workers]
-        SyncWorker[Chess Sync Worker]
-        EmailWorker[Email Worker]
-        ReceiptWorker[Receipt Gen Worker]
-        RecruitmentWorker[Recruitment Worker]
-    end
-    
-    Services -->|Enqueue| Redis[(Redis)]
-    Redis -->|Process Jobs| SyncWorker
-    Redis -->|Process Jobs| EmailWorker
-    Redis -->|Process Jobs| ReceiptWorker
-    Redis -->|Process Jobs| RecruitmentWorker
-    
-    SyncWorker -.->|Fetch Ratings| ChessAPI[Chess.com / Lichess]
-    EmailWorker -.->|Send Emails| Resend[Resend API]
-    ReceiptWorker -.->|Upload PDFs| Cloudinary[Cloudinary]
-    Services -.->|Direct Upload| Cloudinary
-
-    style Client fill:#118ab2,color:#fff
-    style Express fill:#06d6a0,color:#333
-    style MongoDB fill:#073b4c,color:#fff
-    style Redis fill:#ef476f,color:#fff
-    style Backend Core fill:#f8f9fa,stroke:#ccc
-    style Background Workers fill:#f8f9fa,stroke:#ccc
-```
+<img src="/docs/diagrams/en_pass_detailed_arch.svg" alt="Backend Architecture Diagram(subsystem/components)" width="100%"/>
 
 ## Feature‑Based Structure
 
@@ -264,38 +224,7 @@ The leaderboard relies on Redis Sorted Sets (`ZADD`, `ZREVRANGE`, `ZREVRANK`) to
 
 The recruitment pipeline enforces a strict finite state machine.
 
-<img src="/docs/diagrams/recruitment_flow_and_state_machine.svg" alt="Recruitment Flow Diagram" width="100%"/>
-
-```mermaid
-stateDiagram-v2
-    [*] --> DRAFT : Apply
-    
-    DRAFT --> PAYMENT_PENDING : Submit Manual Payment
-    DRAFT --> ACTIVE : (Admin Bypass / Direct)
-    
-    PAYMENT_PENDING --> ACTIVE : Admin Approves Payment
-    PAYMENT_PENDING --> PAYMENT_FAILED : Admin Rejects Payment
-    PAYMENT_FAILED --> PAYMENT_PENDING : User Re-submits Payment
-    
-    ACTIVE --> TASK_SUBMITTED : User Submits Task
-    ACTIVE --> TASK_NOT_SUBMITTED : Deadline Passes
-    ACTIVE --> SHORTLISTED : (Admin Bypass / Direct)
-    
-    TASK_SUBMITTED --> UNDER_REVIEW : Submission Processed
-    
-    TASK_NOT_SUBMITTED --> REJECTED
-    
-    UNDER_REVIEW --> SHORTLISTED : Selected for Interview
-    UNDER_REVIEW --> REJECTED
-    
-    SHORTLISTED --> INTERVIEW : Interview Scheduled
-    
-    INTERVIEW --> SELECTED : Passed Interview
-    INTERVIEW --> REJECTED : Failed Interview
-    
-    SELECTED --> [*]
-    REJECTED --> [*]
-```
+<img src="/docs/diagrams/recruitment_process_and_state_machine.svg" alt="Recruitment Flow Diagram" width="100%"/>
 
 - **Apply**: `POST /api/recruitment/apply` — Creates a `DRAFT` application.
 - **State Transitions**: All status changes go through `transitionStatus()` in `recruitment.service.js`, which validates against `VALID_TRANSITIONS` before writing.
@@ -305,36 +234,10 @@ stateDiagram-v2
 
 The application has switched to a fully manual payment verification process, removing the legacy Razorpay gateway.
 
-```mermaid
-flowchart TD
-    User([Applicant]) -->|POST /api/payments/manual\nUpload Screenshot + UTR| API[Payment Controller]
-    
-    subgraph Backend Services
-        API -->|1. Upload Image| Cloudinary[(Cloudinary)]
-        API -->|2. Create PENDING Payment| DB[(MongoDB)]
-        API -->|3. Transition to PAYMENT_PENDING| DB
-        API -->|4. Enqueue Notification| Queue[(Redis BullMQ)]
-    end
-    
-    Admin([Admin]) -->|PATCH /api/admin/payments/:id/verify| Verify[Verify Payment]
-    
-    subgraph Admin Verification
-        Verify -->|On SUCCESS| SuccessFlow[Mark SUCCESS & ACTIVE]
-        Verify -->|On FAILED| FailedFlow[Mark FAILED & PAYMENT_FAILED]
-    end
-    
-    SuccessFlow -->|Enqueue Receipt Job| Queue
-    FailedFlow -->|Enqueue Rejection Email| Queue
-
-    style User fill:#118ab2,color:#fff
-    style Admin fill:#e76f51,color:#fff
-    style DB fill:#073b4c,color:#fff
-    style Queue fill:#ef476f,color:#fff
-    style Cloudinary fill:#06d6a0,color:#333
-```
+<img src="/docs/diagrams/manual_payment_and_receipt_flow.svg" alt="Recruitment Flow Diagram" width="100%"/>
 
 1. **Submission**: `POST /api/payments/manual` - The applicant uploads a screenshot of their transaction along with the UTR number. The screenshot is uploaded to Cloudinary, a `PENDING` record is created in the `Payments` collection, and the application transitions to `PAYMENT_PENDING`. An email is queued notifying them that their payment is under review.
-2. **Verification**: `PATCH /api/admin/payments/:id/verify` - An admin reviews the screenshot and UTR. 
+2. **Verification**: `PATCH /api/admin/payments/:id/verify` - An admin reviews the screenshot and UTR.
    - **On Success**: A MongoDB Transaction is used to update the `Payment` ledger to `SUCCESS` and transition the application to `ACTIVE`. A background job is enqueued to generate a receipt.
    - **On Failure**: The ledger is marked `FAILED` with a rejection reason, the application transitions to `PAYMENT_FAILED`, and an email is queued to notify the candidate.
 3. **Receipt Generation**: The `receipt-queue` (BullMQ worker) uses Puppeteer to render a PDF receipt from an EJS template, uploads/stores it, and triggers a success email with the receipt attached.
@@ -343,23 +246,7 @@ flowchart TD
 
 Email notifications are offloaded to a background worker to ensure fast API responses and decoupled logic.
 
-```mermaid
-flowchart LR
-    API[API / Services] -->|Enqueue Job| Queue[(Redis / BullMQ)]
-    Queue -->|Process Job| Worker[Email Worker]
-    
-    subgraph Worker Process
-        Worker -->|Hydrate| EJS[EJS Templates]
-    end
-    
-    Worker -->|sendEmail| Resend[Resend API]
-    Resend -.->|Delivers Email| User((End User))
-
-    style API fill:#2a9d8f,color:#fff
-    style Queue fill:#e76f51,color:#fff
-    style Worker fill:#e9c46a,color:#333
-    style Resend fill:#264653,color:#fff
-```
+<img src="/docs/diagrams/email_flow.svg" alt="Recruitment Flow Diagram" width="100%"/>
 
 - **Queue**: Uses BullMQ (`email-queue`) backed by Redis.
 - **Worker**: The background worker picks up jobs, hydrates EJS templates located in `src/features/email/templates/` with user data, and dispatches them.
@@ -375,6 +262,7 @@ flowchart LR
 ## Events Management Flow
 
 The `events` feature allows the club to host, display, and manage chess tournaments or offline events.
+
 - **Models**: Defines an `Event` with capacities, deadlines, and a `status` (upcoming, ongoing, completed, cancelled).
 - **Admin**: Admins create and modify events.
 - **Public**: End-users can query the list of active events to participate or view details.
@@ -413,6 +301,7 @@ On fetch (`GET /api/submissions/:appId/:taskId`):
 ## Admin System Services
 
 The admin module is highly privileged and handles beyond simple CRUD:
+
 - **`POST /api/admin/redis/clean`**: Clears out stale leaderboard sorted sets.
 - **`POST /api/admin/cloud/clean`**: Purges unused or orphaned assets from Cloudinary.
 - **`POST /api/admin/users/sync-all`**: Dispatches a global queue job to re-sync all chess ratings from external APIs.

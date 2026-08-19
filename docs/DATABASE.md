@@ -37,7 +37,9 @@
 | ---------------------- | ------- | -------- | -------- | ----------------------------------------------- |
 | `clerkId`              | String  | Yes      | —        | Clerk auth identifier. Unique, indexed.         |
 | `userName`             | String  | No       | —        | Display name.                                   |
-| `collegeEmail`         | String  | Yes      | —        | Official college email. Unique.                 |
+| `email`                | String  | Yes      | —        | Official email. Unique.                         |
+| `collegeEmail`         | String  | No       | —        | Official college email. Unique.                 |
+| `phoneNumber`          | String  | No       | null     | Contact phone number. Unique, indexed.          |
 | `branch`               | String  | No       | —        | Academic branch (e.g. `"CSE"`, `"ECE"`).        |
 | `year`                 | Number  | No       | —        | Academic year. Allowed: `1–5` (5 = passed out). |
 | `chessAccounts`        | Object  | No       | `{}`     | Nested chess platform data (see below).         |
@@ -52,6 +54,7 @@
 | -------------- | ------ | ----------------------------- |
 | `clerkId`      | Unique | Fast lookup by Clerk identity |
 | `collegeEmail` | Unique | Enforce one account per email |
+| `phoneNumber`  | Unique | Enforce unique phone number   |
 
 ---
 
@@ -91,6 +94,7 @@
 | `instructions` | Array of String | Yes      | Full instructions shown to the applicant.               |
 | `order`        | Number          | Yes      | Display order within a department (1, 2, 3...).         |
 | `isRequired`   | Boolean         | No       | Default `true`. `false` = optional bonus task.          |
+| `containsAssets`| Boolean        | No       | Default `false`. If the task contains external assets.  |
 | `submission`   | Object          | No       | Rules for what responses this task accepts.             |
 
 ### Indexes
@@ -161,7 +165,7 @@ ACTIVE
 | `taskId`        | ObjectId | Yes      | Ref: `Task`. Compound unique with `applicationId`. |
 | `text`          | String   | No       | Free-text answer.                                  |
 | `links`         | String[] | No       | Array of submitted URLs.                           |
-| `files`         | Object[] | No       | Array of uploaded file metadata from Cloudinary.   |
+| `files`         | Object[] | No       | `[ { publicId, resourceType, format, originalName, size } ]` |
 
 ### Indexes
 | Index                       | Type   | Purpose                                                    |
@@ -213,10 +217,13 @@ ACTIVE
 | `description`          | String   | Yes      | —           | Details of the event                |
 | `date`                 | Date     | Yes      | —           | When it happens                     |
 | `venue`                | String   | Yes      | —           | Location                            |
+| `registrationDeadline` | Date     | No       | null        | Deadline for registering            |
 | `status`               | String   | No       | `upcoming`  | `upcoming`, `ongoing`, `completed`, `cancelled` |
 | `capacity`             | Number   | No       | null        | Maximum attendees allowed           |
 | `isPaid`               | Boolean  | No       | false       | If the event requires a fee         |
 | `amount`               | Number   | No       | 0           | Fee in paise                        |
+| `bannerUrl`            | String   | No       | null        | Header image URL for the event      |
+| `createdBy`            | ObjectId | Yes      | —           | Ref: User. The admin who made it    |
 
 ---
 

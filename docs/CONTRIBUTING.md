@@ -36,13 +36,27 @@ Create Branch
       ↓
 Implement Feature
       ↓
-Test Locally
+Run via Docker Compose / Locally
       ↓
 Create Pull Request
       ↓
 Code Review
       ↓
 Merge
+```
+
+## Running Locally
+
+We recommend using Docker to spin up Redis for your local BullMQ queues:
+
+```bash
+docker-compose up -d redis
+npm run dev
+```
+
+Alternatively, you can run the entire backend via Docker:
+```bash
+docker-compose up --build
 ```
 
 ---
@@ -67,6 +81,13 @@ Example:
 > - branch
 > - year
 > - chess accounts
+
+## Coding Standards Checklist
+
+Before submitting, ensure your code adheres to our project standards:
+- [ ] **Validation**: All incoming requests are validated using `zod` schemas in the route middleware.
+- [ ] **Error Handling**: Use the central `AppError` class from `src/utils/AppError.js` to throw operational errors (e.g. `throw new AppError("Message", 400);`). Do not use raw `res.status().json()` for errors.
+- [ ] **Feature Isolation**: Ensure your feature logic is contained within `src/features/[feature_name]/`.
 
 ---
 

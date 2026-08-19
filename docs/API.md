@@ -243,6 +243,30 @@ Retrieve tasks for a specific department in a given year, ordered by `order`.
 
 ---
 
+## GET /api/tasks/all-departments
+
+Retrieve a list of all defined departments globally.
+
+**Auth:** Not required
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "...",
+      "name": "Web Development",
+      "code": "WEBSITE",
+      "description": "..."
+    }
+  ]
+}
+```
+
+---
+
 # Recruitment APIs
 
 ## POST /api/recruitment/apply
@@ -437,7 +461,15 @@ Manually verify a user's uploaded payment receipt.
 Standard CRUD endpoints exist under:
 - `/api/admin/departments`
 - `/api/admin/tasks`
-- `/api/admin/users`
+
+### User Management
+- **`GET /api/admin/users`**: Retrieve a paginated list of all users.
+- **`GET /api/admin/users/:id`**: Retrieve full details of a specific user.
+- **`PATCH /api/admin/users/:id/role`**: Update a user's role (e.g. promoting to admin).
+
+### Payment Management
+- **`GET /api/admin/payments`**: Retrieve all manual payments (pending, success, failed).
+- **`GET /api/admin/payments/export`**: Export payments to Excel (see Admin System APIs).
 
 ---
 

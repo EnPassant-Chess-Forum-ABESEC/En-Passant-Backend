@@ -1,6 +1,18 @@
 version: '3.8'
 
 services:
+  app:
+    build: .
+    container_name: en-passant-backend
+    ports:
+      - "8080:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379
+    env_file:
+      - .env
+    depends_on:
+      - redis
+
   redis:
     image: redis:7-alpine
     container_name: en-passant-redis
