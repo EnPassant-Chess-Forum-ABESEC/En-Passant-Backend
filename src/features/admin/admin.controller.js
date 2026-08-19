@@ -9,20 +9,44 @@ import { redisConnection } from "../../redis/redis.client.js";
 import { deleteAllCloudFiles } from "../storage/storage.service.js";
 import Payment from "../payments/payment.model.js";
 import { enqueueReceiptGeneration } from "../payments/receipt.queue.js";
+
+const CACHE_TTL = 300;
+
+const clearAdminCache = async (pattern) => {
+  try {
+    const keys = await redisConnection.keys(pattern);
+    if (keys.length > 0) {
+      await redisConnection.del(...keys);
+    }
+  } catch (err) {
+    console.error("Redis cache clearing error:", err);
+  }
+};
 export const getAllApplications = async (req, res, next) => {
   const { status, departmentId, year } = req.query;
+  const cacheKey = `admin:applications:${status || 'ALL'}:${departmentId || 'ALL'}:${year || 'ALL'}`;
+  
   try {
+    const cachedData = await redisConnection.get(cacheKey);
+    if (cachedData) {
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+
     const applications = await adminService.getAllApplications({
       status,
       departmentId,
       year: Number(year),
     });
 
-    return res.status(200).json({
+    const response = {
       success: true,
       message: "Applications fetched successfully",
       applications,
-    });
+    };
+
+    await redisConnection.setex(cacheKey, CACHE_TTL, JSON.stringify(response));
+
+    return res.status(200).json(response);
   } catch (error) {
     next(error);
   }
@@ -66,6 +90,7 @@ export const deleteApplication = async (req, res, next) => {
 
   try {
     await adminService.deleteApplication(id);
+    await clearAdminCache("admin:applications:*");
 
     return res.status(200).json({
       success: true,
@@ -86,6 +111,8 @@ export const updateApplicationStatus = async (req, res, next) => {
       id,
       status,
     );
+    await clearAdminCache("admin:applications:*");
+    
     return res.status(200).json({
       success: true,
       message: "Application status updated successfully",
@@ -222,13 +249,23 @@ export const getAllUsers = async (req, res, next) => {
   try {
     const pageSize = Number(req.query.pageSize) || 10;
     const pageNumber = Number(req.query.pageNumber) || 1;
+    const cacheKey = `admin:users:${pageSize}:${pageNumber}`;
+
+    const cachedData = await redisConnection.get(cacheKey);
+    if (cachedData) {
+      return res.status(200).json(JSON.parse(cachedData));
+    }
 
     const users = await adminService.getAllUsers(pageSize, pageNumber);
 
-    res.status(200).json({
+    const response = {
       success: true,
       users,
-    });
+    };
+
+    await redisConnection.setex(cacheKey, CACHE_TTL, JSON.stringify(response));
+
+    res.status(200).json(response);
   } catch (error) {
     next(error);
   }
@@ -240,6 +277,8 @@ export const updateUserRole = async (req, res, next) => {
       req.params.id,
       req.body.role,
     );
+    
+    await clearAdminCache("admin:users:*");
 
     res.status(200).json({
       success: true,
@@ -255,10 +294,16 @@ export const getAllPayments = async (req, res, next) => {
   try {
     const pageSize = Number(req.query.pageSize) || 10;
     const pageNumber = Number(req.query.pageNumber) || 1;
+    const cacheKey = `admin:payments:${pageSize}:${pageNumber}`;
+
+    const cachedData = await redisConnection.get(cacheKey);
+    if (cachedData) {
+      return res.status(200).json(JSON.parse(cachedData));
+    }
 
     const payments = await adminService.getAllPayments(pageSize, pageNumber);
 
-    res.status(200).json({
+    const response = {
       success: true,
       payments,
       metadata: {
@@ -266,7 +311,11 @@ export const getAllPayments = async (req, res, next) => {
         pageSize,
         total: await paymentRepo.countPayments(),
       },
-    });
+    };
+
+    await redisConnection.setex(cacheKey, CACHE_TTL, JSON.stringify(response));
+
+    res.status(200).json(response);
   } catch (error) {
     next(error);
   }
@@ -324,6 +373,8 @@ export const verifyPayment = async (req, res, next) => {
       if (reason) payment.rejectionReason = reason;
       await payment.save();
     }
+    
+    await clearAdminCache("admin:payments:*");
 
     return res.status(200).json({
       success: true,
