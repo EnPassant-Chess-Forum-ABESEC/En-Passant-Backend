@@ -222,18 +222,12 @@ export const getAllUsers = async (req, res, next) => {
   try {
     const pageSize = Number(req.query.pageSize) || 10;
     const pageNumber = Number(req.query.pageNumber) || 1;
-    const { search, role, sort } = req.query;
 
-    const { users, total } = await adminService.getAllUsers(pageSize, pageNumber, search, role, sort);
+    const users = await adminService.getAllUsers(pageSize, pageNumber);
 
     res.status(200).json({
       success: true,
       users,
-      metadata: {
-        pageNumber,
-        pageSize,
-        total,
-      },
     });
   } catch (error) {
     next(error);
@@ -261,9 +255,8 @@ export const getAllPayments = async (req, res, next) => {
   try {
     const pageSize = Number(req.query.pageSize) || 10;
     const pageNumber = Number(req.query.pageNumber) || 1;
-    const { search, status, sort } = req.query;
 
-    const { payments, total } = await adminService.getAllPayments(pageSize, pageNumber, search, status, sort);
+    const payments = await adminService.getAllPayments(pageSize, pageNumber);
 
     res.status(200).json({
       success: true,
@@ -271,7 +264,7 @@ export const getAllPayments = async (req, res, next) => {
       metadata: {
         pageNumber,
         pageSize,
-        total,
+        total: await paymentRepo.countPayments(),
       },
     });
   } catch (error) {
