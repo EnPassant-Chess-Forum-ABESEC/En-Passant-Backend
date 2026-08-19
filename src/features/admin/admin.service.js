@@ -224,11 +224,12 @@ export const getUserById = async (id) => {
   }
 };
 
-export const getAllUsers = async (pageSize, pageNumber) => {
+export const getAllUsers = async (pageSize, pageNumber, search, role, sort) => {
   try {
-    const users = await userRepo.findAll(pageSize, pageNumber);
+    const users = await userRepo.findAll(pageSize, pageNumber, search, role, sort);
+    const total = await userRepo.countUsers(search, role);
 
-    return users;
+    return { users, total };
   } catch (error) {
     if (error instanceof AppError) throw error;
     throw new AppError(`getAllUsers failed: ${error.message}`, 500);
@@ -250,13 +251,14 @@ export const updateUserRole = async (userId, role) => {
   }
 };
 
-export const getAllPayments = async (pageSize, pageNumber) => {
+export const getAllPayments = async (pageSize, pageNumber, search, status, sort) => {
   try {
-    const payments = await paymentRepo.getAllPayments(pageSize, pageNumber);
+    const payments = await paymentRepo.getAllPayments(pageSize, pageNumber, search, status, sort);
+    const total = await paymentRepo.countPayments(search, status);
 
     if (!payments) throw new AppError("Payments not found", 404);
 
-    return payments;
+    return { payments, total };
   } catch (error) {
     if (error instanceof AppError) throw error;
     throw new AppError(`getAllPayments failed: ${error.message}`, 500);

@@ -443,23 +443,128 @@ Standard CRUD endpoints exist under:
 
 # Admin System APIs
 
-Special administrative endpoints for background worker tasks and cleanup.
+Special administrative endpoints for background worker tasks, data exports, and cleanup.
 
 - **`POST /api/admin/applications/remind-drafts`**: Enqueues reminder emails for users who have a DRAFT application.
 - **`POST /api/admin/users/sync-all`**: Queues an immediate sync of chess ratings for all users from external APIs.
 - **`POST /api/admin/redis/clean`**: Purges Leaderboard sorted sets in Redis.
 - **`POST /api/admin/cloud/clean`**: Purges all files from Cloudinary storage.
+- **`GET /api/admin/applications/export`**: Export all applications to Excel.
+- **`GET /api/admin/payments/export`**: Export all payments to Excel.
+- **`POST /api/admin/payments/retry-receipts`**: Retry generating PDF receipts for successful payments that are missing them.
+- **`GET /api/admin/stats`**: Fetch high-level dashboard statistics (counts of applications by status, etc.).
 
 ---
 
-# Events, Settings, and Contact APIs
+# Events APIs
 
-The following features have their own API namespaces with standard CRUD controllers:
+## GET /api/events
+Retrieve all active and upcoming events.
 
-- **Events (`/api/events`)**: Manage offline events, capacities, and deadlines. Admin required for POST/PATCH/DELETE.
-- **Settings (`/api/settings`)**: Fetch global application deadlines (Start/End dates, Reveal dates).
-- **Contact (`/api/contact`)**: Submit contact inquiries from the frontend and list/resolve them.
-- **Webhooks (`/api/webhooks`)**: Receiver for Clerk authentication events and user provisioning.
+**Auth:** Not required
+
+**Response `200`:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "...",
+      "title": "Summer Chess Tournament",
+      "date": "2026-08-15T10:00:00.000Z",
+      "venue": "Main Hall",
+      "status": "upcoming"
+    }
+  ]
+}
+```
+
+## GET /api/events/:id
+Retrieve a specific event by ID.
+
+**Auth:** Not required
+
+## POST /api/events
+Create a new event.
+
+**Auth:** Required (Admin)  
+**Content-Type:** `application/json`
+
+## PATCH /api/events/:id
+Update an existing event.
+
+**Auth:** Required (Admin)
+
+## DELETE /api/events/:id
+Delete an event.
+
+**Auth:** Required (Admin)
+
+---
+
+# Settings APIs
+
+## GET /api/settings/recruitment-phases
+Retrieve the global start, end, and reveal dates for recruitment.
+
+**Auth:** Not required
+
+**Response `200`:**
+```json
+{
+  "success": true,
+  "data": {
+    "applicationStartDate": "2026-08-01T00:00:00.000Z",
+    "applicationEndDate": "2026-08-20T23:59:59.000Z",
+    "taskRevealDate": "2026-08-21T00:00:00.000Z",
+    "submissionEndDate": "2026-08-30T23:59:59.000Z"
+  }
+}
+```
+
+## PUT /api/settings/recruitment-phases
+Update the recruitment phases dates.
+
+**Auth:** Required (Admin)
+
+---
+
+# Contact APIs
+
+## POST /api/contact
+Submit a contact inquiry from the frontend.
+
+**Auth:** Not required (Rate Limited: 3 per hour per IP)  
+**Content-Type:** `application/json`
+
+**Request Body:**
+```json
+{
+  "name": "Jane Doe",
+  "email": "jane@example.com",
+  "subject": "Question about recruitment",
+  "message": "When will the tasks be revealed?"
+}
+```
+
+## GET /api/contact
+Retrieve all submitted contact inquiries.
+
+**Auth:** Required (Admin)
+
+## PATCH /api/contact/:id/status
+Update the status of a contact inquiry (e.g., to `READ` or `RESOLVED`).
+
+**Auth:** Required (Admin)
+
+---
+
+# Webhooks API
+
+## POST /api/webhooks/clerk
+Receives events from Clerk to automatically provision users in our database upon signup.
+
+**Auth:** Handled via Clerk Webhook Signatures
 
 ---
 
