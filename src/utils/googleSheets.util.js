@@ -83,6 +83,11 @@ const applyFormatting = async (
       cell.backgroundColor = bg;
       cell.verticalAlignment = "MIDDLE";
       if (c === 0) cell.horizontalAlignment = "CENTER";
+      
+      cell.textFormat = {
+        bold: false,
+        foregroundColor: { red: 0, green: 0, blue: 0 },
+      };
 
       if (isApplications) {
         if (c === 7) {
@@ -114,7 +119,7 @@ const applyFormatting = async (
                 blue: 235 / 255,
               },
             };
-          else if (val === "DRAFT")
+          else if (val === "DRAFT" || val === "PAYMENT_PENDING")
             cell.textFormat = {
               bold: true,
               foregroundColor: {
