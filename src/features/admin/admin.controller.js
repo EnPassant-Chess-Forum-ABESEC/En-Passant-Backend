@@ -375,6 +375,7 @@ export const verifyPayment = async (req, res, next) => {
     }
     
     await clearAdminCache("admin:payments:*");
+    await clearAdminCache("admin:applications:*");
 
     return res.status(200).json({
       success: true,
