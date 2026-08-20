@@ -36,16 +36,19 @@ The application follows a modular monolith architecture where features are isola
 
 ## Feature‑Based Structure
 
-s/
-
 ```
 src/
-├─ app.js                # Express app and global middleware
-├─ server.js             # Server entry point, initialises workers & schedulers
+├─ app.js
+├─ server.js
 ├─ config/
-│   └─ db.js             # MongoDB connection
+│   └─ db.js
 ├─ redis/
-│   └─ redis.client.js   # IORedis client (used by BullMQ)
+│   └─ redis.client.js
+├─ utils/
+│   ├─ AppError.js
+│   ├─ googleSheet.util.js
+│   ├─ admin.service.js
+│   └─ admin.validation.js
 ├─ features/
 │   ├─ admin/
 │   │   ├─ admin.controller.js
@@ -74,46 +77,46 @@ src/
 │   ├─ logs/
 │   │   └─ log.model.js
 │   ├─ payments/
-│   │   ├─ payment.controller.js          # manual submission, admin verification
-│   │   ├─ payment.model.js               # manual payment ledger schema
+│   │   ├─ payment.controller.js
+│   │   ├─ payment.model.js
 │   │   ├─ payment.repository.js
 │   │   ├─ payment.routes.js
-│   │   ├─ receipt.queue.js               # Queue for receipt generation
-│   │   ├─ receipt.worker.js              # PDF generation worker (Puppeteer)
+│   │   ├─ receipt.queue.js
+│   │   ├─ receipt.worker.js
 │   │   └─ templates/
 │   ├─ recruitment/
-│   │   ├─ recruitment.constants.js       # Enums + VALID_TRANSITIONS state machine
-│   │   ├─ recruitment.controller.js      # createApplication, getMyApplication
-│   │   ├─ recruitment.model.js           # Mongoose Recruitment schema
-│   │   ├─ recruitment.queue.js           # BullMQ queue definition
-│   │   ├─ recruitment.repository.js      # Data access layer
-│   │   ├─ recruitment.routes.js          # Express router
-│   │   ├─ recruitment.scheduler.js       # Cron: daily expiry dispatcher
-│   │   ├─ recruitment.service.js         # Business logic + state transitions
-│   │   ├─ recruitment.validation.js      # Zod validation schemas
-│   │   └─ recruitment.worker.js          # BullMQ worker: autoRejectExpiredApplications
+│   │   ├─ recruitment.constants.js
+│   │   ├─ recruitment.controller.js
+│   │   ├─ recruitment.model.js
+│   │   ├─ recruitment.queue.js
+│   │   ├─ recruitment.repository.js
+│   │   ├─ recruitment.routes.js
+│   │   ├─ recruitment.scheduler.js
+│   │   ├─ recruitment.service.js
+│   │   ├─ recruitment.validation.js
+│   │   └─ recruitment.worker.js
 │   ├─ settings/
 │   │   ├─ settings.controller.js
 │   │   ├─ settings.model.js
 │   │   └─ settings.routes.js
 │   ├─ storage/
 │   │   ├─ providers/
-│   │   │   └─ cloudinary.provider.js     # Cloudinary SDK init
-│   │   └─ storage.service.js             # uploadFile, deleteFile, generateSignedUrl
+│   │   │   └─ cloudinary.provider.js
+│   │   └─ storage.service.js
 │   ├─ submissions/
-│   │   ├─ submission.controller.js       # uploadTaskSubmission, getTaskSubmission
-│   │   ├─ submission.model.js            # Mongoose Submission schema
-│   │   ├─ submission.repository.js       # Data access layer
-│   │   └─ submission.routes.js           # Express router
+│   │   ├─ submission.controller.js
+│   │   ├─ submission.model.js
+│   │   ├─ submission.repository.js
+│   │   └─ submission.routes.js
 │   ├─ sync/
-│   │   ├─ adapters/                      # Chess.com + Lichess adapters
-│   │   ├─ sync.engine.js                 # Core sync + leaderboard update logic
+│   │   ├─ adapters/
+│   │   ├─ sync.engine.js
 │   │   ├─ sync.queue.js
-│   │   ├─ sync.scheduler.js              # Cron: daily sync dispatcher
+│   │   ├─ sync.scheduler.js
 │   │   └─ sync.worker.js
 │   ├─ tasks/
 │   │   ├─ task.controller.js
-│   │   ├─ task.model.js                  # Department + Task schemas
+│   │   ├─ task.model.js
 │   │   ├─ task.repository.js
 │   │   ├─ task.routes.js
 │   │   └─ task.service.js
@@ -125,14 +128,13 @@ src/
 │   │   ├─ user.routes.js
 │   │   └─ user.validation.js
 │   └─ webhooks/
-│       ├─ webhook.controller.js          # external service webhooks (e.g. Clerk)
+│       ├─ webhook.controller.js
 │       └─ webhook.routes.js
 ├─ middleware/
-│   ├─ auth.middleware.js      # Clerk JWT authentication (userAuth, adminAuth)
-│   ├─ upload.middleware.js    # Multer memory storage (10 MB limit)
-│   ├─ validate.middleware.js  # Zod schema validation
-│   └─ error.middleware.js     # Global error formatting
-└─ server.js                   # Entry: starts Express + workers + schedulers
+│   ├─ auth.middleware.js
+│   ├─ upload.middleware.js
+│   ├─ validate.middleware.js
+│   └─ error.middleware.js
 ```
 
 ### Why Feature‑Based?
