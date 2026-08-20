@@ -21,7 +21,6 @@ Before writing code:
 - `docs/ARCHITECTURE.md`
 - `docs/API.md`
 - `docs/DEVELOPMENT_GUIDE.md`
-- `docs/GIT_WORKFLOW.md`
 
 ---
 
@@ -29,20 +28,18 @@ Before writing code:
 
 The standard development flow:
 
-```text
-Issue / Task
-      ↓
-Create Branch
-      ↓
-Implement Feature
-      ↓
-Run via Docker Compose / Locally
-      ↓
-Create Pull Request
-      ↓
-Code Review
-      ↓
-Merge
+```mermaid
+---
+config:
+  look: handDrawn
+  theme: neutral
+---
+flowchart TB
+    A[Issue / Task] --> B[Create Branch] --> C[Implement Feature]
+    C --> D[Run via Docker Compose / Locally]
+    D --> E[Create Pull Request] --> F[Code Review] --> G[Merge]
+
+    A ~~~ D
 ```
 
 ## Running Locally
@@ -55,6 +52,7 @@ npm run dev
 ```
 
 Alternatively, you can run the entire backend via Docker:
+
 ```bash
 docker-compose up --build
 ```
@@ -85,6 +83,7 @@ Example:
 ## Coding Standards Checklist
 
 Before submitting, ensure your code adheres to our project standards:
+
 - [ ] **Validation**: All incoming requests are validated using `zod` schemas in the route middleware.
 - [ ] **Error Handling**: Use the central `AppError` class from `src/utils/AppError.js` to throw operational errors (e.g. `throw new AppError("Message", 400);`). Do not use raw `res.status().json()` for errors.
 - [ ] **Feature Isolation**: Ensure your feature logic is contained within `src/features/[feature_name]/`.
@@ -110,4 +109,4 @@ If your changes affect:
 - Architecture
 - Development workflow
 
-Update the related documentation before merging.
+Update the related documentation before creating a pull request.

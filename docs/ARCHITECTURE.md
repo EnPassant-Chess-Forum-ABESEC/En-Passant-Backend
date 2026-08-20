@@ -232,7 +232,6 @@ The recruitment pipeline enforces a strict finite state machine.
 
 - **Apply**: `POST /api/recruitment/apply` — Creates a `DRAFT` application.
 - **State Transitions**: All status changes go through `transitionStatus()` in `recruitment.service.js`, which validates against `VALID_TRANSITIONS` before writing.
-- **Background Expiry**: A daily cron (via BullMQ + Redis) fires `autoRejectExpiredApplications()` at midnight, deleting any `PAYMENT_PENDING` applications older than 24 hours.
 
 ## Manual Payment & Receipt Flow
 
@@ -261,15 +260,7 @@ Email notifications are offloaded to a background worker to ensure fast API resp
   - `send-payment-success-email`: Sent by admin upon verification (includes receipt URL).
   - `send-payment-failed-email`: Sent by admin upon rejection (includes reason).
   - `send-contact-us-email`: Forwards contact form submissions to the club's email.
-  - `send-draft-reminder-email`: Reminds users with pending applications.
-
-## Events Management Flow
-
-The `events` feature allows the club to host, display, and manage chess tournaments or offline events.
-
-- **Models**: Defines an `Event` with capacities, deadlines, and a `status` (upcoming, ongoing, completed, cancelled).
-- **Admin**: Admins create and modify events.
-- **Public**: End-users can query the list of active events to participate or view details.
+  - `send-draft-reminder-email`: Reminds users with applications in draft status, i.e. payment not completed.
 
 ## Task Service Flow
 
@@ -310,6 +301,14 @@ The admin module is highly privileged and handles beyond simple CRUD:
 - **`POST /api/admin/cloud/clean`**: Purges unused or orphaned assets from Cloudinary.
 - **`POST /api/admin/users/sync-all`**: Dispatches a global queue job to re-sync all chess ratings from external APIs.
 - **`POST /api/admin/applications/remind-drafts`**: Enqueues reminder emails for users sitting on `DRAFT` applications.
+
+## Events Management Flow (In development)
+
+The `events` feature allows the club to host, display, and manage chess tournaments or offline events.
+
+- **Models**: Defines an `Event` with capacities, deadlines, and a `status` (upcoming, ongoing, completed, cancelled).
+- **Admin**: Admins create and modify events.
+- **Public**: End-users can query the list of active events to participate or view details.
 
 ## Adding a New Feature
 

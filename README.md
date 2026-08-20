@@ -1,6 +1,6 @@
 # En-Passant Backend
 
-This repository contains the backend API for the En-Passant's official website. Built with Node.js, Express, MongoDB, Redis (BullMQ), Clerk authentication, Cloudinary file storage, and Razorpay payments.
+This repository contains the backend API for the En-Passant's official website. Built with Node.js, Express, MongoDB, Redis (BullMQ), Clerk authentication, Cloudinary file storage.
 
 <img src="/docs/diagrams/en_pass_backend_overview.svg"  alt="System Overview Diagram" width="100%">
 
@@ -33,7 +33,6 @@ Dive deeper into our specific subsystems and guides:
 - [Development Guide](./docs/DEVELOPMENT_GUIDE.md)
 - [Error Handling](./docs/ERROR_HANDLING.md)
 - [Contributing Guidelines](./docs/CONTRIBUTING.md)
-- [Architecture Decisions](./docs/DECISIONS.md)
 
 ## Prerequisites
 
@@ -41,6 +40,7 @@ Before setting up the project, ensure you have the following installed on your m
 
 - Node.js (v14 or higher recommended)
 - MongoDB (running locally or accessible via a remote connection string)
+- Redis (running locally or accessible via a remote connection string)
 
 ## Tech Stack
 
@@ -50,7 +50,6 @@ Before setting up the project, ensure you have the following installed on your m
 - **Cache/Queue:** Redis (via BullMQ)
 - **Authentication:** Clerk
 - **File Storage:** Cloudinary
-- **Payments:** Razorpay
 
 ## Local Setup Instructions
 
@@ -74,7 +73,7 @@ Before setting up the project, ensure you have the following installed on your m
    cp .env.example .env
    ```
 
-   Open the `.env` file and populate the Clerk keys (`CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY`) with the development credentials from your Clerk dashboard. Update the `MONGO_URI` if your local database uses a different port or name and ensure the `UPSTASH_REDIS_REST_URL` points to your Redis instance and is a TCP url.
+   Open the `.env` file and populate it with your specific configuration values, such as database connection strings, API keys, and other secrets.
 
 4. **Start the Development Server:**
    This project uses `nodemon` to automatically restart the server upon file changes.
@@ -88,18 +87,22 @@ Before setting up the project, ensure you have the following installed on your m
 You can use Docker Compose to spin up Redis or the entire backend stack quickly.
 
 ### 1. Start only Redis
+
 If you want to run the backend locally with `npm run dev` but need a local Redis instance for BullMQ queues:
 
 ```bash
 docker-compose up -d redis
 ```
+
 This will start Redis on `localhost:6379`. Make sure your `.env` file contains:
-`UPSTASH_REDIS_REST_URL=redis://localhost:6379` (or `REDIS_URL` depending on your current setup).
+`REDIS_URL=redis://localhost:6379` or any other redis connection string such as redis cloud or upstash.
 
 ### 2. Start the Full Application
+
 To run the Node.js Express Backend alongside Redis in Docker:
 
 ```bash
 docker-compose up --build
 ```
+
 This will build the backend image and start both services. The API will be accessible at `http://localhost:8080`.
