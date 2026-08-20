@@ -85,7 +85,7 @@ const applyFormatting = async (
       if (c === 0) cell.horizontalAlignment = "CENTER";
 
       if (isApplications) {
-        if (c === 6) {
+        if (c === 7) {
           const val = cell.value;
           if (val === "ACTIVE")
             cell.textFormat = {
@@ -124,7 +124,7 @@ const applyFormatting = async (
               },
             };
         }
-        if (c === 7) {
+        if (c === 8) {
           const val = cell.value;
           if (val === "SUCCESS")
             cell.textFormat = {
@@ -192,7 +192,7 @@ const applyFormatting = async (
   await sheet.saveUpdatedCells();
 
   const colWidths = isApplications
-    ? [50, 150, 240, 120, 150, 200, 140, 130, 180, 180]
+    ? [50, 150, 240, 240, 150, 180, 200, 140, 140, 180, 180]
     : [50, 150, 240, 120, 200, 100, 130, 120, 180];
   for (let i = 0; i < colWidths.length; i++) {
     await sheet.updateDimensionProperties(
