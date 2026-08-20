@@ -32,7 +32,7 @@ The backend follows a **feature‑based architecture**. Instead of grouping file
 
 The application follows a modular monolith architecture where features are isolated as independent domains with clear boundaries, allowing future extraction into services if needed.
 
-<img src="/docs/diagrams/en_pass_detailed_architecture.svg" alt="Backend Architecture Diagram(subsystem/components)" width="100%"/>
+<img src="/docs/diagrams/en_passant_detailed_arch.svg" alt="Backend Architecture Diagram(subsystem/components)" width="100%"/>
 
 ## Feature‑Based Structure
 
