@@ -36,6 +36,8 @@ The application follows a modular monolith architecture where features are isola
 
 ## Feature‑Based Structure
 
+s/
+
 ```
 src/
 ├─ app.js                # Express app and global middleware
