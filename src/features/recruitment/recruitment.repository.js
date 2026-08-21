@@ -61,31 +61,30 @@ export const getApplicationStatsByDepartment = async () => {
             }
           }
         ],
-        as: "recruitments"
+        as: "primaryRecruitments"
+      }
+    },
+    {
+      $lookup: {
+        from: "recruitments",
+        localField: "_id",
+        foreignField: "secondaryDepartmentId",
+        pipeline: [
+          {
+            $match: {
+              status: { $in: [APPLICATION_STATUS.ACTIVE, APPLICATION_STATUS.PAYMENT_PENDING] }
+            }
+          }
+        ],
+        as: "secondaryRecruitments"
       }
     },
     {
       $project: {
         _id: 0,
         name: 1,
-        ACTIVE: {
-          $size: {
-            $filter: {
-              input: "$recruitments",
-              as: "r",
-              cond: { $eq: ["$$r.status", APPLICATION_STATUS.ACTIVE] }
-            }
-          }
-        },
-        PAYMENT_PENDING: {
-          $size: {
-            $filter: {
-              input: "$recruitments",
-              as: "r",
-              cond: { $eq: ["$$r.status", APPLICATION_STATUS.PAYMENT_PENDING] }
-            }
-          }
-        }
+        PRIMARY: { $size: "$primaryRecruitments" },
+        SECONDARY: { $size: "$secondaryRecruitments" }
       }
     },
     {
