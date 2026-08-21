@@ -51,18 +51,20 @@ export const updatePaymentStatus = async (paymentId, status) => {
 
 export const getDashboardStats = async () => {
   try {
-    const [totalApplications, activeTasks, totalMembers, totalRevenue] =
+    const [totalApplications, activeTasks, totalMembers, totalRevenue, chartData] =
       await Promise.all([
         recruitmentRepo.countRecruitments(),
         taskRepo.countTasks(),
         userRepo.countUsers(),
         paymentRepo.calculateTotalRevenue(),
+        recruitmentRepo.getApplicationStatsByDepartment(),
       ]);
     return {
       totalApplications,
       activeTasks,
       totalMembers,
       totalRevenue,
+      chartData,
     };
   } catch (error) {
     if (error instanceof AppError) throw error;

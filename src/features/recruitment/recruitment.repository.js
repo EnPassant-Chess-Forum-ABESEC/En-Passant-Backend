@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Recruitment from "./recruitment.model.js";
 import { APPLICATION_STATUS } from "./recruitment.constants.js";
 
@@ -44,4 +45,51 @@ export const deleteApplication = async (id) => {
 
 export const countRecruitments = async () => {
   return Recruitment.countDocuments();
+};
+
+export const getApplicationStatsByDepartment = async () => {
+  return mongoose.model("Department").aggregate([
+    {
+      $lookup: {
+        from: "recruitments",
+        localField: "_id",
+        foreignField: "preferredDepartmentId",
+        pipeline: [
+          {
+            $match: {
+              status: { $in: [APPLICATION_STATUS.ACTIVE, APPLICATION_STATUS.PAYMENT_PENDING] }
+            }
+          }
+        ],
+        as: "recruitments"
+      }
+    },
+    {
+      $project: {
+        _id: 0,
+        name: 1,
+        ACTIVE: {
+          $size: {
+            $filter: {
+              input: "$recruitments",
+              as: "r",
+              cond: { $eq: ["$$r.status", APPLICATION_STATUS.ACTIVE] }
+            }
+          }
+        },
+        PAYMENT_PENDING: {
+          $size: {
+            $filter: {
+              input: "$recruitments",
+              as: "r",
+              cond: { $eq: ["$$r.status", APPLICATION_STATUS.PAYMENT_PENDING] }
+            }
+          }
+        }
+      }
+    },
+    {
+      $sort: { name: 1 }
+    }
+  ]);
 };
