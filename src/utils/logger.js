@@ -15,7 +15,11 @@ const transports = [
 ];
 
 if (process.env.LOGTAIL_SOURCE_TOKEN) {
-  const logtail = new Logtail(process.env.LOGTAIL_SOURCE_TOKEN);
+  const logtailOptions = {};
+  if (process.env.LOGTAIL_ENDPOINT) {
+    logtailOptions.endpoint = process.env.LOGTAIL_ENDPOINT;
+  }
+  const logtail = new Logtail(process.env.LOGTAIL_SOURCE_TOKEN, logtailOptions);
   transports.push(new LogtailTransport(logtail));
 }
 
