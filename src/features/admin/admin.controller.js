@@ -290,6 +290,20 @@ export const updateUserRole = async (req, res, next) => {
   }
 };
 
+export const deleteUser = async (req, res, next) => {
+  try {
+    await adminService.deleteUser(req.params.id);
+    await clearAdminCache("admin:users:*");
+
+    res.status(200).json({
+      success: true,
+      message: "User deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getAllPayments = async (req, res, next) => {
   try {
     const pageSize = Number(req.query.pageSize) || 10;

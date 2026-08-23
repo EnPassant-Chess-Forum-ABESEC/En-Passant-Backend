@@ -24,6 +24,7 @@ import {
   sendDraftReminders,
   getDashboardStats,
   retryMissingReceipts,
+  deleteUser,
 } from "./admin.controller.js";
 import { adminAuth } from "../../middleware/auth.middleware.js";
 import { validate } from "../../middleware/validate.middleware.js";
@@ -108,6 +109,7 @@ router.patch(
   validate(updateUserRoleSchema),
   updateUserRole,
 );
+router.delete("/users/:id", adminAuth, deleteUser);
 
 // system management
 router.post("/redis/clean", adminAuth, cleanRedisSets);

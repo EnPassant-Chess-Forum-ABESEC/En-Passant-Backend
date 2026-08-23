@@ -28,3 +28,7 @@ export const findAll = (pageSize = 10, pageNumber = 1) => {
     .limit(Number(pageSize))
     .skip((Number(pageNumber) - 1) * Number(pageSize));
 };
+
+export const deleteUserByClerkId = async (clerkId) => {
+  return User.findOneAndDelete({ clerkId });
+};

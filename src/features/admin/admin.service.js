@@ -51,14 +51,19 @@ export const updatePaymentStatus = async (paymentId, status) => {
 
 export const getDashboardStats = async () => {
   try {
-    const [totalApplications, activeTasks, totalMembers, totalRevenue, chartData] =
-      await Promise.all([
-        recruitmentRepo.countRecruitments(),
-        taskRepo.countTasks(),
-        userRepo.countUsers(),
-        paymentRepo.calculateTotalRevenue(),
-        recruitmentRepo.getApplicationStatsByDepartment(),
-      ]);
+    const [
+      totalApplications,
+      activeTasks,
+      totalMembers,
+      totalRevenue,
+      chartData,
+    ] = await Promise.all([
+      recruitmentRepo.countRecruitments(),
+      taskRepo.countTasks(),
+      userRepo.countUsers(),
+      paymentRepo.calculateTotalRevenue(),
+      recruitmentRepo.getApplicationStatsByDepartment(),
+    ]);
     return {
       totalApplications,
       activeTasks,
@@ -252,6 +257,28 @@ export const updateUserRole = async (userId, role) => {
   }
 };
 
+export const deleteUser = async (userId) => {
+  try {
+    const user = await userRepo.findByClerkId(userId);
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
+
+    const { createClerkClient } = await import("@clerk/express");
+    const clerkClient = createClerkClient({
+      secretKey: process.env.CLERK_SECRET_KEY,
+    });
+    await clerkClient.users.deleteUser(userId);
+
+    await userRepo.deleteUserByClerkId(userId);
+
+    return { success: true };
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    throw new AppError(`deleteUser failed: ${error.message}`, 500);
+  }
+};
+
 export const getAllPayments = async (pageSize, pageNumber) => {
   try {
     const payments = await paymentRepo.getAllPayments(pageSize, pageNumber);
@@ -304,12 +331,17 @@ export const sendDraftReminders = async () => {
     let sentCount = 0;
     for (const app of draftApplications) {
       if (app.userId && app.userId.email) {
-        const userName = app.userId.userName || app.userId.firstName || "Applicant";
-        await enqueueDraftReminderEmail(app.userId._id, app.userId.email, userName);
+        const userName =
+          app.userId.userName || app.userId.firstName || "Applicant";
+        await enqueueDraftReminderEmail(
+          app.userId._id,
+          app.userId.email,
+          userName,
+        );
         sentCount++;
       }
     }
-    
+
     return { count: sentCount };
   } catch (error) {
     if (error instanceof AppError) throw error;
