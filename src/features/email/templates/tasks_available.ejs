@@ -4,39 +4,85 @@
     <meta charset="utf-8" />
     <title>Tasks Available</title>
   </head>
-  <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333">
-    <h2>Hi <%= userName %>,</h2>
 
-    <p>
-      The registration phase for En-Passant Recruitment 2026 has officially
-      concluded, and your tasks are now available!
-    </p>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333333;
+      background-color: #f5f5f5;
+    "
+  >
+    <div
+      style="
+        max-width: 600px;
+        margin: 30px auto;
+        padding: 30px;
+        background-color: #ffffff;
+        border-radius: 8px;
+      "
+    >
+      <h2 style="margin-top: 0; color: #111111">Hi <%= userName %>,</h2>
 
-    <p>
-      You can view your assigned tasks, instructions, and upload your
-      submissions by visiting your dashboard:
-    </p>
+      <p>
+        The registration phase for <strong>En-Passant Recruitment 2026</strong>
+        has officially concluded, and your tasks are now available!
+      </p>
 
-    <p>
-      <a
-        href="<%= dashboardUrl %>"
-        style="
-          display: inline-block;
-          padding: 10px 20px;
-          background-color: #111;
-          color: #ffffff;
-          text-decoration: none;
-          border-radius: 5px;
-        "
-        >Go to Dashboard</a
-      >
-    </p>
+      <p>
+        You can view your assigned tasks, instructions, and upload your
+        submissions by visiting your dashboard:
+      </p>
 
-    <p>
-      If you have any questions, feel free to reply to this email or use the
-      contact form on our website.
-    </p>
+      <p>
+        <a
+          href="<%= dashboardUrl %>"
+          style="
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #111111;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 5px;
+          "
+        >
+          Go to Dashboard
+        </a>
+      </p>
 
-    <p>Best regards,<br />The En-Passant Team</p>
+      <p>Please join the WhatsApp group for further instructions:</p>
+
+      <p>
+        <a
+          href="https://chat.whatsapp.com/FkeYTGwJxOeFjpXWwcfFWF"
+          style="
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #25d366;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 5px;
+          "
+        >
+          Join WhatsApp Group
+        </a>
+      </p>
+
+      <p>
+        If you have any questions, please reach out via our
+        <a
+          href="https://enpassant.co.in/contact"
+          style="color: #111; font-weight: 500"
+          >Contact Us page</a
+        >.
+      </p>
+
+      <p>
+        Best regards,<br />
+        <strong>The En-Passant Team</strong>
+      </p>
+    </div>
   </body>
 </html>
