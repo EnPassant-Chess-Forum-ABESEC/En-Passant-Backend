@@ -37,6 +37,7 @@ export const getAllPayments = async (pageSize = 10, pageNumber = 1) => {
     .select("-receiptFile")
     .populate("userId", "userName email collegeEmail")
     .sort({ createdAt: -1 })
+    .allowDiskUse(true)
     .limit(Number(pageSize))
     .skip((Number(pageNumber) - 1) * Number(pageSize));
 };
@@ -45,7 +46,8 @@ export const getAllPaymentsForExport = async () => {
   return Payment.find()
     .select("-receiptFile")
     .populate("userId", "userName email collegeEmail phoneNumber")
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 })
+    .allowDiskUse(true);
 };
 
 export const calculateTotalRevenue = async () => {
