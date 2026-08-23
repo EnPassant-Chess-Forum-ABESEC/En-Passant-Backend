@@ -9,6 +9,17 @@ import { createOrder } from "./gateways/razorpay.gateway.js";
 import Razorpay from "razorpay";
 import * as paymentRepo from "./payment.repository.js";
 import { uploadFile } from "../storage/storage.service.js";
+import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+
+const s3Client = new S3Client({
+  region: "auto",
+  endpoint: `https://${process.env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  credentials: {
+    accessKeyId: process.env.R2_ACCESS_KEY_ID,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+  },
+});
 
 export const createCheckoutSession = async (req, res, next) => {
   const userId = req.user._id;
@@ -175,16 +186,29 @@ export const downloadReceiptPdf = async (req, res, next) => {
     const { id } = req.params;
     const payment = await paymentRepo.getPaymentById(id);
 
-    if (!payment || !payment.receiptFile) {
+    if (!payment) {
       return res.status(404).send("Receipt not found");
     }
 
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      `inline; filename="receipt_${id}.pdf"`,
-    );
-    res.send(payment.receiptFile);
+    if (payment.receiptFile) {
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        `inline; filename="receipt_${id}.pdf"`,
+      );
+      return res.send(payment.receiptFile);
+    }
+
+    if (payment.receiptS3Key) {
+      const command = new GetObjectCommand({
+        Bucket: process.env.R2_BUCKET_NAME,
+        Key: payment.receiptS3Key,
+      });
+      const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+      return res.redirect(signedUrl);
+    }
+
+    return res.status(404).send("Receipt not generated yet");
   } catch (error) {
     next(error);
   }

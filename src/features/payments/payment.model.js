@@ -59,6 +59,9 @@ const paymentSchema = new mongoose.Schema(
     receiptFile: {
       type: Buffer, // Storing the raw PDF bytes
     },
+    receiptS3Key: {
+      type: String,
+    },
     rejectionReason: {
       type: String,
       default: null,

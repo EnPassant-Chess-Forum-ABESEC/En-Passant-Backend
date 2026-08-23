@@ -8,6 +8,16 @@ import ejs from "ejs";
 import path from "path";
 import { fileURLToPath } from "url";
 import puppeteer from "puppeteer";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+
+const s3Client = new S3Client({
+  region: "auto",
+  endpoint: `https://${process.env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  credentials: {
+    accessKeyId: process.env.R2_ACCESS_KEY_ID,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+  },
+});
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -72,15 +82,28 @@ const processReceiptJob = async (job) => {
 
     await page.close();
 
-    const backendUrl = process.env.BACKEND_URL || "https://en-passant-backend.onrender.com";
+    const backendUrl =
+      process.env.BACKEND_URL || "https://en-passant-backend.onrender.com";
     const receiptLink = `${backendUrl.replace(/\/$/, "").replace(/\/api$/, "")}/api/payments/${payment._id}/receipt.pdf`;
 
-    payment.receiptFile = Buffer.from(pdfBuffer);
+    const s3Key = `receipts/receipt_${payment._id}.pdf`;
+
+    await s3Client.send(
+      new PutObjectCommand({
+        Bucket: process.env.R2_BUCKET_NAME,
+        Key: s3Key,
+        Body: pdfBuffer,
+        ContentType: "application/pdf",
+      }),
+    );
+
+    payment.receiptFile = undefined;
+    payment.receiptS3Key = s3Key;
     payment.receiptUrl = receiptLink;
     await payment.save();
 
     workerLogger.log(
-      `Successfully generated and saved receipt to DB for payment ${payment._id}`,
+      `Successfully generated and uploaded receipt to R2 for payment ${payment._id}`,
     );
 
     import("../email/email.queue.js").then((module) => {

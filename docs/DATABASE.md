@@ -195,7 +195,8 @@ ACTIVE
 | `paymentScreenshotUrl`    | String   | No       | —        | URL of the uploaded screenshot.                   |
 | `receiptPublicId`         | String   | No       | —        | Cloudinary ID of the generated receipt.           |
 | `receiptUrl`              | String   | No       | —        | Backend URL to fetch the receipt PDF.             |
-| `receiptFile`             | Buffer   | No       | —        | PDF buffer if stored directly.                    |
+| `receiptS3Key`            | String   | No       | —        | Cloudflare R2 object key for the PDF receipt.     |
+| `receiptFile`             | Buffer   | No       | —        | [DEPRECATED] Legacy PDF buffer storage.           |
 | `rejectionReason`         | String   | No       | —        | Reason provided by Admin if payment is rejected.  |
 
 ### Indexes
