@@ -22,7 +22,6 @@
 | `events`       | `features/events/event.model.js`            | Club events, tournaments, and timelines     |
 | `settings`     | `features/settings/settings.model.js`       | Global application date settings            |
 | `contactqueries`| `features/contact/contact.model.js`        | User inquiries and contact form submissions |
-| `logs`         | `features/logs/log.model.js`                | System audit logs                           |
 
 ---
 
