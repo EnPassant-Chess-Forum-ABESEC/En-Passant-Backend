@@ -8,6 +8,7 @@ import {
 } from "../storage/storage.service.js";
 import * as recruitmentService from "../recruitment/recruitment.service.js";
 import * as taskRepo from "../tasks/task.repository.js";
+import { Task } from "../tasks/task.model.js";
 import { fileTypeFromBuffer } from "file-type";
 
 export const uploadTaskSubmission = async (req, res, next) => {
@@ -15,25 +16,33 @@ export const uploadTaskSubmission = async (req, res, next) => {
   const { text, links } = req.body;
   const files = req.files || [];
   const hasText = text && text.trim().length > 0;
-  const hasLinks = Array.isArray(links) ? links.length > 0 : (links && links.trim().length > 0);
+  const hasLinks = Array.isArray(links)
+    ? links.length > 0
+    : links && links.trim().length > 0;
 
   if (!hasText && !hasLinks && files.length === 0) {
     return res.status(400).json({
       success: false,
-      message: "Submission cannot be empty. Please provide at least one text, link, or file.",
+      message:
+        "Submission cannot be empty. Please provide at least one text, link, or file.",
     });
   }
 
-  const linksArray = Array.isArray(links) ? links : (links ? [links] : []);
+  const linksArray = Array.isArray(links) ? links : links ? [links] : [];
   for (const link of linksArray) {
     if (link.trim() !== "") {
       try {
         const urlObj = new URL(link);
         if (urlObj.protocol !== "http:" && urlObj.protocol !== "https:") {
-          return res.status(400).json({ success: false, message: "Only HTTP/HTTPS links are allowed" });
+          return res.status(400).json({
+            success: false,
+            message: "Only HTTP/HTTPS links are allowed",
+          });
         }
       } catch (err) {
-        return res.status(400).json({ success: false, message: "Invalid URL provided" });
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid URL provided" });
       }
     }
   }
@@ -42,10 +51,18 @@ export const uploadTaskSubmission = async (req, res, next) => {
 
   try {
     const settings = await Settings.findOne();
-    if (settings && new Date() > settings.submissionEndDate) {
-      return res
-        .status(403)
-        .json({ success: false, message: "Submission window has closed" });
+    if (settings) {
+      if (new Date() < settings.applicationEndDate) {
+        return res.status(403).json({
+          success: false,
+          message: "Submissions will open after the registration deadline",
+        });
+      }
+      if (new Date() > settings.submissionEndDate) {
+        return res
+          .status(403)
+          .json({ success: false, message: "Submission window has closed" });
+      }
     }
 
     const application = await recruitmentService.getMyApplication(
@@ -59,12 +76,10 @@ export const uploadTaskSubmission = async (req, res, next) => {
         application.status !== "TASK_SUBMITTED") ||
       application._id.toString() !== applicationId
     ) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Application not found or is not active",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Application not found or is not active",
+      });
     }
 
     const task = await taskRepo.findById(taskId);
@@ -86,60 +101,115 @@ export const uploadTaskSubmission = async (req, res, next) => {
       task.departmentId?._id?.toString() || task.departmentId?.toString();
 
     if (taskDeptId !== preferredId && !secondaryIds.includes(taskDeptId)) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "You have not applied for this department",
+      return res.status(400).json({
+        success: false,
+        message: "You have not applied for this department",
+      });
+    }
+
+    const allSubmissions =
+      await submissionRepo.findSubmissionsByApplicationId(applicationId);
+
+    const alreadySubmitted = allSubmissions.some((sub) => {
+      const subTaskId = sub.taskId?._id?.toString() || sub.taskId?.toString();
+      return subTaskId === taskId;
+    });
+
+    if (alreadySubmitted) {
+      return res.status(400).json({
+        success: false,
+        message: "You have already submitted this task.",
+      });
+    }
+
+    const isPrimaryDept = taskDeptId === preferredId;
+
+    if (!(isPrimaryDept && task.isRequired)) {
+      const requiredPrimaryTaskExists = await Task.exists({
+        departmentId: preferredId,
+        isRequired: true,
+        year: currentYear,
+      });
+
+      if (requiredPrimaryTaskExists) {
+        const hasRequiredPrimarySubmission = allSubmissions.some((sub) => {
+          const deptId =
+            sub.taskId?.departmentId?._id?.toString() ||
+            sub.taskId?.departmentId?.toString();
+          return deptId === preferredId && sub.taskId?.isRequired === true;
         });
+
+        if (!hasRequiredPrimarySubmission) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "You must complete the required task for your primary department before submitting any other tasks.",
+          });
+        }
+      }
+    }
+
+    if (!isPrimaryDept && !task.isRequired) {
+      const requiredSecondaryTaskExists = await Task.exists({
+        departmentId: taskDeptId,
+        isRequired: true,
+        year: currentYear,
+      });
+
+      if (requiredSecondaryTaskExists) {
+        const hasRequiredSecondarySubmission = allSubmissions.some((sub) => {
+          const deptId =
+            sub.taskId?.departmentId?._id?.toString() ||
+            sub.taskId?.departmentId?.toString();
+          return deptId === taskDeptId && sub.taskId?.isRequired === true;
+        });
+
+        if (!hasRequiredSecondarySubmission) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "You must complete the required task for this department before submitting its optional tasks.",
+          });
+        }
+      }
     }
 
     const { submission } = task;
 
     if (files.length && !submission.acceptsFiles) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "File upload is not accepted for this task",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "File upload is not accepted for this task",
+      });
     }
 
     if (links && !submission.acceptsLinks) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Link submission is not accepted for this task",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Link submission is not accepted for this task",
+      });
     }
 
     if (text && !submission.acceptsText) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Text submission is not accepted for this task",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Text submission is not accepted for this task",
+      });
     }
 
     if (files.length > submission.maxFiles) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Number of files exceed the maximum upload limit",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Number of files exceed the maximum upload limit",
+      });
     }
 
     for (const file of files) {
       if (file.size > submission.maxFileSize) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: "File size exceeds the maximum upload limit",
-          });
+        return res.status(400).json({
+          success: false,
+          message: "File size exceeds the maximum upload limit",
+        });
       }
 
       if (!isValidMimeType(file.mimetype, submission.fileCategory)) {
@@ -149,10 +219,14 @@ export const uploadTaskSubmission = async (req, res, next) => {
       }
 
       const detectedType = await fileTypeFromBuffer(file.buffer);
-      if (!detectedType || !isValidMimeType(detectedType.mime, submission.fileCategory)) {
-        return res
-          .status(400)
-          .json({ success: false, message: "File signature validation failed. Malicious file detected." });
+      if (
+        !detectedType ||
+        !isValidMimeType(detectedType.mime, submission.fileCategory)
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "File signature validation failed. Malicious file detected.",
+        });
       }
     }
 

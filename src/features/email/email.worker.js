@@ -2,7 +2,8 @@ import { workerLogger } from "../../utils/logger.js";
 import { Worker } from "bullmq";
 import { createRedisConnection } from "../../redis/redis.client.js";
 import { sendEmail } from "./email.service.js";
-
+import Recruitment from "../recruitment/recruitment.model.js";
+import { enqueueTasksAvailableEmail } from "./email.queue.js";
 import ejs from "ejs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -127,6 +128,41 @@ const processEmailJob = async (job) => {
     const html = await ejs.renderFile(templatePath, {
       userName: userName || "Applicant",
       applyUrl,
+    });
+
+    await sendEmail({ to: email, subject, text, html });
+  } else if (name === "dispatch-tasks-available") {
+    workerLogger.log("Dispatching tasks available emails to all ACTIVE applicants...");
+    
+    const recruitments = await Recruitment.find({
+      status: "ACTIVE",
+    }).populate("userId", "userName email");
+
+    let count = 0;
+    for (const rec of recruitments) {
+      if (rec.userId && rec.userId.email) {
+        await enqueueTasksAvailableEmail(
+          rec.userId._id,
+          rec.userId.email,
+          rec.userId.userName || "Applicant"
+        );
+        count++;
+      }
+    }
+    workerLogger.log(`Successfully dispatched ${count} tasks available emails.`);
+  } else if (name === "send-tasks-available-email") {
+    const { email, name: userName } = data;
+
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+    const dashboardUrl = `${frontendUrl.replace(/\/$/, "")}/recruitment/dashboard`;
+
+    const subject = "En-Passant Tasks Now Available!";
+    const text = `Hi ${userName},\n\nThe registration phase for En-Passant has officially concluded, and your tasks are now available!\n\nYou can view your assigned tasks, instructions, and upload your submissions by visiting your dashboard:\n${dashboardUrl}\n\nBest regards,\nThe En-Passant Team`;
+
+    const templatePath = path.join(__dirname, "templates", "tasks_available.ejs");
+    const html = await ejs.renderFile(templatePath, {
+      userName: userName || "Applicant",
+      dashboardUrl,
     });
 
     await sendEmail({ to: email, subject, text, html });

@@ -1,4 +1,5 @@
 import Settings from "./settings.model.js";
+import { scheduleTasksAvailableDispatch } from "../email/email.queue.js";
 
 const getSettingsDoc = async () => {
   let settings = await Settings.findOne();
@@ -50,6 +51,8 @@ export const updateRecruitmentPhases = async (req, res, next) => {
       submissionEndDate || settings.submissionEndDate;
 
     await settings.save();
+    
+    await scheduleTasksAvailableDispatch(settings.applicationEndDate);
 
     res.status(200).json({
       success: true,
