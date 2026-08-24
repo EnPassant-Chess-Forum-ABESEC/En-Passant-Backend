@@ -47,8 +47,7 @@ src/
 ├─ utils/
 │   ├─ AppError.js
 │   ├─ googleSheet.util.js
-│   ├─ admin.service.js
-│   └─ admin.validation.js
+│   └─ logger.js
 ├─ features/
 │   ├─ admin/
 │   │   ├─ admin.controller.js
@@ -74,8 +73,6 @@ src/
 │   │   ├─ leaderboard.controller.js
 │   │   ├─ leaderboard.routes.js
 │   │   └─ leaderboard.service.js
-│   ├─ logs/
-│   │   └─ log.model.js
 │   ├─ payments/
 │   │   ├─ payment.controller.js
 │   │   ├─ payment.model.js
