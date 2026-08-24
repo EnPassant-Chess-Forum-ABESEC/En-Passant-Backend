@@ -21,8 +21,11 @@ export const getAllTasksByDepartment = async (req, res, next) => {
     let isRevealed = true;
     let revealDate = null;
 
+    let submissionEndDate = null;
+
     if (settings) {
       revealDate = settings.taskRevealDate;
+      submissionEndDate = settings.submissionEndDate;
       if (new Date() < settings.taskRevealDate && req.user?.role !== "admin") {
         isRevealed = false;
         tasks = tasks.map((task) => {
@@ -36,7 +39,7 @@ export const getAllTasksByDepartment = async (req, res, next) => {
       }
     }
 
-    return res.status(200).json({ tasks, isRevealed, revealDate });
+    return res.status(200).json({ tasks, isRevealed, revealDate, submissionEndDate });
   } catch (error) {
     next(error);
   }
@@ -55,8 +58,11 @@ export const getAllTasksForYear = async (req, res, next) => {
     let isRevealed = true;
     let revealDate = null;
 
+    let submissionEndDate = null;
+
     if (settings) {
       revealDate = settings.taskRevealDate;
+      submissionEndDate = settings.submissionEndDate;
       if (new Date() < settings.taskRevealDate && req.user?.role !== "admin") {
         isRevealed = false;
         tasks = tasks.map((task) => {
@@ -70,7 +76,7 @@ export const getAllTasksForYear = async (req, res, next) => {
       }
     }
 
-    return res.status(200).json({ tasks, isRevealed, revealDate });
+    return res.status(200).json({ tasks, isRevealed, revealDate, submissionEndDate });
   } catch (error) {
     next(error);
   }
