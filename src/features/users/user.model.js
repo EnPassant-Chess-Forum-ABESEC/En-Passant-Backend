@@ -28,6 +28,11 @@ const chessAccountSchema = new mongoose.Schema(
       default: "pending",
     },
 
+    verified: {
+      type: Boolean,
+      default: false,
+    },
+
     lastSync: {
       type: Date,
       default: null,
