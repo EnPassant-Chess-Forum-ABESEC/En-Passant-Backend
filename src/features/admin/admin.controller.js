@@ -4,11 +4,11 @@ import {
   handleSuccessfulPayment,
   handleFailedPayment,
 } from "../recruitment/recruitment.service.js";
-import mongoose from "mongoose";
 import { redisConnection } from "../../redis/redis.client.js";
 import { deleteAllCloudFiles } from "../storage/storage.service.js";
 import Payment from "../payments/payment.model.js";
 import { enqueueReceiptGeneration } from "../payments/receipt.queue.js";
+import { logAdminAction } from "../logs/audit.service.js";
 
 const CACHE_TTL = 300;
 
@@ -24,8 +24,8 @@ const clearAdminCache = async (pattern) => {
 };
 export const getAllApplications = async (req, res, next) => {
   const { status, departmentId, year } = req.query;
-  const cacheKey = `admin:applications:${status || 'ALL'}:${departmentId || 'ALL'}:${year || 'ALL'}`;
-  
+  const cacheKey = `admin:applications:${status || "ALL"}:${departmentId || "ALL"}:${year || "ALL"}`;
+
   try {
     const cachedData = await redisConnection.get(cacheKey);
     if (cachedData) {
@@ -90,6 +90,7 @@ export const deleteApplication = async (req, res, next) => {
 
   try {
     await adminService.deleteApplication(id);
+    await logAdminAction(req.user, "DELETE_APPLICATION", id);
     await clearAdminCache("admin:applications:*");
 
     return res.status(200).json({
@@ -111,8 +112,9 @@ export const updateApplicationStatus = async (req, res, next) => {
       id,
       status,
     );
+    await logAdminAction(req.user, "UPDATE_APPLICATION_STATUS", id, { status });
     await clearAdminCache("admin:applications:*");
-    
+
     return res.status(200).json({
       success: true,
       message: "Application status updated successfully",
@@ -140,6 +142,10 @@ export const getAllDepartments = async (req, res, next) => {
 export const createDepartment = async (req, res, next) => {
   try {
     const department = await adminService.createDepartment(req.body);
+    await logAdminAction(req.user, "CREATE_DEPARTMENT", department._id, {
+      code: department.code,
+      name: department.name,
+    });
 
     return res.status(201).json({
       success: true,
@@ -160,6 +166,12 @@ export const updateDepartment = async (req, res, next) => {
       req.params.id,
       req.body,
     );
+    await logAdminAction(
+      req.user,
+      "UPDATE_DEPARTMENT",
+      req.params.id,
+      req.body,
+    );
 
     return res.status(200).json({
       success: true,
@@ -174,6 +186,7 @@ export const updateDepartment = async (req, res, next) => {
 export const deleteDepartment = async (req, res, next) => {
   try {
     await adminService.deleteDepartment(req.params.id);
+    await logAdminAction(req.user, "DELETE_DEPARTMENT", req.params.id);
 
     return res.status(200).json({
       success: true,
@@ -187,6 +200,9 @@ export const deleteDepartment = async (req, res, next) => {
 export const createTask = async (req, res, next) => {
   try {
     const task = await adminService.createTask(req.body);
+    await logAdminAction(req.user, "CREATE_TASK", task._id, {
+      title: task.title,
+    });
 
     return res.status(201).json({
       success: true,
@@ -201,6 +217,7 @@ export const createTask = async (req, res, next) => {
 export const updateTask = async (req, res, next) => {
   try {
     const updatedTask = await adminService.updateTask(req.params.id, req.body);
+    await logAdminAction(req.user, "UPDATE_TASK", req.params.id, req.body);
 
     return res.status(200).json({
       success: true,
@@ -215,6 +232,7 @@ export const updateTask = async (req, res, next) => {
 export const deleteTask = async (req, res, next) => {
   try {
     await adminService.deleteTask(req.params.id);
+    await logAdminAction(req.user, "DELETE_TASK", req.params.id);
 
     return res.status(200).json({
       success: true,
@@ -277,7 +295,9 @@ export const updateUserRole = async (req, res, next) => {
       req.params.id,
       req.body.role,
     );
-    
+    await logAdminAction(req.user, "UPDATE_USER_ROLE", req.params.id, {
+      role: req.body.role,
+    });
     await clearAdminCache("admin:users:*");
 
     res.status(200).json({
@@ -293,6 +313,7 @@ export const updateUserRole = async (req, res, next) => {
 export const deleteUser = async (req, res, next) => {
   try {
     await adminService.deleteUser(req.params.id);
+    await logAdminAction(req.user, "DELETE_USER", req.params.id);
     await clearAdminCache("admin:users:*");
 
     res.status(200).json({
@@ -387,9 +408,11 @@ export const verifyPayment = async (req, res, next) => {
       if (reason) payment.rejectionReason = reason;
       await payment.save();
     }
-    
+
     await clearAdminCache("admin:payments:*");
     await clearAdminCache("admin:applications:*");
+
+    await logAdminAction(req.user, "VERIFY_PAYMENT", id, { status, reason });
 
     return res.status(200).json({
       success: true,
@@ -423,6 +446,7 @@ export const syncAllUsers = async (req, res, next) => {
         removeOnComplete: true,
       },
     );
+    await logAdminAction(req.user, "SYNC_ALL_USERS");
     res.status(200).json({
       success: true,
       message: "Sync job for all users has been triggered successfully.",
@@ -440,6 +464,7 @@ export const cleanRedisSets = async (req, res, next) => {
       "leaderboard:bullet",
     ];
     await redisConnection.del(...keysToDelete);
+    await logAdminAction(req.user, "CLEAN_REDIS_SETS");
 
     return res.status(200).json({
       success: true,
@@ -453,6 +478,7 @@ export const cleanRedisSets = async (req, res, next) => {
 export const cleanCloudFiles = async (req, res, next) => {
   try {
     await deleteAllCloudFiles();
+    await logAdminAction(req.user, "CLEAN_CLOUD_FILES");
 
     return res.status(200).json({
       success: true,
@@ -466,6 +492,9 @@ export const cleanCloudFiles = async (req, res, next) => {
 export const sendDraftReminders = async (req, res, next) => {
   try {
     const result = await adminService.sendDraftReminders();
+    await logAdminAction(req.user, "SEND_DRAFT_REMINDERS", null, {
+      count: result.count,
+    });
     return res.status(200).json({
       success: true,
       message: `Successfully enqueued draft reminder emails for ${result.count} users.`,
@@ -485,6 +514,10 @@ export const retryMissingReceipts = async (req, res, next) => {
     for (const payment of paymentsWithoutReceipts) {
       await enqueueReceiptGeneration(payment._id);
     }
+
+    await logAdminAction(req.user, "RETRY_MISSING_RECEIPTS", null, {
+      count: paymentsWithoutReceipts.length,
+    });
 
     return res.status(200).json({
       success: true,

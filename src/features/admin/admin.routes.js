@@ -27,6 +27,7 @@ import {
   deleteUser,
 } from "./admin.controller.js";
 import { adminAuth } from "../../middleware/auth.middleware.js";
+import { auditPresenceMiddleware } from "../../middleware/audit.middleware.js";
 import { validate } from "../../middleware/validate.middleware.js";
 import {
   getAllApplicationsSchema,
@@ -45,88 +46,74 @@ import {
 
 const router = express.Router();
 
+router.use(adminAuth);
+router.use(auditPresenceMiddleware);
+
 // recruitment management
 router.get(
   "/applications",
-  adminAuth,
   validate(getAllApplicationsSchema),
   getAllApplications,
 );
-router.get("/applications/export", adminAuth, exportApplications);
+router.get("/applications/export", exportApplications);
 router.get(
   "/applications/:id",
-  adminAuth,
   validate(getApplicationByIdSchema),
   getApplicationById,
 );
 router.patch(
   "/applications/:id/status",
-  adminAuth,
   validate(updateApplicationStatusSchema),
   updateApplicationStatus,
 );
 router.delete(
   "/applications/:id",
-  adminAuth,
   validate(deleteApplicationSchema),
   deleteApplication,
 );
-router.post("/applications/remind-drafts", adminAuth, sendDraftReminders);
+router.post("/applications/remind-drafts", sendDraftReminders);
 
 // department management
-router.get("/departments", adminAuth, getAllDepartments);
-router.post(
-  "/departments",
-  adminAuth,
-  validate(createDepartmentSchema),
-  createDepartment,
-);
+router.get("/departments", getAllDepartments);
+router.post("/departments", validate(createDepartmentSchema), createDepartment);
 router.patch(
   "/departments/:id",
-  adminAuth,
   validate(updateDepartmentSchema),
   updateDepartment,
 );
 router.delete(
   "/departments/:id",
-  adminAuth,
   validate(deleteDepartmentSchema),
   deleteDepartment,
 );
 
 // task management
-router.post("/tasks", adminAuth, validate(createTaskSchema), createTask);
-router.patch("/tasks/:id", adminAuth, validate(updateTaskSchema), updateTask);
-router.delete("/tasks/:id", adminAuth, validate(deleteTaskSchema), deleteTask);
+router.post("/tasks", validate(createTaskSchema), createTask);
+router.patch("/tasks/:id", validate(updateTaskSchema), updateTask);
+router.delete("/tasks/:id", validate(deleteTaskSchema), deleteTask);
 
 // user management
-router.post("/users/sync-all", adminAuth, syncAllUsers);
-router.get("/users", adminAuth, getAllUsers);
-router.get("/users/:id", adminAuth, getUserById);
-router.patch(
-  "/users/:id/role",
-  adminAuth,
-  validate(updateUserRoleSchema),
-  updateUserRole,
-);
-router.delete("/users/:id", adminAuth, deleteUser);
+router.post("/users/sync-all", syncAllUsers);
+router.get("/users", getAllUsers);
+router.get("/users/:id", getUserById);
+router.patch("/users/:id/role", validate(updateUserRoleSchema), updateUserRole);
+router.delete("/users/:id", deleteUser);
 
 // system management
-router.post("/redis/clean", adminAuth, cleanRedisSets);
-router.post("/cloud/clean", adminAuth, cleanCloudFiles);
+router.post("/redis/clean", cleanRedisSets);
+router.post("/cloud/clean", cleanCloudFiles);
 
 // payments
-router.get("/payments", adminAuth, getAllPayments);
-router.get("/payments/export", adminAuth, exportPayments);
+router.get("/payments", getAllPayments);
+router.get("/payments/export", exportPayments);
 router.patch(
   "/payments/:id/verify",
-  adminAuth,
   validate(verifyPaymentSchema),
   verifyPayment,
 );
-router.post("/payments/retry-receipts", adminAuth, retryMissingReceipts);
+router.post("/payments/retry-receipts", retryMissingReceipts);
 
 // admin stats
-router.get("/stats", adminAuth, getDashboardStats);
+router.get("/stats", getDashboardStats);
 
 export default router;

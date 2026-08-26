@@ -22,6 +22,7 @@
 | `events`       | `features/events/event.model.js`            | Club events, tournaments, and timelines     |
 | `settings`     | `features/settings/settings.model.js`       | Global application date settings            |
 | `contactqueries`| `features/contact/contact.model.js`        | User inquiries and contact form submissions |
+| `adminauditlogs`| `features/logs/auditLog.model.js`          | Admin presence and CUD actions audit logs   |
 
 ---
 
@@ -255,6 +256,24 @@ ACTIVE
 | `subject` | String | Yes      | —        |       |
 | `message` | String | Yes      | —        |       |
 | `status`  | String | No       | `UNREAD` | `UNREAD`, `READ`, `RESOLVED` |
+
+
+---
+
+## Admin Audit Logs Collection
+
+**Model:** `features/logs/auditLog.model.js`  
+**Purpose:** Stores a record of admin interactions. It logs administrative "first presence" (cached via Redis for 12 hours) and all mutations (create, update, delete actions). Routine reads are excluded.
+
+### Schema
+
+| Field       | Type     | Required | Default | Notes                                                    |
+| ----------- | -------- | -------- | ------- | -------------------------------------------------------- |
+| `adminId`   | ObjectId | Yes      | —       | Ref: `User`. The admin who performed the action.          |
+| `action`    | String   | Yes      | —       | The action performed (e.g., `PRESENCE`, `DELETE_USER`).  |
+| `targetId`  | String   | No       | null    | The ID of the affected resource (user ID, task ID, etc.).|
+| `details`   | Mixed    | No       | `{}`    | Dynamic metadata associated with the action.              |
+| `createdAt` | Date     | Yes      | Date.now| Automatic timestamp of when the action occurred.          |
 
 ---
 
