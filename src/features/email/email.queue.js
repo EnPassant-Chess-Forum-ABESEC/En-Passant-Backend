@@ -127,10 +127,24 @@ export const enqueueDraftReminderEmail = async (userId, email, name) => {
 
 export const scheduleTasksAvailableDispatch = async (applicationEndDate) => {
   try {
-    const delay = Math.max(
-      0,
-      new Date(applicationEndDate).getTime() - Date.now(),
-    );
+    const targetTime = new Date(applicationEndDate).getTime();
+    const now = Date.now();
+
+    if (targetTime <= now) {
+      console.log(
+        `[Scheduler] Application end date (${applicationEndDate}) has already passed. Skipping tasks available dispatch scheduling.`,
+      );
+      const existingJob = await emailQueue.getJob(
+        "dispatch-tasks-available-job",
+      );
+      if (existingJob) {
+        await existingJob.remove();
+        console.log(`[Scheduler] Removed existing dispatch job from queue.`);
+      }
+      return;
+    }
+
+    const delay = targetTime - now;
 
     const existingJob = await emailQueue.getJob("dispatch-tasks-available-job");
     if (existingJob) {
