@@ -33,6 +33,8 @@ const submissionSchema = new mongoose.Schema({
       size: { type: Number, required: true }, // in bytes
     },
   ],
+}, {
+  timestamps: true
 });
 
 submissionSchema.index({ applicationId: 1, taskId: 1 }, { unique: true });
