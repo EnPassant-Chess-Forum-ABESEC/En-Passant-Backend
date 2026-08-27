@@ -14,13 +14,13 @@ export const getRecruitmentByUserIdAndYear = async (userId, year) => {
 
 export const getRecruitmentById = async (recruitmentid) => {
   return Recruitment.findById(recruitmentid)
-    .populate("userId", "userName email collegeEmail phoneNumber")
+    .populate("userId", "userName email collegeEmail phoneNumber profilePictureUrl")
     .populate("preferredDepartmentId secondaryDepartmentId");
 };
 
 export const findAllRecruitment = async (filter) => {
   return Recruitment.find(filter)
-    .populate("userId", "userName email collegeEmail phoneNumber")
+    .populate("userId", "userName email collegeEmail phoneNumber profilePictureUrl")
     .populate("preferredDepartmentId secondaryDepartmentId");
 };
 

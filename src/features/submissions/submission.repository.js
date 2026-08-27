@@ -23,3 +23,12 @@ export const findSubmissionsByApplicationId = async (applicationId) => {
 export const deleteSubmissionsByApplicationId = async (applicationId) => {
   return Submission.deleteMany({ applicationId });
 };
+
+export const findAllSubmissions = async () => {
+  return Submission.find({})
+    .populate({
+      path: "taskId",
+      populate: { path: "departmentId" },
+    })
+    .lean();
+};

@@ -24,7 +24,26 @@ export const getAllApplications = async (filters) => {
   }
 
   try {
-    return await recruitmentRepo.findAllRecruitment(query);
+    const applications = await recruitmentRepo.findAllRecruitment(query);
+    const allSubmissions = await submissionRepo.findAllSubmissions();
+
+    const appDepts = {};
+    allSubmissions.forEach((sub) => {
+      const appId = sub.applicationId?.toString();
+      const deptName = sub.taskId?.departmentId?.name;
+      if (appId && deptName) {
+        if (!appDepts[appId]) appDepts[appId] = new Set();
+        appDepts[appId].add(deptName);
+      }
+    });
+
+    return applications.map((app) => {
+      const appObj = app.toObject ? app.toObject() : app;
+      appObj.submittedDepartments = Array.from(
+        appDepts[appObj._id.toString()] || [],
+      );
+      return appObj;
+    });
   } catch (error) {
     if (error instanceof AppError) throw error;
     throw new AppError(`getAllApplications failed: ${error.message}`, 500);
