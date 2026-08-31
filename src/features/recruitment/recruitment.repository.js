@@ -14,13 +14,19 @@ export const getRecruitmentByUserIdAndYear = async (userId, year) => {
 
 export const getRecruitmentById = async (recruitmentid) => {
   return Recruitment.findById(recruitmentid)
-    .populate("userId", "userName email collegeEmail phoneNumber profilePictureUrl")
+    .populate(
+      "userId",
+      "userName email collegeEmail phoneNumber profilePictureUrl",
+    )
     .populate("preferredDepartmentId secondaryDepartmentId");
 };
 
 export const findAllRecruitment = async (filter) => {
   return Recruitment.find(filter)
-    .populate("userId", "userName email collegeEmail phoneNumber profilePictureUrl")
+    .populate(
+      "userId",
+      "userName email collegeEmail phoneNumber profilePictureUrl",
+    )
     .populate("preferredDepartmentId secondaryDepartmentId");
 };
 
@@ -57,12 +63,17 @@ export const getApplicationStatsByDepartment = async () => {
         pipeline: [
           {
             $match: {
-              status: { $in: [APPLICATION_STATUS.ACTIVE, APPLICATION_STATUS.PAYMENT_PENDING] }
-            }
-          }
+              status: {
+                $nin: [
+                  APPLICATION_STATUS.DRAFT,
+                  APPLICATION_STATUS.PAYMENT_FAILED,
+                ],
+              },
+            },
+          },
         ],
-        as: "primaryRecruitments"
-      }
+        as: "primaryRecruitments",
+      },
     },
     {
       $lookup: {
@@ -72,23 +83,28 @@ export const getApplicationStatsByDepartment = async () => {
         pipeline: [
           {
             $match: {
-              status: { $in: [APPLICATION_STATUS.ACTIVE, APPLICATION_STATUS.PAYMENT_PENDING] }
-            }
-          }
+              status: {
+                $nin: [
+                  APPLICATION_STATUS.DRAFT,
+                  APPLICATION_STATUS.PAYMENT_FAILED,
+                ],
+              },
+            },
+          },
         ],
-        as: "secondaryRecruitments"
-      }
+        as: "secondaryRecruitments",
+      },
     },
     {
       $project: {
         _id: 0,
         name: 1,
         PRIMARY: { $size: "$primaryRecruitments" },
-        SECONDARY: { $size: "$secondaryRecruitments" }
-      }
+        SECONDARY: { $size: "$secondaryRecruitments" },
+      },
     },
     {
-      $sort: { name: 1 }
-    }
+      $sort: { name: 1 },
+    },
   ]);
 };
