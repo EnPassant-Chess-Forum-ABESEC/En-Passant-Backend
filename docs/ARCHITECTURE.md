@@ -54,6 +54,10 @@ src/
 │   │   ├─ admin.routes.js
 │   │   ├─ admin.service.js
 │   │   └─ admin.validation.js
+│   ├─ auth/
+│   │   ├─ auth.controller.js
+│   │   ├─ auth.routes.js
+│   │   └─ auth.service.js
 │   ├─ contact/
 │   │   ├─ contact.controller.js
 │   │   ├─ contact.model.js
@@ -196,6 +200,16 @@ router.get("/me", userAuth, me);
 ## Authentication Flow
 
 <img src="/docs/diagrams/Authentication_flow.svg" alt="Authentication Flow Diagram" width="100%"/>
+
+**Primary Authentication:**
+Handled completely by **Clerk**. The backend does not issue its own session tokens or passwords. Instead, requests from the frontend must include the Clerk-issued JWT in the `Authorization` header, which is verified by `auth.middleware.js`. Users are automatically created in the MongoDB database via Webhooks.
+
+**OAuth Integrations (Chess.com):**
+Because the backend serves as a stateless API without session cookies, the third-party OAuth flows utilize **Redis** for state management:
+1. `POST /api/auth/chesscom/login` generates an OAuth URL and a PKCE code verifier. It stores the `clerkId` and `codeVerifier` in Redis using a randomly generated `state` UUID as the key.
+2. The user authorizes the application on Chess.com.
+3. Chess.com redirects to `GET /api/auth/chesscom/callback` with a `code` and the `state`.
+4. The backend retrieves the `clerkId` and `codeVerifier` from Redis using the `state` key, exchanges the code for an ID token, updates the user's `chessAccounts` schema, and enqueues an immediate background sync to fetch their chess ratings.
 
 ## Validation Flow
 

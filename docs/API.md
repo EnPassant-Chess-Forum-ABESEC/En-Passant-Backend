@@ -12,6 +12,7 @@ Authorization: Bearer <Clerk Token>
 
 ## Table of Contents
 
+- [Auth APIs](#auth-apis)
 - [User APIs](#user-apis)
 - [Leaderboard APIs](#leaderboard-apis)
 - [Task APIs](#task-apis)
@@ -22,6 +23,37 @@ Authorization: Bearer <Clerk Token>
 - [Admin System APIs](#admin-system-apis)
 - [Events, Settings, and Contact APIs](#events-settings-and-contact-apis)
 - [Error Reference](#error-reference)
+
+---
+
+# Auth APIs
+
+## POST /api/auth/chesscom/login
+
+Generates a Chess.com OAuth authorization URL using PKCE.
+
+**Auth:** Required (Initiated from client)
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "authorizeUrl": "https://oauth.chess.com/authorize?..."
+}
+```
+
+---
+
+## GET /api/auth/chesscom/callback
+
+The callback endpoint for Chess.com OAuth redirect. Exchanges the authorization code for an ID token, extracts the username, links it to the user's profile, triggers a background sync, and redirects the browser.
+
+**Auth:** Not required (Validates via `state` parameter)
+
+**Query Parameters:** `code`, `state`
+
+**Response `302 Found`:** Redirects back to the frontend profile page with `?chesscom_linked=true` or `?chesscom_error=already_linked`.
 
 ---
 
