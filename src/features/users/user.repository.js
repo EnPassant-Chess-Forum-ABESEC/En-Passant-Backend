@@ -8,6 +8,10 @@ export const findByUserName = async (userName) => {
   return User.findOne({ userName });
 };
 
+export const findByChessComUsername = async (username) => {
+  return User.findOne({ "chessAccounts.chessCom.username": username });
+};
+
 export const createUser = async (userData) => {
   return User.create(userData);
 };

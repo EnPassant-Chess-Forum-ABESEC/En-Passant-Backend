@@ -16,6 +16,7 @@ import eventRoutes from "./features/events/event.routes.js";
 import webhookRoutes from "./features/webhooks/webhook.routes.js";
 import settingsRoutes from "./features/settings/settings.routes.js";
 import contactRoutes from "./features/contact/contact.routes.js";
+import authRoutes from "./features/auth/auth.routes.js";
 
 const app = express();
 app.set("trust proxy", 1);
@@ -72,6 +73,7 @@ app.use("/api/events", eventRoutes);
 app.use("/api/webhooks", webhookRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/contact", contactRoutes);
+app.use("/api/auth", authRoutes);
 
 app.use(errorHandler);
 
