@@ -1,6 +1,13 @@
 import mongoose from "mongoose";
+import { REGISTRATION_TYPE, EVENT_STATUS } from "./event.constants";
 
-const EVENT_STATUS = ["upcoming", "ongoing", "completed", "cancelled"];
+const teamConfigSchema = new mongoose.Schema(
+  {
+    minSize: { type: Number, default: 1 },
+    maxSize: { type: Number, required: true },
+  },
+  { _id: false },
+);
 
 const eventSchema = new mongoose.Schema(
   {
@@ -13,42 +20,24 @@ const eventSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    date: {
-      type: Date,
-      required: true,
-    },
-    venue: {
+    bannerUrl: { type: String },
+    startDate: { type: Date, required: true },
+    endDate: { type: Date, required: true },
+    registrationDeadline: { type: Date, required: true },
+    participationMode: {
       type: String,
-      required: true,
-      trim: true,
-    },
-    registrationDeadline: {
-      type: Date,
-      default: null,
-    },
-    capacity: {
-      type: Number,
-      min: 0,
-      default: null,
-    },
-    isPaid: {
-      type: Boolean,
-      default: false,
-    },
-    amount: {
-      type: Number,
-      min: 0,
-      default: 0,
-    },
-    bannerUrl: {
-      type: String,
-      default: null,
-      trim: true,
+      enum: Object.values(REGISTRATION_TYPE),
     },
     status: {
       type: String,
-      enum: EVENT_STATUS,
-      default: "upcoming",
+      enum: Object.values(EVENT_STATUS),
+      default: EVENT_STATUS.DRAFT,
+    },
+    teamConfig: {
+      type: teamConfigSchema,
+      required: function () {
+        this.participationMode === "team";
+      },
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
@@ -63,5 +52,4 @@ const eventSchema = new mongoose.Schema(
 
 const Event = mongoose.model("Event", eventSchema);
 
-export { Event, EVENT_STATUS };
 export default Event;
