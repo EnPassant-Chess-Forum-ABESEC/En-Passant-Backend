@@ -202,14 +202,65 @@ router.get("/me", userAuth, me);
 <img src="/docs/diagrams/Authentication_flow.svg" alt="Authentication Flow Diagram" width="100%"/>
 
 **Primary Authentication:**
-Handled completely by **Clerk**. The backend does not issue its own session tokens or passwords. Instead, requests from the frontend must include the Clerk-issued JWT in the `Authorization` header, which is verified by `auth.middleware.js`. Users are automatically created in the MongoDB database via Webhooks.
+Handled completely by **Clerk**. Requests from the frontend must include the Clerk-issued JWT in the `Authorization` header, which is verified by `auth.middleware.js`. Users are automatically created in the MongoDB database via Webhooks.
 
 **OAuth Integrations (Chess.com):**
 Because the backend serves as a stateless API without session cookies, the third-party OAuth flows utilize **Redis** for state management:
+
 1. `POST /api/auth/chesscom/login` generates an OAuth URL and a PKCE code verifier. It stores the `clerkId` and `codeVerifier` in Redis using a randomly generated `state` UUID as the key.
 2. The user authorizes the application on Chess.com.
 3. Chess.com redirects to `GET /api/auth/chesscom/callback` with a `code` and the `state`.
 4. The backend retrieves the `clerkId` and `codeVerifier` from Redis using the `state` key, exchanges the code for an ID token, updates the user's `chessAccounts` schema, and enqueues an immediate background sync to fetch their chess ratings.
+
+```mermaid
+flowchart TB
+    Client([Frontend / Browser])
+    ChessAPI{{Chess.com OAuth API}}
+
+    subgraph Backend [Backend API Service]
+        direction TB
+        Route[auth.routes.js]
+        Ctrl[auth.controller.js]
+        Service[auth.service.js]
+        Repo[user.repository.js]
+        Sync[[sync.queue.js]]
+    end
+
+    subgraph Data [Data Layer]
+        direction LR
+        Redis[(Redis)]
+        DB[(MongoDB)]
+    end
+
+    %% Initiation Phase
+    Client -- "1. POST /chesscom/login" --> Route
+    Route --> Ctrl
+    Ctrl -- "Generate PKCE" --> Service
+    Service -- "SETEX state:UUID" --> Redis
+    Ctrl -. "Returns Authorize URL" .-> Client
+
+    %% Authorization Phase
+    Client -- "2. User Approves Access" --> ChessAPI
+    ChessAPI -- "3. GET /chesscom/callback?code&state" --> Route
+    Route --> Ctrl
+    
+    %% Processing Phase
+    Ctrl -- "4. GET & DEL state:UUID" --> Redis
+    Ctrl -- "5. POST /token (Exchange Code)" --> ChessAPI
+    Ctrl -- "Decode JWT (Extract Username)" --> Service
+    
+    %% DB Phase
+    Ctrl -- "6. Check Duplicate" --> Repo
+    Repo --> DB
+    Ctrl -- "7. Update User Profile" --> Repo
+    Ctrl -- "8. enqueueSyncJob" --> Sync
+    
+    Ctrl -. "9. 302 Redirect to Profile" .-> Client
+
+    style ChessAPI fill:#7fa650,stroke:#333,stroke-width:2px,color:#fff
+    style Redis fill:#dc382c,stroke:#333,stroke-width:2px,color:#fff
+    style DB fill:#47a248,stroke:#333,stroke-width:2px,color:#fff
+```
 
 ## Validation Flow
 
