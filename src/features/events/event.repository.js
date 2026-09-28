@@ -5,15 +5,11 @@ export const createEvent = async (eventData) => {
 };
 
 export const findEventById = async (eventId) => {
-  return Event.findById(eventId)
+  return Event.findById(eventId);
 };
 
 export const findAllEvents = async () => {
-  return Event.find()
-};
-
-export const countEvents = async () => {
-  return Event.countDocuments();
+  return Event.find();
 };
 
 export const updateEvent = async (eventId, updateData) => {

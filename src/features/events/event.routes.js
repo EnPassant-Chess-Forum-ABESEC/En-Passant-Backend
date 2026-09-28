@@ -13,12 +13,11 @@ import {
   updateEventSchema,
   getEventByIdSchema,
   deleteEventSchema,
-  getAllEventsSchema,
 } from "./event.validation.js";
 
 const router = express.Router();
 
-router.get("/", validate(getAllEventsSchema), getAllEvents);
+router.get("/", getAllEvents);
 router.get("/:id", validate(getEventByIdSchema), getEventById);
 
 router.post("/", adminAuth, validate(createEventSchema), createEvent);
