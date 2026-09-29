@@ -4,12 +4,11 @@ import "dotenv/config";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-
 const getTransporter = () => {
   return nodemailer.createTransport({
     host: process.env.SMTP_HOST || "smtp.gmail.com",
     port: process.env.SMTP_PORT || 587,
-    secure: process.env.SMTP_SECURE === "true", 
+    secure: process.env.SMTP_SECURE === "true",
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
@@ -20,8 +19,7 @@ const getTransporter = () => {
 export const sendEmail = async ({ to, subject, text, html, attachments }) => {
   try {
     const isDev = process.env.NODE_ENV !== "production";
-    
-    // For development, use SMTP (Nodemailer) to save Resend credits
+
     if (isDev && process.env.SMTP_USER && process.env.SMTP_PASS) {
       const transporter = getTransporter();
       const mailOptions = {
@@ -30,11 +28,13 @@ export const sendEmail = async ({ to, subject, text, html, attachments }) => {
         subject,
         text,
         html: html || text,
-        attachments: attachments ? attachments.map(a => ({
-          filename: a.filename,
-          content: a.content,
-          contentType: a.content_type // Map resend attachment format to nodemailer
-        })) : []
+        attachments: attachments
+          ? attachments.map((a) => ({
+              filename: a.filename,
+              content: a.content,
+              contentType: a.content_type,
+            }))
+          : [],
       };
 
       await transporter.sendMail(mailOptions);
@@ -42,7 +42,6 @@ export const sendEmail = async ({ to, subject, text, html, attachments }) => {
       return true;
     }
 
-    // Fallback to Resend for Production
     if (!process.env.RESEND_API_KEY) {
       console.warn("RESEND_API_KEY is not set. Email will not be sent.");
       return false;
