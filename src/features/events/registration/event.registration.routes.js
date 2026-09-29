@@ -6,7 +6,10 @@ import {
   joinTeam,
 } from "./event.registration.controller.js";
 import { validate } from "../../../middleware/validate.middleware.js";
-import { registerForEventValidation } from "./event.registration.validation.js";
+import {
+  registerForEventValidation,
+  joinTeamValidation,
+} from "./event.registration.validation.js";
 
 const router = express.Router();
 
@@ -18,6 +21,6 @@ router.post(
 );
 
 router.get("/registrations/:id", adminAuth, getAllRegistrationForEvent);
-router.post("/:id/join-team", userAuth, joinTeam);
+router.post("/:id/join-team", userAuth, validate(joinTeamValidation), joinTeam);
 
 export default router;

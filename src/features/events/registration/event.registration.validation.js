@@ -14,3 +14,9 @@ export const registerForEventValidation = z.object({
     ]),
   }),
 });
+
+export const joinTeamValidation = z.object({
+  body: z.object({
+    joinCode: z.string().length(4, "Join code must be exactly 4 characters"),
+  }),
+});
