@@ -45,3 +45,10 @@ export const createRegistration = async (userId, eventId, regBody) => {
 
   return await regRepo.createRegistration(regData);
 };
+
+export const getRegistrationByEventId = async (eventId) => {
+  const event = await eventRepo.findEventById(eventId);
+  if (!event) throw new AppError("Event not found", 404);
+
+  return await regRepo.findRegistrationByEventId(eventId, pageSize, pageNumber);
+};

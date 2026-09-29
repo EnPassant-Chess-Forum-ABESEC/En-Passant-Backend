@@ -17,3 +17,22 @@ export const registerForEvent = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getAllRegistrationForEvent = async (req, res, next) => {
+  try {
+    const pageSize = Number(req.query.pageSize) || 10;
+    const pageNumber = Number(req.query.pageNumber) || 1;
+    const registrations = await regService.getRegistrationByEventId(
+      req.params.id,
+      pageSize,
+      pageNumber,
+    );
+
+    return res.status(200).json({
+      success: true,
+      registrations,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

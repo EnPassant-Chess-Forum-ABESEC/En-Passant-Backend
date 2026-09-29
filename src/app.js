@@ -73,7 +73,7 @@ app.use("/api/webhooks", webhookRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/events", eventRoutes);
-app.use("/api/events", eventRegisterRoutes);
+app.use("/api/event-registrations", eventRegisterRoutes);
 
 app.use(errorHandler);
 
