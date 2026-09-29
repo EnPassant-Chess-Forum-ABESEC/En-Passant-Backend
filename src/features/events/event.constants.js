@@ -25,4 +25,4 @@ export const REGISTRATION_STATUS = {
   DISQUALIFIED: "disqualified",
 };
 
-export const generateJoinCode = () => nanoid(8);
+export const generateJoinCode = () => nanoid(4);

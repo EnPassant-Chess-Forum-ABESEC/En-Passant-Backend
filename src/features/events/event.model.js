@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { REGISTRATION_TYPE, EVENT_STATUS } from "./event.constants";
+import { REGISTRATION_TYPE, EVENT_STATUS } from "./event.constants.js";
 
 const teamConfigSchema = new mongoose.Schema(
   {
