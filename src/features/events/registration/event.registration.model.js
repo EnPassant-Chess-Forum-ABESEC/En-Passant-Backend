@@ -3,7 +3,7 @@ import {
   REGISTRATION_TYPE,
   PAYMENT_STATUS,
   REGISTRATION_STATUS,
-} from "./event.constants.js";
+} from "../event.constants.js";
 
 const teamMemberSchema = new mongoose.Schema(
   {
