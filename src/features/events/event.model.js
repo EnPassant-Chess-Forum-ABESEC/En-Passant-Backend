@@ -36,7 +36,7 @@ const eventSchema = new mongoose.Schema(
     teamConfig: {
       type: teamConfigSchema,
       required: function () {
-        this.participationMode === "team";
+        return this.participationMode === "team";
       },
     },
     createdBy: {

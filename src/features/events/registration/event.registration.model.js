@@ -26,12 +26,10 @@ const teamSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      unique: true,
     },
     joinCode: {
       type: String,
       required: true,
-      unique: true,
     },
     leaderId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -77,6 +75,16 @@ const eventRegistrationSchema = new mongoose.Schema(
     },
   },
   { timestamps: true },
+);
+
+eventRegistrationSchema.index(
+  { eventId: 1, "team.teamName": 1 },
+  { unique: true, partialFilterExpression: { "team.teamName": { $type: "string" } } }
+);
+
+eventRegistrationSchema.index(
+  { eventId: 1, "team.joinCode": 1 },
+  { unique: true, partialFilterExpression: { "team.joinCode": { $type: "string" } } }
 );
 
 export const EventRegistration = mongoose.model(

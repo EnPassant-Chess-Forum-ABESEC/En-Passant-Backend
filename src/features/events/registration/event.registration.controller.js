@@ -36,3 +36,20 @@ export const getAllRegistrationForEvent = async (req, res, next) => {
     next(error);
   }
 };
+
+export const joinTeam = async (req, res, next) => {
+  try {
+    const newTeam = await regService.pushTeamMember(
+      req.user._id,
+      req.params.id,
+      req.body.joinCode,
+    );
+    return res.status(200).json({
+      success: true,
+      message: "team member added successfully",
+      newTeam,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

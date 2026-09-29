@@ -4,6 +4,10 @@ export const findByClerkId = async (clerkId) => {
   return User.findOne({ clerkId });
 };
 
+export const findById = async (id) => {
+  return User.findById(id);
+};
+
 export const findByUserName = async (userName) => {
   return User.findOne({ userName });
 };

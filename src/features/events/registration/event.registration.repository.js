@@ -29,3 +29,15 @@ export const findRegistrationByUserAndEventId = async (userId, eventId) => {
     ],
   });
 };
+
+export const findRegistrationByJoinCode = async (eventId, joinCode) => {
+  return await EventRegistration.findOne({ eventId, "team.joinCode": joinCode });
+};
+
+export const pushTeamMember = async (regId, member) => {
+  return await EventRegistration.findByIdAndUpdate(
+    regId,
+    { $push: { "team.members": member } },
+    { returnDocument: "after" },
+  );
+};
