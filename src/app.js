@@ -16,6 +16,7 @@ import eventRoutes from "./features/events/event.routes.js";
 import webhookRoutes from "./features/webhooks/webhook.routes.js";
 import settingsRoutes from "./features/settings/settings.routes.js";
 import contactRoutes from "./features/contact/contact.routes.js";
+import eventRegisterRoutes from "./features/events/registration/event.registration.routes.js";
 
 const app = express();
 app.set("trust proxy", 1);
@@ -68,10 +69,11 @@ app.use("/api/recruitment", recruitmentRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/submissions", submissionRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/events", eventRoutes);
 app.use("/api/webhooks", webhookRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/contact", contactRoutes);
+app.use("/api/events", eventRoutes);
+app.use("/api/events", eventRegisterRoutes);
 
 app.use(errorHandler);
 
