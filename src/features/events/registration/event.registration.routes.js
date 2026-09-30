@@ -4,11 +4,12 @@ import {
   registerForEvent,
   getAllRegistrationForEvent,
   joinTeam,
+  leaveTeam,
 } from "./event.registration.controller.js";
 import { validate } from "../../../middleware/validate.middleware.js";
 import {
   registerForEventValidation,
-  joinTeamValidation,
+  joinCodeValidation,
 } from "./event.registration.validation.js";
 
 const router = express.Router();
@@ -19,8 +20,12 @@ router.post(
   validate(registerForEventValidation),
   registerForEvent,
 );
-
 router.get("/registrations/:id", adminAuth, getAllRegistrationForEvent);
-router.post("/:id/join-team", userAuth, validate(joinTeamValidation), joinTeam);
-
+router.post("/:id/join-team", userAuth, validate(joinCodeValidation), joinTeam);
+router.post(
+  "/:id/leave-team",
+  userAuth,
+  validate(joinCodeValidation),
+  leaveTeam,
+);
 export default router;

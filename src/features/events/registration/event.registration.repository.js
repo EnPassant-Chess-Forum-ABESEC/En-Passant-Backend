@@ -31,7 +31,10 @@ export const findRegistrationByUserAndEventId = async (userId, eventId) => {
 };
 
 export const findRegistrationByJoinCode = async (eventId, joinCode) => {
-  return await EventRegistration.findOne({ eventId, "team.joinCode": joinCode });
+  return await EventRegistration.findOne({
+    eventId,
+    "team.joinCode": joinCode,
+  });
 };
 
 export const pushTeamMember = async (regId, member) => {
@@ -39,5 +42,16 @@ export const pushTeamMember = async (regId, member) => {
     regId,
     { $push: { "team.members": member } },
     { returnDocument: "after" },
+  );
+};
+
+export const removeTeamMember = async (regId, member) => {
+  return await EventRegistration.updateOne(
+    {
+      _id: regId,
+    },
+    {
+      $pull: { "team.members": member },
+    },
   );
 };

@@ -15,8 +15,8 @@ export const registerForEventValidation = z.object({
   }),
 });
 
-export const joinTeamValidation = z.object({
+export const joinCodeValidation = z.object({
   body: z.object({
-    joinCode: z.string().length(4, "Join code must be exactly 4 characters"),
+    joinCode: z.string().length(6, "Join code must be exactly 6 characters"),
   }),
 });

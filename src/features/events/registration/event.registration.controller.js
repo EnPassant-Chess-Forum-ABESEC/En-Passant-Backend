@@ -46,9 +46,24 @@ export const joinTeam = async (req, res, next) => {
     );
     return res.status(200).json({
       success: true,
-      message: "team member added successfully",
+      message: "Team member added successfully",
       newTeam,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const leaveTeam = async (req, res, next) => {
+  try {
+    await regService.removeTeamMember(
+      req.user._id,
+      req.params.id,
+      req.body.joinCode,
+    );
+    return res
+      .status(200)
+      .json({ success: true, message: "Member deleted successfully" });
   } catch (error) {
     next(error);
   }

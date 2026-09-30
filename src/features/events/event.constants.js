@@ -1,4 +1,4 @@
-import { nanoid } from "nanoid";
+import { customAlphabet } from "nanoid";
 
 export const REGISTRATION_TYPE = {
   SOLO: "solo",
@@ -25,6 +25,6 @@ export const REGISTRATION_STATUS = {
   DISQUALIFIED: "disqualified",
 };
 
-export const generateJoinCode = () => {
-  return nanoid(4).toUpperCase();
-};
+const nanoid = customAlphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 6);
+
+export const generateJoinCode = () => nanoid();
