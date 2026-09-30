@@ -31,6 +31,5 @@ router.post(
 );
 
 router.get("/:id/my-registration", userAuth, getMyRegistration);
-router.get("/registrations/:id", adminAuth, getRegistrationByEventId);
 
 export default router;
