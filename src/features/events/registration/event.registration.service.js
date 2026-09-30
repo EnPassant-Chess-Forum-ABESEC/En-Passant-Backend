@@ -47,6 +47,16 @@ export const createRegistration = async (userId, eventId, regBody) => {
   return await regRepo.createRegistration(regData);
 };
 
+export const getMyRegistration = async (userId, eventId) => {
+  const event = await eventRepo.findEventById(eventId);
+  if (!event) throw new AppError("Event not found", 404);
+
+  const registration = await regRepo.findRegistrationByUserAndEventId(userId, eventId);
+  if (!registration) throw new AppError("Registration not found", 404);
+
+  return registration;
+};
+
 export const pushTeamMember = async (memId, eventId, joinCode) => {
   const event = await eventRepo.findEventById(eventId);
   if (!event) throw new AppError("Event not found", 404);
