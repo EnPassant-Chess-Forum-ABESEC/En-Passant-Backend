@@ -37,6 +37,22 @@ export const getAllRegistrationForEvent = async (req, res, next) => {
   }
 };
 
+export const getMyRegistration = async (req, res, next) => {
+  try {
+    const registration = await regService.getMyRegistration(
+      req.user._id,
+      req.params.id,
+    );
+
+    return res.status(200).json({
+      success: true,
+      registration,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const joinTeam = async (req, res, next) => {
   try {
     const newTeam = await regService.pushTeamMember(

@@ -3,6 +3,7 @@ import { adminAuth, userAuth } from "../../../middleware/auth.middleware.js";
 import {
   registerForEvent,
   getAllRegistrationForEvent,
+  getMyRegistration,
   joinTeam,
   leaveTeam,
 } from "./event.registration.controller.js";
@@ -28,4 +29,8 @@ router.post(
   validate(joinCodeValidation),
   leaveTeam,
 );
+
+router.get("/:id/my-registration", userAuth, getMyRegistration);
+router.get("/registrations/:id", adminAuth, getRegistrationByEventId);
+
 export default router;
