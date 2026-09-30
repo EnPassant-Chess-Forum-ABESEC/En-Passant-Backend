@@ -88,7 +88,7 @@ export const pushTeamMember = async (memId, eventId, joinCode) => {
   if (existing) throw new AppError("Team member already present", 409);
 
   const currentTeamSize = registration.team.members.length + 1;
-  if (currentTeamSize < event.teamConfig.maxSize)
+  if (currentTeamSize >= event.teamConfig.maxSize)
     throw new AppError("Team is already full", 409);
 
   return await regRepo.pushTeamMember(registration._id, { userId: memId });
@@ -123,10 +123,17 @@ export const removeTeamMember = async (memId, eventId, joinCode) => {
   const member = await userRepo.findById(memId);
   if (!member) throw new AppError("Member not found");
 
-  const currentTeamSize = registration.team.members.length;
+  const isLeader = registration.team.leaderId.toString() === memId.toString();
+  if (isLeader) {
+    throw new AppError("Leader cannot leave the team", 400);
+  }
 
-  if (currentTeamSize === 0)
-    throw new AppError("Team size is zero, can not remove", 400);
+  const isMember = registration.team.members.some(
+    (m) => m.userId.toString() === memId.toString()
+  );
+  if (!isMember) {
+    throw new AppError("You are not a member of this team", 400);
+  }
 
   return await regRepo.removeTeamMember(registration._id, { userId: memId });
 };

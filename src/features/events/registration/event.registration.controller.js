@@ -5,7 +5,7 @@ export const registerForEvent = async (req, res, next) => {
     const registration = await regService.createRegistration(
       req.user._id,
       req.params.id,
-      req.body.participation,
+      req.body,
     );
 
     return res.status(200).json({
