@@ -25,6 +25,7 @@ import {
   getDashboardStats,
   retryMissingReceipts,
   deleteUser,
+  getAllRegistrationForEvent,
 } from "./admin.controller.js";
 import { adminAuth } from "../../middleware/auth.middleware.js";
 import { auditPresenceMiddleware } from "../../middleware/audit.middleware.js";
@@ -72,6 +73,9 @@ router.delete(
   deleteApplication,
 );
 router.post("/applications/remind-drafts", sendDraftReminders);
+
+// event registration management
+router.get("/event-registrations/:id", getAllRegistrationForEvent);
 
 // department management
 router.get("/departments", getAllDepartments);

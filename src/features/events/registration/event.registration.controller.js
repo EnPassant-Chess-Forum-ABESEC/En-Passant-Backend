@@ -18,16 +18,23 @@ export const registerForEvent = async (req, res, next) => {
   }
 };
 
-export const getAllRegistrationForEvent = async (req, res, next) => {
+export const deleteRegistration = async (req, res, next) => {
   try {
-    const pageSize = Number(req.query.pageSize) || 10;
-    const pageNumber = Number(req.query.pageNumber) || 1;
-    const registrations = await regService.getRegistrationByEventId(
-      req.params.id,
-      pageSize,
-      pageNumber,
-    );
+    await regService.deleteUserRegistration(req.user._id, req.params.id);
+    return res.status(200).json({
+      success: true,
+      message: "Registration deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
+
+
+export const getAllMyRegistrations = async (req, res, next) => {
+  try {
+    const registrations = await regService.getAllMyRegistrations(req.user._id);
     return res.status(200).json({
       success: true,
       registrations,
@@ -80,6 +87,38 @@ export const leaveTeam = async (req, res, next) => {
     return res
       .status(200)
       .json({ success: true, message: "Member deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const transferLeadership = async (req, res, next) => {
+  try {
+    await regService.transferLeadership(
+      req.user._id,
+      req.params.id,
+      req.body.newLeaderId,
+    );
+    return res.status(200).json({
+      success: true,
+      message: "Leadership transferred successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const leaveTeamAsLeader = async (req, res, next) => {
+  try {
+    await regService.leaveTeamAsLeader(
+      req.user._id,
+      req.params.id,
+      req.body.newLeaderId,
+    );
+    return res.status(200).json({
+      success: true,
+      message: "Leadership transferred and left team successfully",
+    });
   } catch (error) {
     next(error);
   }

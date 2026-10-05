@@ -1,4 +1,5 @@
 import * as adminService from "./admin.service.js";
+import * as eventRegService from "../events/registration/event.registration.service.js";
 import * as paymentRepo from "../payments/payment.repository.js";
 import {
   handleSuccessfulPayment,
@@ -84,6 +85,27 @@ export const getApplicationById = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getAllRegistrationForEvent = async (req, res, next) => {
+  try {
+    const pageSize = Number(req.query.pageSize) || 10;
+    const pageNumber = Number(req.query.pageNumber) || 1;
+    const registrations = await eventRegService.getRegistrationByEventId(
+      req.params.id,
+      pageSize,
+      pageNumber,
+    );
+
+    return res.status(200).json({
+      success: true,
+      registrations,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
 
 export const deleteApplication = async (req, res, next) => {
   const { id } = req.params;
