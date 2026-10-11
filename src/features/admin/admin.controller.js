@@ -527,3 +527,82 @@ export const retryMissingReceipts = async (req, res, next) => {
     next(error);
   }
 };
+
+
+// Events 
+export const getAllEvents = async (req, res, next) => {
+  try {
+    const events = await adminService.getAllEvents();
+
+    return res.status(200).json({
+      success: true,
+      message: "Events fetched successfully",
+      events,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getEventById = async (req, res, next) => {
+  try {
+    const event = await adminService.getEventById(req.params.id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Event fetched successfully",
+      event,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createEvent = async (req, res, next) => {
+  try {
+    const event = await adminService.createEvent(req.user._id, req.body);
+    await logAdminAction(req.user, "CREATE_EVENT", event._id, {
+      title: event.title,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Event created successfully",
+      event,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateEvent = async (req, res, next) => {
+  try {
+    const updatedEvent = await adminService.updateEvent(
+      req.params.id,
+      req.body,
+    );
+    await logAdminAction(req.user, "UPDATE_EVENT", req.params.id, req.body);
+
+    return res.status(200).json({
+      success: true,
+      message: "Event updated successfully",
+      updatedEvent,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteEvent = async (req, res, next) => {
+  try {
+    await adminService.deleteEvent(req.params.id);
+    await logAdminAction(req.user, "DELETE_EVENT", req.params.id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Event deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};

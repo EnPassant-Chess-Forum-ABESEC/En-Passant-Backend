@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { APPLICATION_STATUS } from "../recruitment/recruitment.constants.js";
 
+
 export const getAllApplicationsSchema = z.object({
   query: z
     .object({

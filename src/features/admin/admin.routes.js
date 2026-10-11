@@ -25,6 +25,11 @@ import {
   getDashboardStats,
   retryMissingReceipts,
   deleteUser,
+  getAllEvents,
+  getEventById,
+  createEvent,
+  updateEvent,
+  deleteEvent,
 } from "./admin.controller.js";
 import { adminAuth } from "../../middleware/auth.middleware.js";
 import { auditPresenceMiddleware } from "../../middleware/audit.middleware.js";
@@ -42,7 +47,15 @@ import {
   updateUserRoleSchema,
   verifyPaymentSchema,
   deleteApplicationSchema,
+
 } from "./admin.validation.js";
+
+import {
+  createEventSchema,
+  updateEventSchema,
+  getEventByIdSchema,
+  deleteEventSchema,
+} from "../events/event.validation.js";
 
 const router = express.Router();
 
@@ -112,6 +125,14 @@ router.patch(
   verifyPayment,
 );
 router.post("/payments/retry-receipts", retryMissingReceipts);
+
+// event management
+router.get("/events", getAllEvents);
+router.get("/events/:id", validate(getEventByIdSchema), getEventById);
+router.post("/events", validate(createEventSchema), createEvent);
+router.patch("/events/:id", validate(updateEventSchema), updateEvent);
+router.delete("/events/:id", validate(deleteEventSchema), deleteEvent);
+
 
 // admin stats
 router.get("/stats", getDashboardStats);

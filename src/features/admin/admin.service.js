@@ -6,6 +6,7 @@ import * as submissionRepo from "../submissions/submission.repository.js";
 import * as taskRepo from "../tasks/task.repository.js";
 import * as userRepo from "../users/user.repository.js";
 import * as paymentRepo from "../payments/payment.repository.js";
+import * as eventRepo from "../events/event.repository.js";
 import { enqueueDraftReminderEmail } from "../email/email.queue.js";
 import { APPLICATION_STATUS } from "../recruitment/recruitment.constants.js";
 export const getAllApplications = async (filters) => {
@@ -365,5 +366,71 @@ export const sendDraftReminders = async () => {
   } catch (error) {
     if (error instanceof AppError) throw error;
     throw new AppError(`sendDraftReminders failed: ${error.message}`, 500);
+  }
+};
+
+
+
+//Events 
+export const getAllEvents = async () => {
+  try {
+    return await eventRepo.findAllEvents();
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    throw new AppError(`getAllEvents failed: ${error.message}`, 500);
+  }
+};
+
+export const getEventById = async (eventId) => {
+  try {
+    const event = await eventRepo.findEventById(eventId);
+
+    if (!event) {
+      throw new AppError("Event not found", 404);
+    }
+
+    return event;
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    throw new AppError(`getEventById failed: ${error.message}`, 500);
+  }
+};
+
+export const createEvent = async (userId, eventData) => {
+  try {
+    return await eventRepo.createEvent({ ...eventData, createdBy: userId });
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    throw new AppError(`createEvent failed: ${error.message}`, 500);
+  }
+};
+
+export const updateEvent = async (eventId, eventData) => {
+  try {
+    const event = await eventRepo.updateEvent(eventId, eventData);
+
+    if (!event) {
+      throw new AppError("Event not found", 404);
+    }
+
+    return event;
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    throw new AppError(`updateEvent failed: ${error.message}`, 500);
+  }
+};
+
+export const deleteEvent = async (eventId) => {
+  try {
+    const event = await eventRepo.deleteEvent(eventId);
+
+    if (!event) {
+      throw new AppError("Event not found", 404);
+    }
+
+    return event;
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    throw new AppError(`deleteEvent failed: ${error.message}`, 500);
   }
 };
