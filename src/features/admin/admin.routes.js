@@ -1,49 +1,10 @@
 import express from "express";
-import {
-  getAllApplications,
-  getApplicationById,
-  updateApplicationStatus,
-  getAllDepartments,
-  createDepartment,
-  updateDepartment,
-  deleteDepartment,
-  createTask,
-  updateTask,
-  deleteTask,
-  getAllUsers,
-  getUserById,
-  updateUserRole,
-  getAllPayments,
-  verifyPayment,
-  exportApplications,
-  exportPayments,
-  syncAllUsers,
-  deleteApplication,
-  cleanRedisSets,
-  cleanCloudFiles,
-  sendDraftReminders,
-  getDashboardStats,
-  retryMissingReceipts,
-  deleteUser,
-  getAllRegistrationForEvent,
-} from "./admin.controller.js";
+import * as adminController from "./admin.controller.js";
+import * as adminValidation from "./admin.validation.js";
+import * as eventValidation from "../events/event.validation.js";
 import { adminAuth } from "../../middleware/auth.middleware.js";
 import { auditPresenceMiddleware } from "../../middleware/audit.middleware.js";
 import { validate } from "../../middleware/validate.middleware.js";
-import {
-  getAllApplicationsSchema,
-  getApplicationByIdSchema,
-  updateApplicationStatusSchema,
-  createDepartmentSchema,
-  updateDepartmentSchema,
-  deleteDepartmentSchema,
-  createTaskSchema,
-  updateTaskSchema,
-  deleteTaskSchema,
-  updateUserRoleSchema,
-  verifyPaymentSchema,
-  deleteApplicationSchema,
-} from "./admin.validation.js";
 
 const router = express.Router();
 
@@ -53,71 +14,118 @@ router.use(auditPresenceMiddleware);
 // recruitment management
 router.get(
   "/applications",
-  validate(getAllApplicationsSchema),
-  getAllApplications,
+  validate(adminValidation.getAllApplicationsSchema),
+  adminController.getAllApplications,
 );
-router.get("/applications/export", exportApplications);
+router.get("/applications/export", adminController.exportApplications);
 router.get(
   "/applications/:id",
-  validate(getApplicationByIdSchema),
-  getApplicationById,
+  validate(adminValidation.getApplicationByIdSchema),
+  adminController.getApplicationById,
 );
 router.patch(
   "/applications/:id/status",
-  validate(updateApplicationStatusSchema),
-  updateApplicationStatus,
+  validate(adminValidation.updateApplicationStatusSchema),
+  adminController.updateApplicationStatus,
 );
 router.delete(
   "/applications/:id",
-  validate(deleteApplicationSchema),
-  deleteApplication,
+  validate(adminValidation.deleteApplicationSchema),
+  adminController.deleteApplication,
 );
-router.post("/applications/remind-drafts", sendDraftReminders);
+router.post("/applications/remind-drafts", adminController.sendDraftReminders);
 
 // event registration management
-router.get("/event-registrations/:id", getAllRegistrationForEvent);
+router.get(
+  "/event-registrations/:id",
+  validate(eventValidation.getEventByIdSchema),
+  adminController.getAllRegistrationForEvent,
+);
 
 // department management
-router.get("/departments", getAllDepartments);
-router.post("/departments", validate(createDepartmentSchema), createDepartment);
+router.get("/departments", adminController.getAllDepartments);
+router.post(
+  "/departments",
+  validate(adminValidation.createDepartmentSchema),
+  adminController.createDepartment,
+);
 router.patch(
   "/departments/:id",
-  validate(updateDepartmentSchema),
-  updateDepartment,
+  validate(adminValidation.updateDepartmentSchema),
+  adminController.updateDepartment,
 );
 router.delete(
   "/departments/:id",
-  validate(deleteDepartmentSchema),
-  deleteDepartment,
+  validate(adminValidation.deleteDepartmentSchema),
+  adminController.deleteDepartment,
 );
 
 // task management
-router.post("/tasks", validate(createTaskSchema), createTask);
-router.patch("/tasks/:id", validate(updateTaskSchema), updateTask);
-router.delete("/tasks/:id", validate(deleteTaskSchema), deleteTask);
+router.post(
+  "/tasks",
+  validate(adminValidation.createTaskSchema),
+  adminController.createTask,
+);
+router.patch(
+  "/tasks/:id",
+  validate(adminValidation.updateTaskSchema),
+  adminController.updateTask,
+);
+router.delete(
+  "/tasks/:id",
+  validate(adminValidation.deleteTaskSchema),
+  adminController.deleteTask,
+);
 
 // user management
-router.post("/users/sync-all", syncAllUsers);
-router.get("/users", getAllUsers);
-router.get("/users/:id", getUserById);
-router.patch("/users/:id/role", validate(updateUserRoleSchema), updateUserRole);
-router.delete("/users/:id", deleteUser);
+router.post("/users/sync-all", adminController.syncAllUsers);
+router.get("/users", adminController.getAllUsers);
+router.get("/users/:id", adminController.getUserById);
+router.patch(
+  "/users/:id/role",
+  validate(adminValidation.updateUserRoleSchema),
+  adminController.updateUserRole,
+);
+router.delete("/users/:id", adminController.deleteUser);
 
 // system management
-router.post("/redis/clean", cleanRedisSets);
-router.post("/cloud/clean", cleanCloudFiles);
+router.post("/redis/clean", adminController.cleanRedisSets);
+router.post("/cloud/clean", adminController.cleanCloudFiles);
 
 // payments
-router.get("/payments", getAllPayments);
-router.get("/payments/export", exportPayments);
+router.get("/payments", adminController.getAllPayments);
+router.get("/payments/export", adminController.exportPayments);
 router.patch(
   "/payments/:id/verify",
-  validate(verifyPaymentSchema),
-  verifyPayment,
+  validate(adminValidation.verifyPaymentSchema),
+  adminController.verifyPayment,
 );
-router.post("/payments/retry-receipts", retryMissingReceipts);
+router.post("/payments/retry-receipts", adminController.retryMissingReceipts);
 
 // admin stats
-router.get("/stats", getDashboardStats);
+router.get("/stats", adminController.getDashboardStats);
+
+// event management
+router.get("/events", adminController.getAllEvents);
+router.get(
+  "/events/:id",
+  validate(eventValidation.getEventByIdSchema),
+  adminController.getEventById,
+);
+router.post(
+  "/events",
+  validate(eventValidation.createEventSchema),
+  adminController.createEvent,
+);
+router.patch(
+  "/events/:id",
+  validate(eventValidation.updateEventSchema),
+  adminController.updateEvent,
+);
+router.delete(
+  "/events/:id",
+  validate(eventValidation.deleteEventSchema),
+  adminController.deleteEvent,
+);
 
 export default router;
