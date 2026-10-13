@@ -68,6 +68,18 @@ const eventRegistrationSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    section: {
+      type: String,
+      default: "open",
+      trim: true,
+      lowercase: true,
+    },
+    bracket: {
+      type: String,
+      default: "open",
+      trim: true,
+      lowercase: true,
+    },
     status: {
       type: String,
       enum: Object.values(REGISTRATION_STATUS),
@@ -76,6 +88,8 @@ const eventRegistrationSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+eventRegistrationSchema.index({ eventId: 1, section: 1, bracket: 1, status: 1 });
 
 eventRegistrationSchema.index(
   { eventId: 1, "team.teamName": 1 },

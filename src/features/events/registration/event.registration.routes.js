@@ -18,7 +18,6 @@ import {
 
 const router = express.Router();
 
-// Registration
 router.post(
   "/:id/register",
   userAuth,
@@ -27,11 +26,9 @@ router.post(
 );
 router.delete("/:id/delete", userAuth, deleteRegistration);
 
-// User
 router.get("/my-registrations", userAuth, getAllMyRegistrations);
 router.get("/:id/my-registration", userAuth, getMyRegistration);
 
-// Team management
 router.post("/:id/join-team", userAuth, validate(joinCodeValidation), joinTeam);
 router.post(
   "/:id/leave-team",

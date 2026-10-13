@@ -1,4 +1,5 @@
 import { EventRegistration } from "./event.registration.model.js";
+import "../../users/user.model.js";
 
 export const createRegistration = async (regData) => {
   return EventRegistration.create(regData);
@@ -27,6 +28,14 @@ export const findRegistrationByEventId = async (
     .sort({ createdAt: -1 })
     .limit(Number(pageSize))
     .skip((Number(pageNumber) - 1) * Number(pageSize));
+};
+
+export const findAllRegistrationsByEventId = async (eventId, filter = {}) => {
+  return await EventRegistration.find({ eventId, ...filter })
+    .populate("registeredBy", "userName email phoneNumber collegeEmail chessAccounts")
+    .populate("team.leaderId", "userName email phoneNumber collegeEmail chessAccounts")
+    .populate("team.members.userId", "userName email phoneNumber collegeEmail chessAccounts")
+    .sort({ createdAt: 1 });
 };
 
 export const getAllMyRegistrations = async (userId) => {

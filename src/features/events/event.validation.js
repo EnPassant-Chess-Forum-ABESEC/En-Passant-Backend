@@ -15,6 +15,19 @@ const teamConfigSchema = z.object({
   maxSize: z.number().int().min(1),
 });
 
+const bracketConfigSchema = z.object({
+  name: z.string().min(1).trim().toLowerCase(),
+  minRating: z.number().int().min(0).nullable().optional(),
+  maxRating: z.number().int().min(0).nullable().optional(),
+  totalRounds: z.number().int().min(1).nullable().optional(),
+});
+
+const sectionConfigSchema = z.object({
+  name: z.string().min(1).trim().toLowerCase(),
+  description: z.string().optional(),
+  brackets: z.array(bracketConfigSchema).optional().default([]),
+});
+
 const eventBody = z.object({
   title: z.string().min(1, "Title is required").trim(),
   description: z.string().min(1, "Description is required"),
@@ -24,6 +37,7 @@ const eventBody = z.object({
   registrationDeadline: isoDate("registrationDeadline"),
   participationMode: z.enum(Object.values(REGISTRATION_TYPE)),
   status: z.enum(Object.values(EVENT_STATUS)),
+  sections: z.array(sectionConfigSchema).optional().default([]),
   teamConfig: teamConfigSchema,
 });
 

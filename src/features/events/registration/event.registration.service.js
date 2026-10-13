@@ -28,6 +28,8 @@ export const createRegistration = async (userId, eventId, regBody) => {
   const regData = {
     eventId,
     registrationType: participationMode,
+    section: (regBody.section || "open").toLowerCase().trim(),
+    bracket: (regBody.bracket || "open").toLowerCase().trim(),
     paymentStatus: PAYMENT_STATUS.PENDING,
     registeredBy: userId,
     status: REGISTRATION_STATUS.PENDING,

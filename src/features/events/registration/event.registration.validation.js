@@ -2,6 +2,8 @@ import { z } from "zod";
 
 export const registerForEventValidation = z.object({
   body: z.object({
+    section: z.string().trim().optional().default("open"),
+    bracket: z.string().trim().optional().default("open"),
     participation: z.discriminatedUnion("participationType", [
       z.object({
         participationType: z.literal("team"),

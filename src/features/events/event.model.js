@@ -9,6 +9,25 @@ const teamConfigSchema = new mongoose.Schema(
   { _id: false },
 );
 
+const bracketConfigSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true, lowercase: true },
+    minRating: { type: Number, default: null },
+    maxRating: { type: Number, default: null },
+    totalRounds: { type: Number, default: null },
+  },
+  { _id: false },
+);
+
+const sectionConfigSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true, lowercase: true },
+    description: { type: String, default: "" },
+    brackets: [bracketConfigSchema],
+  },
+  { _id: false },
+);
+
 const eventSchema = new mongoose.Schema(
   {
     title: {
@@ -32,6 +51,10 @@ const eventSchema = new mongoose.Schema(
       type: String,
       enum: Object.values(EVENT_STATUS),
       default: EVENT_STATUS.DRAFT,
+    },
+    sections: {
+      type: [sectionConfigSchema],
+      default: [],
     },
     teamConfig: {
       type: teamConfigSchema,
