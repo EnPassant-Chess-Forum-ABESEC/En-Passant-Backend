@@ -14,6 +14,7 @@ const bracketConfigSchema = new mongoose.Schema(
     name: { type: String, required: true, trim: true, lowercase: true },
     minRating: { type: Number, default: null },
     maxRating: { type: Number, default: null },
+    range: { type: String, default: "" },
     totalRounds: { type: Number, default: null },
   },
   { _id: false },
@@ -22,8 +23,26 @@ const bracketConfigSchema = new mongoose.Schema(
 const sectionConfigSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true, lowercase: true },
+    title: { type: String, default: "" },
     description: { type: String, default: "" },
     brackets: [bracketConfigSchema],
+  },
+  { _id: false },
+);
+
+const prizeItemSchema = new mongoose.Schema(
+  {
+    id: { type: String },
+    place: { type: String, required: true },
+    reward: { type: String, required: true },
+  },
+  { _id: false },
+);
+
+const prizesConfigSchema = new mongoose.Schema(
+  {
+    label: { type: String, default: "Prizes & Accolades" },
+    items: { type: [prizeItemSchema], default: [] },
   },
   { _id: false },
 );
@@ -38,6 +57,18 @@ const eventSchema = new mongoose.Schema(
     description: {
       type: String,
       required: true,
+    },
+    root: {
+      type: String,
+      default: "A C C",
+    },
+    format: {
+      type: String,
+      default: "Swiss System",
+    },
+    timeControl: {
+      type: mongoose.Schema.Types.Mixed,
+      default: "10 + 5",
     },
     bannerUrl: { type: String },
     startDate: { type: Date, required: true },
@@ -55,6 +86,10 @@ const eventSchema = new mongoose.Schema(
     sections: {
       type: [sectionConfigSchema],
       default: [],
+    },
+    prizes: {
+      type: prizesConfigSchema,
+      default: () => ({ label: "Prizes & Accolades", items: [] }),
     },
     teamConfig: {
       type: teamConfigSchema,
