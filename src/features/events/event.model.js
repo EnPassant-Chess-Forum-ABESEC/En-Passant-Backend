@@ -16,6 +16,8 @@ const bracketConfigSchema = new mongoose.Schema(
     maxRating: { type: Number, default: null },
     range: { type: String, default: "" },
     totalRounds: { type: Number, default: null },
+    timeControl: { type: mongoose.Schema.Types.Mixed, default: null },
+    timeFormat: { type: mongoose.Schema.Types.Mixed, default: null },
   },
   { _id: false },
 );
@@ -25,6 +27,8 @@ const sectionConfigSchema = new mongoose.Schema(
     name: { type: String, required: true, trim: true, lowercase: true },
     title: { type: String, default: "" },
     description: { type: String, default: "" },
+    timeControl: { type: mongoose.Schema.Types.Mixed, default: null },
+    timeFormat: { type: mongoose.Schema.Types.Mixed, default: null },
     brackets: [bracketConfigSchema],
   },
   { _id: false },

@@ -21,12 +21,16 @@ const bracketConfigSchema = z.object({
   maxRating: z.number().int().min(0).nullable().optional(),
   range: z.string().optional(),
   totalRounds: z.number().int().min(1).nullable().optional(),
+  timeControl: z.union([z.string(), z.record(z.any())]).optional(),
+  timeFormat: z.union([z.string(), z.record(z.any())]).optional(),
 });
 
 const sectionConfigSchema = z.object({
   name: z.string().min(1).trim().toLowerCase(),
   title: z.string().optional(),
   description: z.string().optional(),
+  timeControl: z.union([z.string(), z.record(z.any())]).optional(),
+  timeFormat: z.union([z.string(), z.record(z.any())]).optional(),
   brackets: z.array(bracketConfigSchema).optional().default([]),
 });
 
