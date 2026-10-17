@@ -53,21 +53,52 @@ export const initializeEventTournaments = async (userId, eventId, config = {}) =
       const rounds = Number(
         config.totalRounds || secBrk?.totalRounds || defaultRounds,
       );
+      const timeControl =
+        config.timeControl ||
+        config.timeFormat ||
+        secBrk?.timeControl ||
+        secBrk?.timeFormat ||
+        eventSec?.timeControl ||
+        eventSec?.timeFormat ||
+        event.timeControl ||
+        null;
       targets.push({
         section: sectionName,
         bracket: brkName,
         totalRounds: rounds,
+        timeControl,
+        timeFormat: timeControl,
       });
     }
   } else if (Array.isArray(config.sections) && config.sections.length > 0) {
     for (const sec of config.sections) {
       const sectionName = sec.name.toLowerCase().trim();
       const rounds = Number(sec.totalRounds || config.totalRounds || 10);
+      const eventSec = event.sections?.find(
+        (s) => s.name?.toLowerCase() === sectionName,
+      );
       for (const brk of sec.brackets || []) {
+        const brkName = brk.toLowerCase().trim();
+        const secBrk = eventSec?.brackets?.find(
+          (b) => b.name?.toLowerCase() === brkName,
+        );
+        const timeControl =
+          sec.timeControl ||
+          sec.timeFormat ||
+          config.timeControl ||
+          config.timeFormat ||
+          secBrk?.timeControl ||
+          secBrk?.timeFormat ||
+          eventSec?.timeControl ||
+          eventSec?.timeFormat ||
+          event.timeControl ||
+          null;
         targets.push({
           section: sectionName,
-          bracket: brk.toLowerCase().trim(),
+          bracket: brkName,
           totalRounds: rounds,
+          timeControl,
+          timeFormat: timeControl,
         });
       }
     }
@@ -77,10 +108,21 @@ export const initializeEventTournaments = async (userId, eventId, config = {}) =
       for (const brk of sec.brackets || []) {
         const bracketName = brk.name.toLowerCase().trim();
         const rounds = Number(brk.totalRounds || config.totalRounds || 10);
+        const timeControl =
+          config.timeControl ||
+          config.timeFormat ||
+          brk.timeControl ||
+          brk.timeFormat ||
+          sec.timeControl ||
+          sec.timeFormat ||
+          event.timeControl ||
+          null;
         targets.push({
           section: sectionName,
           bracket: bracketName,
           totalRounds: rounds,
+          timeControl,
+          timeFormat: timeControl,
         });
       }
     }
@@ -92,10 +134,17 @@ export const initializeEventTournaments = async (userId, eventId, config = {}) =
         : ["beginner", "intermediate", "advanced"];
     const rounds = Number(config.totalRounds || 10);
     for (const brk of brackets) {
+      const timeControl =
+        config.timeControl ||
+        config.timeFormat ||
+        event.timeControl ||
+        (brk === "advanced" ? "15 + 2" : "10 + 5");
       targets.push({
         section: sectionName,
         bracket: brk.toLowerCase().trim(),
         totalRounds: rounds,
+        timeControl,
+        timeFormat: timeControl,
       });
     }
   }
@@ -116,10 +165,16 @@ export const initializeEventTournaments = async (userId, eventId, config = {}) =
         section: target.section,
         bracket: target.bracket,
         format: config.format || "swiss",
+        timeControl: target.timeControl,
+        timeFormat: target.timeFormat,
         totalRounds: target.totalRounds,
         round1TopSeedColor: config.round1TopSeedColor || "W",
         players: [],
       });
+    } else if (target.timeControl && tournament.timeControl !== target.timeControl) {
+      tournament.timeControl = target.timeControl;
+      tournament.timeFormat = target.timeFormat;
+      await tournament.save();
     }
     results.push(tournament);
   }
@@ -268,6 +323,8 @@ export const getEventTournamentDashboard = async (eventId) => {
       section: t.section,
       bracket: t.bracket,
       format: t.format,
+      timeControl: t.timeControl || null,
+      timeFormat: t.timeFormat || t.timeControl || null,
       status: t.status,
       totalRounds: t.totalRounds,
       currentRoundNumber: t.currentRoundNumber,

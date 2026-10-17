@@ -42,6 +42,8 @@ export const createTournament = async (userId, data) => {
     section: (data.section || "open").toLowerCase().trim(),
     bracket: (data.bracket || "open").toLowerCase().trim(),
     format: data.format || "swiss",
+    timeControl: data.timeControl || data.timeFormat || null,
+    timeFormat: data.timeFormat || data.timeControl || null,
     totalRounds: Number(data.totalRounds),
     round1TopSeedColor: data.round1TopSeedColor === "B" ? "B" : "W",
     status: TOURNAMENT_STATUS.SETUP,

@@ -26,6 +26,8 @@ export const createTournamentSchema = z.object({
       .enum(Object.values(TOURNAMENT_FORMAT))
       .optional()
       .default(TOURNAMENT_FORMAT.SWISS),
+    timeControl: z.union([z.string(), z.record(z.any())]).optional(),
+    timeFormat: z.union([z.string(), z.record(z.any())]).optional(),
     totalRounds: z.number().int().min(1, "Total rounds must be at least 1"),
     round1TopSeedColor: z.enum(["W", "B"]).optional().default("W"),
     players: z.array(playerInputSchema).optional().default([]),

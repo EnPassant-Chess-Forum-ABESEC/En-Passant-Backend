@@ -88,6 +88,14 @@ const tournamentSchema = new mongoose.Schema(
       enum: Object.values(TOURNAMENT_FORMAT),
       default: TOURNAMENT_FORMAT.SWISS,
     },
+    timeControl: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
+    timeFormat: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
     totalRounds: {
       type: Number,
       required: true,

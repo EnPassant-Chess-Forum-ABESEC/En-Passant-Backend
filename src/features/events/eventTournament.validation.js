@@ -19,9 +19,13 @@ export const initializeEventTournamentsSchema = z.object({
             name: z.string().min(1).trim(),
             brackets: z.array(z.string().trim()).min(1),
             totalRounds: z.number().int().min(1).optional(),
+            timeControl: z.union([z.string(), z.record(z.any())]).optional(),
+            timeFormat: z.union([z.string(), z.record(z.any())]).optional(),
           }),
         )
         .optional(),
+      timeControl: z.union([z.string(), z.record(z.any())]).optional(),
+      timeFormat: z.union([z.string(), z.record(z.any())]).optional(),
       totalRounds: z.number().int().min(1).optional(),
       format: z
         .enum(Object.values(TOURNAMENT_FORMAT))
