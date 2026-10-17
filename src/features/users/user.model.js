@@ -17,6 +17,11 @@ const chessAccountSchema = new mongoose.Schema(
       trim: true,
     },
 
+    verified: {
+      type: Boolean,
+      default: false,
+    },
+
     ratings: {
       type: ratingsSchema,
       default: () => ({}),

@@ -15,7 +15,10 @@ export const initSyncWorker = () => {
         const users = await User.find(
           {
             $or: [
-              { "chessAccounts.chessCom.username": { $exists: true, $ne: "" } },
+              {
+                "chessAccounts.chessCom.username": { $exists: true, $ne: "" },
+                "chessAccounts.chessCom.verified": true,
+              },
               { "chessAccounts.lichess.username": { $exists: true, $ne: "" } },
             ],
           },

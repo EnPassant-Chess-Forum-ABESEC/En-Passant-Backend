@@ -57,6 +57,7 @@ export const chesscomCallback = async (req, res, next) => {
 
     const updatedUser = await userRepo.updateUser(clerkId, {
       "chessAccounts.chessCom.username": userName,
+      "chessAccounts.chessCom.verified": true,
     });
 
     if (updatedUser) {
