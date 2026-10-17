@@ -46,7 +46,9 @@ export const chesscomCallback = async (req, res, next) => {
     const user = await userRepo.findByClerkId(clerkId);
     if (!user) throw new AppError("User not found", 404);
 
-    const clientUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+    const clientUrl = (
+      process.env.FRONTEND_URL || "http://localhost:3000"
+    ).replace(/\/+$/, "");
 
     const existingUser = await userRepo.findByChessComUsername(userName);
     if (existingUser && existingUser.clerkId !== clerkId) {
