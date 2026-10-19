@@ -1,5 +1,6 @@
 import { redisConnection as redisClient } from "../../redis/redis.client.js";
 import User from "../users/user.model.js";
+import { AppError } from "../../utils/AppError.js";
 
 const TIME_CONTROLS = ["rapid", "blitz", "bullet"];
 
@@ -8,7 +9,12 @@ const getKey = (timeControl) => `leaderboard:${timeControl}`;
 export const updateUserLeaderboard = async (user) => {
   const chessCom = user?.chessAccounts?.chessCom;
 
-  if (!chessCom?.username || !chessCom.ratings) {
+  if (!chessCom?.username || !chessCom?.verified || !chessCom.ratings) {
+    try {
+      for (const control of TIME_CONTROLS) {
+        await redisClient.zrem(getKey(control), user.clerkId);
+      }
+    } catch {}
     return;
   }
 
@@ -55,6 +61,7 @@ export const getLeaderboard = async (control, limit = 20) => {
       userName: user?.userName,
       profilePictureUrl: user?.profilePictureUrl,
       chessComUsername: user?.chessAccounts?.chessCom?.username,
+      isVerified: user?.chessAccounts?.chessCom?.verified || false,
       branch: user?.branch,
       year: user?.year,
       rating: m.score,
@@ -82,8 +89,16 @@ export const getUserRanks = async (clerkId) => {
 };
 
 export const removeUserFromLeaderboard = async (clerkId) => {
-  for (const control of TIME_CONTROLS) {
-    const key = getKey(control);
-    await redisClient.zrem(key, clerkId);
+  try {
+    for (const control of TIME_CONTROLS) {
+      const key = getKey(control);
+      await redisClient.zrem(key, clerkId);
+    }
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    throw new AppError(
+      `removeUserFromLeaderboard failed: ${error.message}`,
+      500,
+    );
   }
 };

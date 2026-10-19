@@ -18,6 +18,7 @@ import settingsRoutes from "./features/settings/settings.routes.js";
 import contactRoutes from "./features/contact/contact.routes.js";
 import eventRegisterRoutes from "./features/events/registration/event.registration.routes.js";
 import tournamentRoutes from "./features/tournaments/tournament.routes.js";
+import authRoutes from "./features/auth/auth.routes.js";
 
 const app = express();
 app.set("trust proxy", 1);
@@ -76,6 +77,7 @@ app.use("/api/contact", contactRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/event-registrations", eventRegisterRoutes);
 app.use("/api/tournaments", tournamentRoutes);
+app.use("/api/auth", authRoutes);
 
 app.use(errorHandler);
 
