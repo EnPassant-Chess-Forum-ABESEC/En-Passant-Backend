@@ -9,6 +9,7 @@ import {
   transferLeadership,
   leaveTeamAsLeader,
   getAllMyRegistrations,
+  previewBracket,
 } from "./event.registration.controller.js";
 import { validate } from "../../../middleware/validate.middleware.js";
 import {
@@ -28,6 +29,7 @@ router.delete("/:id/delete", userAuth, deleteRegistration);
 
 router.get("/my-registrations", userAuth, getAllMyRegistrations);
 router.get("/:id/my-registration", userAuth, getMyRegistration);
+router.get("/:id/preview-bracket", userAuth, previewBracket);
 
 router.post("/:id/join-team", userAuth, validate(joinCodeValidation), joinTeam);
 router.post(

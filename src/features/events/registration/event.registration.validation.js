@@ -4,6 +4,7 @@ export const registerForEventValidation = z.object({
   body: z.object({
     section: z.string().trim().optional().default("open"),
     bracket: z.string().trim().optional().default("open"),
+    isHosteler: z.boolean().optional().default(false),
     participation: z.discriminatedUnion("participationType", [
       z.object({
         participationType: z.literal("team"),

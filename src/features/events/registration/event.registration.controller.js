@@ -60,6 +60,19 @@ export const getMyRegistration = async (req, res, next) => {
   }
 };
 
+export const previewBracket = async (req, res, next) => {
+  try {
+    const preview = await regService.getBracketPreview(
+      req.user._id,
+      req.params.id,
+      req.query.section,
+    );
+    return res.status(200).json(preview);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const joinTeam = async (req, res, next) => {
   try {
     const newTeam = await regService.pushTeamMember(

@@ -2,6 +2,7 @@ import { AppError } from "../../../utils/AppError.js";
 import * as regRepo from "./event.registration.repository.js";
 import * as eventRepo from "../event.repository.js";
 import * as userRepo from "../../users/user.repository.js";
+import { fetchChessComRapidVerification } from "../../sync/adapters/chesscom.adapter.js";
 import {
   PAYMENT_STATUS,
   REGISTRATION_STATUS,
@@ -23,13 +24,88 @@ export const createRegistration = async (userId, eventId, regBody) => {
 
   if (existing) throw new AppError("Duplicate registration", 409);
 
+  const user = await userRepo.findById(userId);
+  if (!user) throw new AppError("User not found", 404);
+
+  const chessAccount = user.chessAccounts?.chessCom;
+  if (!chessAccount?.username) {
+    throw new AppError(
+      "Please link your Chess.com account in your profile before registering",
+      400,
+    );
+  }
+
+  if (!chessAccount.verified) {
+    throw new AppError(
+      "Your Chess.com account is not verified. Please verify your Chess.com account via OAuth in your profile before registering",
+      400,
+    );
+  }
+
+  const verification = await fetchChessComRapidVerification(
+    chessAccount.username,
+  );
+
+  if (verification.rapidGamesCount < 5) {
+    throw new AppError(
+      `You have played ${verification.rapidGamesCount} bullet games in the past 30 days on Chess.com. A minimum of 5 bullet games in the last 30 days is required to determine your bracket placement.`,
+      400,
+    );
+  }
+
   const { participationMode } = event;
+  const sectionName = (regBody.section || "open").toLowerCase().trim();
+  const peakRating = verification.peakRapidRating;
+
+  let assignedBracket = "open";
+  const targetSection = event.sections?.find(
+    (s) => s.name?.toLowerCase() === sectionName,
+  );
+
+  if (targetSection?.brackets && targetSection.brackets.length > 0) {
+    if (targetSection.brackets.length === 1) {
+      assignedBracket = targetSection.brackets[0].name.toLowerCase().trim();
+    } else {
+      const matched = targetSection.brackets.find(
+        (b) =>
+          (b.minRating == null || peakRating >= b.minRating) &&
+          (b.maxRating == null || peakRating <= b.maxRating),
+      );
+
+      if (matched) {
+        assignedBracket = matched.name.toLowerCase().trim();
+      } else {
+        const sortedBrackets = [...targetSection.brackets].sort(
+          (a, b) => (b.maxRating || 3000) - (a.maxRating || 3000),
+        );
+        if (peakRating > (sortedBrackets[0].maxRating || 0)) {
+          assignedBracket = sortedBrackets[0].name.toLowerCase().trim();
+        } else {
+          assignedBracket = targetSection.brackets[0].name.toLowerCase().trim();
+        }
+      }
+    }
+  }
+
+  const isWomensSection =
+    sectionName === "womens" || sectionName === "women";
+  const isHosteler = Boolean(regBody.isHosteler);
+  const residentType = isHosteler
+    ? "hosteler"
+    : isWomensSection
+      ? "day_scholar"
+      : null;
 
   const regData = {
     eventId,
     registrationType: participationMode,
-    section: (regBody.section || "open").toLowerCase().trim(),
-    bracket: (regBody.bracket || "open").toLowerCase().trim(),
+    section: sectionName,
+    bracket: assignedBracket,
+    isHosteler,
+    residentType,
+    peakRapidRating: peakRating,
+    rapidGamesCount: verification.rapidGamesCount,
+    chessUsername: chessAccount.username,
     paymentStatus: PAYMENT_STATUS.PENDING,
     registeredBy: userId,
     status: REGISTRATION_STATUS.PENDING,
@@ -259,4 +335,89 @@ export const leaveTeamAsLeader = async (leaderId, eventId, newLeaderId) => {
     throw new AppError("The new leader must be an existing team member", 400);
 
   return await regRepo.deleteLeader(registration._id, newLeaderId);
+};
+
+export const getBracketPreview = async (
+  userId,
+  eventId,
+  sectionName = "open",
+) => {
+  let event = null;
+  if (/^[0-9a-fA-F]{24}$/.test(eventId)) {
+    event = await eventRepo.findEventById(eventId);
+  }
+  if (!event) {
+    const all = await eventRepo.findAllEvents();
+    event =
+      all.find(
+        (e) =>
+          e._id.toString() === eventId ||
+          e.title?.toLowerCase() === eventId.toLowerCase(),
+      ) || all[0];
+  }
+  if (!event) throw new AppError("Event not found", 404);
+
+  const user = await userRepo.findById(userId);
+  if (!user) throw new AppError("User not found", 404);
+
+  const chessAccount = user.chessAccounts?.chessCom;
+  if (!chessAccount?.username) {
+    return {
+      success: true,
+      bracket: null,
+      message: "No Chess.com account linked",
+    };
+  }
+
+  let verification = null;
+  if (chessAccount.verified) {
+    try {
+      verification = await fetchChessComRapidVerification(
+        chessAccount.username,
+      );
+    } catch {}
+  }
+
+  const peakRating =
+    verification?.peakRapidRating ??
+    chessAccount.ratings?.rapid ??
+    chessAccount.ratings?.bullet ??
+    0;
+  const gamesCount = verification?.rapidGamesCount ?? 0;
+
+  const secLower = (sectionName || "open").toLowerCase().trim();
+  const targetSection =
+    event.sections?.find((s) => s.name?.toLowerCase() === secLower) ||
+    event.sections?.[0];
+
+  let matchedBracket = null;
+  if (targetSection?.brackets && targetSection.brackets.length > 0) {
+    if (targetSection.brackets.length === 1) {
+      matchedBracket = targetSection.brackets[0];
+    } else {
+      matchedBracket = targetSection.brackets.find(
+        (b) =>
+          (b.minRating == null || peakRating >= b.minRating) &&
+          (b.maxRating == null || peakRating <= b.maxRating),
+      );
+      if (!matchedBracket) {
+        const sortedBrackets = [...targetSection.brackets].sort(
+          (a, b) => (b.maxRating || 3000) - (a.maxRating || 3000),
+        );
+        if (peakRating > (sortedBrackets[0].maxRating || 0)) {
+          matchedBracket = sortedBrackets[0];
+        } else {
+          matchedBracket = targetSection.brackets[0];
+        }
+      }
+    }
+  }
+
+  return {
+    success: true,
+    bracket: matchedBracket,
+    peakRating,
+    gamesCount,
+    hasMinimumGames: gamesCount >= 5,
+  };
 };

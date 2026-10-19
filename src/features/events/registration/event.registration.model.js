@@ -85,6 +85,28 @@ const eventRegistrationSchema = new mongoose.Schema(
       enum: Object.values(REGISTRATION_STATUS),
       default: REGISTRATION_STATUS.PENDING,
     },
+    isHosteler: {
+      type: Boolean,
+      default: false,
+    },
+    residentType: {
+      type: String,
+      enum: ["hosteler", "day_scholar", null],
+      default: null,
+    },
+    peakRapidRating: {
+      type: Number,
+      default: null,
+    },
+    rapidGamesCount: {
+      type: Number,
+      default: null,
+    },
+    chessUsername: {
+      type: String,
+      default: null,
+      trim: true,
+    },
   },
   { timestamps: true },
 );

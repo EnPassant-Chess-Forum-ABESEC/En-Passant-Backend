@@ -8,6 +8,8 @@ export const findById = async (id) => {
   return User.findById(id);
 };
 
+export const findUserById = findById;
+
 export const findByUserName = async (userName) => {
   return User.findOne({ userName });
 };
