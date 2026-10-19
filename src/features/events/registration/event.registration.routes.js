@@ -1,5 +1,6 @@
 import express from "express";
 import { userAuth } from "../../../middleware/auth.middleware.js";
+import { upload } from "../../../middleware/upload.middleware.js";
 import {
   registerForEvent,
   getMyRegistration,
@@ -22,6 +23,7 @@ const router = express.Router();
 router.post(
   "/:id/register",
   userAuth,
+  upload.single("screenshot"),
   validate(registerForEventValidation),
   registerForEvent,
 );

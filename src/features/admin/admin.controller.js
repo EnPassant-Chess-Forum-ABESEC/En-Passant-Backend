@@ -1,5 +1,10 @@
 import * as adminService from "./admin.service.js";
 import * as eventRegService from "../events/registration/event.registration.service.js";
+import * as eventRegRepo from "../events/registration/event.registration.repository.js";
+import {
+  REGISTRATION_STATUS,
+  PAYMENT_STATUS,
+} from "../events/event.constants.js";
 import * as paymentRepo from "../payments/payment.repository.js";
 import {
   handleSuccessfulPayment,
@@ -99,6 +104,22 @@ export const getAllRegistrationForEvent = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       registrations,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteEventRegistration = async (req, res, next) => {
+  const { id } = req.params;
+
+  try {
+    await adminService.deleteEventRegistration(id);
+    await logAdminAction(req.user, "DELETE_EVENT_REGISTRATION", id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Event registration and all associated records deleted successfully",
     });
   } catch (error) {
     next(error);
@@ -349,14 +370,23 @@ export const getAllPayments = async (req, res, next) => {
   try {
     const pageSize = Number(req.query.pageSize) || 10;
     const pageNumber = Number(req.query.pageNumber) || 1;
-    const cacheKey = `admin:payments:${pageSize}:${pageNumber}`;
+    const purpose = req.query.purpose;
+    const filter = {};
+    if (purpose) {
+      filter.purpose = purpose;
+    }
+    const cacheKey = `admin:payments:${purpose || "all"}:${pageSize}:${pageNumber}`;
 
     const cachedData = await redisConnection.get(cacheKey);
     if (cachedData) {
       return res.status(200).json(JSON.parse(cachedData));
     }
 
-    const payments = await adminService.getAllPayments(pageSize, pageNumber);
+    const payments = await adminService.getAllPayments(
+      pageSize,
+      pageNumber,
+      filter,
+    );
 
     const response = {
       success: true,
@@ -364,7 +394,7 @@ export const getAllPayments = async (req, res, next) => {
       metadata: {
         pageNumber,
         pageSize,
-        total: await paymentRepo.countPayments(),
+        total: await paymentRepo.countPayments(filter),
       },
     };
 
@@ -404,29 +434,61 @@ export const verifyPayment = async (req, res, next) => {
       });
     }
 
-    if (status === "SUCCESS") {
-      await handleSuccessfulPayment(
-        payment.applicationId,
-        payment.utr || payment.gatewayOrderId,
-      );
+    if (payment.purpose === "event" || payment.registrationId) {
+      if (status === "SUCCESS") {
+        if (payment.registrationId) {
+          await eventRegRepo.updateRegistrationStatus(
+            payment.registrationId,
+            REGISTRATION_STATUS.CONFIRMED,
+            PAYMENT_STATUS.SUCCESS,
+          );
+        }
 
-      const updatedPayment = await paymentRepo.updatePaymentStatus(
-        payment.gatewayOrderId,
-        "SUCCESS",
-        payment.utr || "MANUAL_VERIFIED",
-      );
+        payment.status = "SUCCESS";
+        payment.gatewayPaymentId = payment.utr || "MANUAL_VERIFIED";
+        await payment.save();
 
-      if (updatedPayment) {
         import("../payments/receipt.queue.js").then((module) => {
-          module.enqueueReceiptGeneration(updatedPayment._id);
+          module.enqueueReceiptGeneration(payment._id);
         });
-      }
-    } else if (status === "FAILED") {
-      await handleFailedPayment(payment.applicationId, reason);
+      } else if (status === "FAILED") {
+        if (payment.registrationId) {
+          await eventRegRepo.updateRegistrationStatus(
+            payment.registrationId,
+            REGISTRATION_STATUS.PENDING,
+            PAYMENT_STATUS.FAILED,
+          );
+        }
 
-      payment.status = "FAILED";
-      if (reason) payment.rejectionReason = reason;
-      await payment.save();
+        payment.status = "FAILED";
+        if (reason) payment.rejectionReason = reason;
+        await payment.save();
+      }
+    } else {
+      if (status === "SUCCESS") {
+        await handleSuccessfulPayment(
+          payment.applicationId,
+          payment.utr || payment.gatewayOrderId,
+        );
+
+        const updatedPayment = await paymentRepo.updatePaymentStatus(
+          payment.gatewayOrderId,
+          "SUCCESS",
+          payment.utr || "MANUAL_VERIFIED",
+        );
+
+        if (updatedPayment) {
+          import("../payments/receipt.queue.js").then((module) => {
+            module.enqueueReceiptGeneration(updatedPayment._id);
+          });
+        }
+      } else if (status === "FAILED") {
+        await handleFailedPayment(payment.applicationId, reason);
+
+        payment.status = "FAILED";
+        if (reason) payment.rejectionReason = reason;
+        await payment.save();
+      }
     }
 
     await clearAdminCache("admin:payments:*");

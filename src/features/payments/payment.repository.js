@@ -19,8 +19,8 @@ export const updatePaymentStatus = async (
   );
 };
 
-export const countPayments = async () => {
-  return Payment.countDocuments();
+export const countPayments = async (filter = {}) => {
+  return Payment.countDocuments(filter);
 };
 
 export const getPaymentById = async (id) => {
@@ -32,10 +32,18 @@ export const hasPendingPaymentByApplicationId = async (applicationId) => {
   return !!pendingPayment;
 };
 
-export const getAllPayments = async (pageSize = 10, pageNumber = 1) => {
-  return Payment.find()
+export const getAllPayments = async (pageSize = 10, pageNumber = 1, filter = {}) => {
+  return Payment.find(filter)
     .select("-receiptFile")
-    .populate("userId", "userName email collegeEmail")
+    .populate("userId", "userName email collegeEmail phoneNumber")
+    .populate("eventId", "title participationMode")
+    .populate({
+      path: "registrationId",
+      populate: {
+        path: "registeredBy",
+        select: "userName email",
+      },
+    })
     .sort({ createdAt: -1 })
     .allowDiskUse(true)
     .limit(Number(pageSize))
@@ -60,4 +68,8 @@ export const calculateTotalRevenue = async () => {
 
 export const deletePaymentByApplicationId = async (applicationId) => {
   return Payment.deleteMany({ applicationId });
+};
+
+export const deletePaymentByRegistrationId = async (registrationId) => {
+  return Payment.deleteMany({ registrationId });
 };

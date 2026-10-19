@@ -58,6 +58,16 @@ const eventRegistrationSchema = new mongoose.Schema(
         return this.registrationType === "team";
       },
     },
+    teamName: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+    clubName: {
+      type: String,
+      default: null,
+      trim: true,
+    },
     paymentStatus: {
       type: String,
       enum: Object.values(PAYMENT_STATUS),
@@ -106,6 +116,23 @@ const eventRegistrationSchema = new mongoose.Schema(
       type: String,
       default: null,
       trim: true,
+    },
+    utr: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+    paymentScreenshotUrl: {
+      type: String,
+      default: null,
+    },
+    paymentScreenshotPublicId: {
+      type: String,
+      default: null,
+    },
+    paymentAmount: {
+      type: Number,
+      default: null,
     },
   },
   { timestamps: true },

@@ -7,6 +7,8 @@ import * as taskRepo from "../tasks/task.repository.js";
 import * as userRepo from "../users/user.repository.js";
 import * as paymentRepo from "../payments/payment.repository.js";
 import * as eventRepo from "../events/event.repository.js";
+import * as eventRegRepo from "../events/registration/event.registration.repository.js";
+import * as tournamentRepo from "../tournaments/tournament.repository.js";
 import { enqueueDraftReminderEmail } from "../email/email.queue.js";
 import { APPLICATION_STATUS } from "../recruitment/recruitment.constants.js";
 import {
@@ -123,6 +125,52 @@ export const deleteApplication = async (applicationId) => {
   return await recruitmentRepo.deleteApplication(applicationId);
 };
 
+export const deleteEventRegistration = async (registrationId) => {
+  const registration = await eventRegRepo.findRegistrationById(registrationId);
+  if (!registration) {
+    throw new AppError("Event registration not found", 404);
+  }
+
+  if (registration.paymentScreenshotPublicId) {
+    storageService
+      .deleteFile(registration.paymentScreenshotPublicId)
+      .catch(() => null);
+  }
+
+  const payments = await paymentRepo.getAllPayments({ registrationId });
+  for (const p of payments) {
+    if (p.receiptPublicId) {
+      storageService.deleteFile(p.receiptPublicId).catch(() => null);
+    }
+    if (p.paymentScreenshotPublicId) {
+      storageService.deleteFile(p.paymentScreenshotPublicId).catch(() => null);
+    }
+  }
+
+  await paymentRepo.deletePaymentByRegistrationId(registrationId);
+
+  try {
+    if (registration.eventId) {
+      const tournaments = await tournamentRepo.findTournamentsByReferenceId(
+        registration.eventId.toString(),
+      );
+      for (const t of tournaments) {
+        const playerId1 = registration.registeredBy?.toString();
+        const playerId2 = registration._id?.toString();
+        const initialCount = t.players?.length || 0;
+        t.players = (t.players || []).filter(
+          (p) => p.id !== playerId1 && p.id !== playerId2,
+        );
+        if (t.players.length !== initialCount) {
+          await t.save();
+        }
+      }
+    }
+  } catch {}
+
+  return await eventRegRepo.deleteRegistrationById(registrationId);
+};
+
 export const createDepartment = async (departmentData) => {
   const existing = await taskRepo.findDepartmentByCode(departmentData.code);
 
@@ -218,8 +266,12 @@ export const deleteUser = async (userId) => {
   return { success: true };
 };
 
-export const getAllPayments = async (pageSize, pageNumber) => {
-  const payments = await paymentRepo.getAllPayments(pageSize, pageNumber);
+export const getAllPayments = async (pageSize, pageNumber, filter = {}) => {
+  const payments = await paymentRepo.getAllPayments(
+    pageSize,
+    pageNumber,
+    filter,
+  );
 
   if (!payments) throw new AppError("Payments not found", 404);
 

@@ -6,6 +6,8 @@ export const registerForEvent = async (req, res, next) => {
       req.user._id,
       req.params.id,
       req.body,
+      req.file,
+      req.user,
     );
 
     return res.status(200).json({

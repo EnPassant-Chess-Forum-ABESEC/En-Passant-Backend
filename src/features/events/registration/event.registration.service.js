@@ -2,6 +2,8 @@ import { AppError } from "../../../utils/AppError.js";
 import * as regRepo from "./event.registration.repository.js";
 import * as eventRepo from "../event.repository.js";
 import * as userRepo from "../../users/user.repository.js";
+import * as paymentRepo from "../../payments/payment.repository.js";
+import { uploadFile, deleteFile } from "../../storage/storage.service.js";
 import { fetchChessComRapidVerification } from "../../sync/adapters/chesscom.adapter.js";
 import {
   PAYMENT_STATUS,
@@ -10,7 +12,20 @@ import {
   generateJoinCode,
 } from "../event.constants.js";
 
-export const createRegistration = async (userId, eventId, regBody) => {
+export const getSectionFee = (sectionName) => {
+  const s = (sectionName || "").toLowerCase().trim();
+  if (s === "womens" || s === "women") return 40;
+  if (s === "interclub" || s === "inter-club" || s === "inter club") return 80;
+  return 60;
+};
+
+export const createRegistration = async (
+  userId,
+  eventId,
+  regBody,
+  file,
+  userObj,
+) => {
   const event = await eventRepo.findEventById(eventId);
   if (!event) throw new AppError("Event not found", 404);
 
@@ -24,7 +39,15 @@ export const createRegistration = async (userId, eventId, regBody) => {
 
   if (existing) throw new AppError("Duplicate registration", 409);
 
-  const user = await userRepo.findById(userId);
+  if (!regBody.utr || !regBody.utr.trim()) {
+    throw new AppError("Transaction UTR is required", 400);
+  }
+
+  if (!file) {
+    throw new AppError("Payment screenshot is required", 400);
+  }
+
+  const user = userObj || (await userRepo.findById(userId));
   if (!user) throw new AppError("User not found", 404);
 
   const chessAccount = user.chessAccounts?.chessCom;
@@ -57,7 +80,7 @@ export const createRegistration = async (userId, eventId, regBody) => {
   const sectionName = (regBody.section || "open").toLowerCase().trim();
   const peakRating = verification.peakRapidRating;
 
-  let assignedBracket = "open";
+  let assignedBracket = (regBody.bracket || "open").toLowerCase().trim();
   const targetSection = event.sections?.find(
     (s) => s.name?.toLowerCase() === sectionName,
   );
@@ -96,9 +119,37 @@ export const createRegistration = async (userId, eventId, regBody) => {
       ? "day_scholar"
       : null;
 
+  const userNameSanitized = (user.userName || "user")
+    .replace(/[^a-zA-Z0-9]/g, "_")
+    .toLowerCase();
+  const dateStr = new Date().toISOString().split("T")[0];
+  const publicId = `receipts/${userNameSanitized}_${dateStr}_${Date.now()}`;
+
+  const uploadResult = await uploadFile(file.buffer, {
+    public_id: publicId,
+    folder: "event_payments",
+  });
+
+  const feeInRupees = getSectionFee(sectionName);
+  const feeInPaise = feeInRupees * 100;
+
+  const effectiveClubName =
+    regBody.clubName?.trim() ||
+    regBody.teamName?.trim() ||
+    regBody.participation?.teamName?.trim() ||
+    null;
+
+  const effectiveTeamName =
+    regBody.teamName?.trim() ||
+    regBody.participation?.teamName?.trim() ||
+    (sectionName === "interclub" ? effectiveClubName : null);
+
   const regData = {
     eventId,
-    registrationType: participationMode,
+    registrationType:
+      participationMode ||
+      regBody.participation?.participationType ||
+      "solo",
     section: sectionName,
     bracket: assignedBracket,
     isHosteler,
@@ -109,20 +160,43 @@ export const createRegistration = async (userId, eventId, regBody) => {
     paymentStatus: PAYMENT_STATUS.PENDING,
     registeredBy: userId,
     status: REGISTRATION_STATUS.PENDING,
+    teamName: effectiveTeamName,
+    clubName: effectiveClubName,
+    utr: regBody.utr.trim(),
+    paymentScreenshotUrl: uploadResult.secure_url,
+    paymentScreenshotPublicId: uploadResult.public_id,
+    paymentAmount: feeInRupees,
   };
 
   if (participationMode === REGISTRATION_TYPE.TEAM) {
-    if (!regBody.teamName) throw new AppError("Missing team name", 400);
+    if (!effectiveTeamName) throw new AppError("Missing team name", 400);
 
     regData.team = {
-      teamName: regBody.teamName,
+      teamName: effectiveTeamName,
       joinCode: generateJoinCode(),
       leaderId: userId,
       members: [],
     };
   }
 
-  return await regRepo.createRegistration(regData);
+  const registration = await regRepo.createRegistration(regData);
+
+  await paymentRepo.createPayment({
+    userId,
+    eventId,
+    registrationId: registration._id,
+    purpose: "event",
+    amount: feeInPaise,
+    currency: "INR",
+    gateway: "MANUAL",
+    gatewayOrderId: `manual_order_event_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+    status: "PENDING",
+    utr: regBody.utr.trim(),
+    paymentScreenshotPublicId: uploadResult.public_id,
+    paymentScreenshotUrl: uploadResult.secure_url,
+  });
+
+  return registration;
 };
 
 export const deleteUserRegistration = async (userId, eventId) => {
@@ -163,6 +237,12 @@ export const deleteUserRegistration = async (userId, eventId) => {
       );
 
     await regRepo.deleteRegistration(eventId, registration._id);
+  }
+
+  await paymentRepo.deletePaymentByRegistrationId(registration._id);
+
+  if (registration.paymentScreenshotPublicId) {
+    deleteFile(registration.paymentScreenshotPublicId).catch(() => null);
   }
 };
 

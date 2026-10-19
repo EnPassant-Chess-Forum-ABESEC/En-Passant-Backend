@@ -16,6 +16,10 @@ export const deleteRegistration = async (eventId, regId) => {
   });
 };
 
+export const deleteRegistrationById = async (regId) => {
+  return await EventRegistration.findByIdAndDelete(regId);
+};
+
 export const findRegistrationByEventId = async (
   eventId,
   pageSize = 10,
@@ -110,6 +114,17 @@ export const deleteLeader = async (regId, newLeaderId) => {
       $set: { "team.leaderId": newLeaderId },
       $pull: { "team.members": { userId: newLeaderId } },
     },
+    { returnDocument: "after" },
+  );
+};
+
+export const updateRegistrationStatus = async (regId, status, paymentStatus) => {
+  const update = {};
+  if (status) update.status = status;
+  if (paymentStatus) update.paymentStatus = paymentStatus;
+  return await EventRegistration.findByIdAndUpdate(
+    regId,
+    { $set: update },
     { returnDocument: "after" },
   );
 };

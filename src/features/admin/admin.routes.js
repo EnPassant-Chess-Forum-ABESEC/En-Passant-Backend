@@ -41,6 +41,10 @@ router.get(
   validate(eventValidation.getEventByIdSchema),
   adminController.getAllRegistrationForEvent,
 );
+router.delete(
+  "/event-registrations/:id",
+  adminController.deleteEventRegistration,
+);
 
 // department management
 router.get("/departments", adminController.getAllDepartments);

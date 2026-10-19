@@ -4,17 +4,40 @@ export const registerForEventValidation = z.object({
   body: z.object({
     section: z.string().trim().optional().default("open"),
     bracket: z.string().trim().optional().default("open"),
-    isHosteler: z.boolean().optional().default(false),
-    participation: z.discriminatedUnion("participationType", [
-      z.object({
-        participationType: z.literal("team"),
-        teamName: z.string().min(1, "Team name is required"),
-      }),
-      z.object({
-        participationType: z.literal("solo"),
-        teamName: z.string().optional(),
-      }),
-    ]),
+    isHosteler: z.preprocess(
+      (val) => val === true || val === "true",
+      z.boolean().default(false),
+    ),
+    utr: z.string().trim().min(3, "Transaction UTR is required"),
+    teamName: z.string().trim().optional(),
+    clubName: z.string().trim().optional(),
+    participation: z
+      .preprocess(
+        (val) => {
+          if (typeof val === "string") {
+            try {
+              return JSON.parse(val);
+            } catch {
+              return val;
+            }
+          }
+          return val;
+        },
+        z.discriminatedUnion("participationType", [
+          z.object({
+            participationType: z.literal("team"),
+            teamName: z.string().min(1, "Team name is required"),
+            clubName: z.string().optional(),
+          }),
+          z.object({
+            participationType: z.literal("solo"),
+            teamName: z.string().optional(),
+            clubName: z.string().optional(),
+          }),
+        ]),
+      )
+      .optional()
+      .default({ participationType: "solo" }),
   }),
 });
 

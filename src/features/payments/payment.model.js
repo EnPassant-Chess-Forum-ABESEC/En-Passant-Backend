@@ -11,6 +11,14 @@ const paymentSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Recruitment",
     },
+    registrationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "EventRegistration",
+    },
+    eventId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Event",
+    },
     purpose: {
       type: String,
       enum: ["recruitment", "event"],
@@ -31,15 +39,15 @@ const paymentSchema = new mongoose.Schema(
     },
     gatewayOrderId: {
       type: String,
-      required: true, // Razorpay order_id
+      required: true,
       unique: true,
     },
     gatewayPaymentId: {
-      type: String, // The Razorpay payment_id
+      type: String,
       default: null,
     },
     utr: {
-      type: String, // For manual UPI payments
+      type: String,
       sparse: true,
     },
     paymentScreenshotPublicId: {
@@ -49,15 +57,15 @@ const paymentSchema = new mongoose.Schema(
       type: String,
     },
     receiptPublicId: {
-      type: String, // Cloudinary public_id of the receipt
+      type: String,
       default: null,
     },
     receiptUrl: {
-      type: String, // Backend URL of the receipt
+      type: String,
       default: null,
     },
     receiptFile: {
-      type: Buffer, // Storing the raw PDF bytes
+      type: Buffer,
     },
     receiptS3Key: {
       type: String,
