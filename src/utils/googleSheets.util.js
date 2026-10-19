@@ -151,11 +151,11 @@ const applyFormatting = async (
     colWidths = [50, 150, 240, 240, 150, 180, 200, 140, 140, 180, 180];
   } else if (mode === "event_registrations") {
     colWidths = [
-      50, 160, 220, 200, 140, 160, 100, 110, 130, 110, 80, 110, 160, 140, 120,
+      50, 160, 90, 80, 100, 220, 200, 140, 160, 100, 110, 130, 110, 80, 110, 160, 140, 120,
       120, 160, 90, 180, 180, 160,
     ];
   } else if (mode === "payments_event") {
-    colWidths = [50, 160, 220, 140, 180, 120, 180, 100, 120, 180, 180, 160];
+    colWidths = [50, 160, 90, 80, 100, 220, 140, 180, 120, 180, 100, 120, 180, 180, 160];
   } else {
     colWidths = [50, 150, 240, 140, 200, 100, 130, 120, 180, 180];
   }
@@ -287,6 +287,9 @@ export const syncEventRegistrationsToSheets = async (
     [
       "S.No.",
       "Name",
+      "Gender",
+      "Year",
+      "Branch",
       "Email",
       "College Email",
       "Phone",
@@ -310,12 +313,18 @@ export const syncEventRegistrationsToSheets = async (
   ];
 
   registrations.forEach((reg, index) => {
+    const user = reg.registeredBy || reg.userId || {};
     allRows.push([
       index + 1,
-      reg.registeredBy?.userName || reg.userId?.userName || "N/A",
-      reg.registeredBy?.email || reg.userId?.email || "N/A",
-      reg.registeredBy?.collegeEmail || reg.userId?.collegeEmail || "N/A",
-      reg.registeredBy?.phoneNumber || reg.userId?.phoneNumber || "N/A",
+      user.userName || "N/A",
+      reg.gender
+        ? reg.gender.charAt(0).toUpperCase() + reg.gender.slice(1)
+        : "—",
+      user.year ? `Year ${user.year}` : "—",
+      user.branch || "—",
+      user.email || "N/A",
+      user.collegeEmail || "N/A",
+      user.phoneNumber || "N/A",
       reg.eventId?.title || eventTitle || "ACC 2026",
       reg.section ? reg.section.toUpperCase() : "OPEN",
       reg.bracket ? reg.bracket.toUpperCase() : "OPEN",
@@ -395,6 +404,9 @@ export const syncPaymentsToSheets = async (payments, purpose = null) => {
         [
           "S.No.",
           "Participant Name",
+          "Gender",
+          "Year",
+          "Branch",
           "Email",
           "Phone",
           "Tournament",
@@ -425,9 +437,23 @@ export const syncPaymentsToSheets = async (payments, purpose = null) => {
 
   payments.forEach((payment, index) => {
     if (isEvent) {
+      const pGender =
+        payment.registrationId?.gender ||
+        payment.metadata?.gender ||
+        "—";
+      const formattedGender =
+        pGender !== "—"
+          ? pGender.charAt(0).toUpperCase() + pGender.slice(1)
+          : "—";
+      const pYear = payment.userId?.year ? `Year ${payment.userId.year}` : "—";
+      const pBranch = payment.userId?.branch || "—";
+
       allRows.push([
         index + 1,
         payment.userId?.userName || "N/A",
+        formattedGender,
+        pYear,
+        pBranch,
         payment.userId?.email || "N/A",
         payment.userId?.phoneNumber || "N/A",
         payment.eventId?.title || "Chess Tournament",

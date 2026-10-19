@@ -95,6 +95,13 @@ const eventRegistrationSchema = new mongoose.Schema(
       enum: Object.values(REGISTRATION_STATUS),
       default: REGISTRATION_STATUS.PENDING,
     },
+    gender: {
+      type: String,
+      enum: ["male", "female", null],
+      default: null,
+      trim: true,
+      lowercase: true,
+    },
     isHosteler: {
       type: Boolean,
       default: false,

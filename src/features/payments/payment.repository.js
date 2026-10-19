@@ -59,9 +59,12 @@ export const getAllPayments = async (pageSize = 10, pageNumber = 1, filter = {})
 export const getAllPaymentsForExport = async (filter = {}) => {
   return Payment.find(filter)
     .select("-receiptFile")
-    .populate("userId", "userName email collegeEmail phoneNumber")
+    .populate("userId", "userName email collegeEmail phoneNumber branch year")
     .populate("eventId", "title participationMode")
-    .populate("registrationId", "section bracket teamName clubName chessUsername")
+    .populate(
+      "registrationId",
+      "section bracket teamName clubName chessUsername gender",
+    )
     .sort({ createdAt: -1 })
     .allowDiskUse(true);
 };

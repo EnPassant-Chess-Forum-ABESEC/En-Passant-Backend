@@ -22,7 +22,14 @@ export const registerForEvent = async (req, res, next) => {
 
 export const deleteRegistration = async (req, res, next) => {
   try {
-    await regService.deleteUserRegistration(req.user._id, req.params.id);
+    const registrationId = req.query.registrationId || req.body?.registrationId;
+    const section = req.query.section || req.body?.section;
+    await regService.deleteUserRegistration(
+      req.user._id,
+      req.params.id,
+      registrationId,
+      section,
+    );
     return res.status(200).json({
       success: true,
       message: "Registration deleted successfully",
@@ -31,8 +38,6 @@ export const deleteRegistration = async (req, res, next) => {
     next(error);
   }
 };
-
-
 
 export const getAllMyRegistrations = async (req, res, next) => {
   try {
@@ -48,14 +53,17 @@ export const getAllMyRegistrations = async (req, res, next) => {
 
 export const getMyRegistration = async (req, res, next) => {
   try {
-    const registration = await regService.getMyRegistration(
-      req.user._id,
-      req.params.id,
-    );
+    const { registration, allRegistrations } =
+      await regService.getMyRegistration(
+        req.user._id,
+        req.params.id,
+        req.query.section,
+      );
 
     return res.status(200).json({
       success: true,
       registration,
+      allRegistrations,
     });
   } catch (error) {
     next(error);

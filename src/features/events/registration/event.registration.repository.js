@@ -45,9 +45,18 @@ export const findAllRegistrationsByEventId = async (eventId, filter = {}) => {
 export const getAllRegistrationsForExport = async (filter = {}) => {
   return await EventRegistration.find(filter)
     .populate("eventId", "title")
-    .populate("registeredBy", "userName email phoneNumber collegeEmail chessAccounts")
-    .populate("team.leaderId", "userName email phoneNumber collegeEmail chessAccounts")
-    .populate("team.members.userId", "userName email phoneNumber collegeEmail chessAccounts")
+    .populate(
+      "registeredBy",
+      "userName email phoneNumber collegeEmail chessAccounts branch year",
+    )
+    .populate(
+      "team.leaderId",
+      "userName email phoneNumber collegeEmail chessAccounts branch year",
+    )
+    .populate(
+      "team.members.userId",
+      "userName email phoneNumber collegeEmail chessAccounts branch year",
+    )
     .sort({ createdAt: -1 });
 };
 
@@ -61,8 +70,8 @@ export const getAllMyRegistrations = async (userId) => {
   }).populate("eventId");
 };
 
-export const findRegistrationByUserAndEventId = async (userId, eventId) => {
-  return EventRegistration.findOne({
+export const findAllRegistrationsByUserAndEventId = async (userId, eventId) => {
+  return await EventRegistration.find({
     eventId,
     $or: [
       { registeredBy: userId },
@@ -70,6 +79,25 @@ export const findRegistrationByUserAndEventId = async (userId, eventId) => {
       { "team.members.userId": userId },
     ],
   });
+};
+
+export const findRegistrationByUserAndEventId = async (
+  userId,
+  eventId,
+  section = null,
+) => {
+  const query = {
+    eventId,
+    $or: [
+      { registeredBy: userId },
+      { "team.leaderId": userId },
+      { "team.members.userId": userId },
+    ],
+  };
+  if (section) {
+    query.section = section.toLowerCase().trim();
+  }
+  return EventRegistration.findOne(query);
 };
 
 export const findRegistrationByJoinCode = async (eventId, joinCode) => {

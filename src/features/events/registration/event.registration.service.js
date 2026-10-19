@@ -35,12 +35,72 @@ export const createRegistration = async (
   if (event.registrationDeadline && new Date() > event.registrationDeadline)
     throw new AppError("Registration deadline has passed for the event", 400);
 
-  const existing = await regRepo.findRegistrationByUserAndEventId(
+  const gender = (regBody.gender || "").toLowerCase().trim();
+  if (gender !== "male" && gender !== "female") {
+    throw new AppError("Please select your gender (Male or Female)", 400);
+  }
+
+  const sectionName = (regBody.section || "open").toLowerCase().trim();
+  const isInterclub =
+    sectionName === "interclub" ||
+    sectionName === "inter-club" ||
+    sectionName === "inter club";
+  const isWomens = sectionName === "womens" || sectionName === "women";
+  const isOpen = sectionName === "open";
+
+  if (gender === "male" && isWomens) {
+    throw new AppError(
+      "Male participants cannot register for the Women's division",
+      400,
+    );
+  }
+
+  const existingRegs = await regRepo.findAllRegistrationsByUserAndEventId(
     userId,
     eventId,
   );
 
-  if (existing) throw new AppError("Duplicate registration", 409);
+  const hasInterclub = existingRegs.some(
+    (r) =>
+      r.section === "interclub" ||
+      r.section === "inter-club" ||
+      r.section === "inter club",
+  );
+  const hasOpen = existingRegs.some((r) => r.section === "open");
+  const hasWomens = existingRegs.some(
+    (r) => r.section === "womens" || r.section === "women",
+  );
+
+  if (isInterclub) {
+    if (hasInterclub) {
+      throw new AppError(
+        "You are already registered for the Inter-Club division",
+        409,
+      );
+    }
+    if (hasOpen || hasWomens) {
+      throw new AppError(
+        "Participants registered in Open or Women's division cannot register for Inter-Club",
+        400,
+      );
+    }
+  } else {
+    if (hasInterclub) {
+      throw new AppError(
+        "Participants registered in the Inter-Club division cannot register for Open or Women's divisions",
+        400,
+      );
+    }
+    if (isOpen && hasOpen) {
+      throw new AppError("You are already registered for the Open division", 409);
+    }
+    if (isWomens && hasWomens) {
+      throw new AppError(
+        "You are already registered for the Women's division",
+        409,
+      );
+    }
+  }
 
   if (!regBody.utr || !regBody.utr.trim()) {
     throw new AppError("Transaction UTR is required", 400);
@@ -80,7 +140,6 @@ export const createRegistration = async (
   }
 
   const { participationMode } = event;
-  const sectionName = (regBody.section || "open").toLowerCase().trim();
   const peakRating = verification.peakRapidRating;
 
   let assignedBracket = (regBody.bracket || "open").toLowerCase().trim();
@@ -155,6 +214,7 @@ export const createRegistration = async (
       "solo",
     section: sectionName,
     bracket: assignedBracket,
+    gender,
     isHosteler,
     residentType,
     peakRapidRating: peakRating,
@@ -205,7 +265,12 @@ export const createRegistration = async (
   return registration;
 };
 
-export const deleteUserRegistration = async (userId, eventId) => {
+export const deleteUserRegistration = async (
+  userId,
+  eventId,
+  registrationId = null,
+  section = null,
+) => {
   const event = await eventRepo.findEventById(eventId);
   if (!event) throw new AppError("Event not found", 404);
 
@@ -215,10 +280,21 @@ export const deleteUserRegistration = async (userId, eventId) => {
       400,
     );
 
-  const registration = await regRepo.findRegistrationByUserAndEventId(
-    userId,
-    eventId,
-  );
+  let registration = null;
+  if (registrationId) {
+    registration = await regRepo.findRegistrationById(registrationId);
+  } else if (section) {
+    registration = await regRepo.findRegistrationByUserAndEventId(
+      userId,
+      eventId,
+      section,
+    );
+  } else {
+    registration = await regRepo.findRegistrationByUserAndEventId(
+      userId,
+      eventId,
+    );
+  }
   if (!registration) throw new AppError("Registration not found", 404);
 
   const isConfirmed =
@@ -283,27 +359,26 @@ export const getAllMyRegistrations = async (userId) => {
   return await regRepo.getAllMyRegistrations(userId);
 };
 
-export const getMyRegistration = async (userId, eventId) => {
+export const getMyRegistration = async (userId, eventId, section = null) => {
   const event = await eventRepo.findEventById(eventId);
   if (!event) throw new AppError("Event not found", 404);
 
-  const registration = await regRepo.findRegistrationByUserAndEventId(
+  const allRegistrations = await regRepo.findAllRegistrationsByUserAndEventId(
     userId,
     eventId,
   );
-  if (!registration) throw new AppError("Registration not found", 404);
+  if (!allRegistrations || allRegistrations.length === 0) {
+    throw new AppError("Registration not found", 404);
+  }
 
-  if (!registration.receiptUrl) {
-    const payment = await Payment.findOne({
-      registrationId: registration._id,
-      status: "SUCCESS",
-    }).select("receiptUrl");
-    if (payment?.receiptUrl) {
-      registration.receiptUrl = payment.receiptUrl;
-      await EventRegistration.findByIdAndUpdate(registration._id, {
-        receiptUrl: payment.receiptUrl,
-      });
-    }
+  let registration = null;
+  if (section) {
+    registration = allRegistrations.find(
+      (r) => r.section?.toLowerCase().trim() === section.toLowerCase().trim(),
+    );
+  }
+  if (!registration) {
+    registration = allRegistrations[allRegistrations.length - 1];
   }
 
   const backendUrl =
@@ -313,17 +388,29 @@ export const getMyRegistration = async (userId, eventId) => {
       : `http://localhost:${process.env.PORT || 8080}`);
   const cleanBackendUrl = backendUrl.replace(/\/$/, "").replace(/\/api$/, "");
 
-  if (
-    registration.receiptUrl &&
-    registration.receiptUrl.includes("/api/payments/")
-  ) {
-    const pathPart = registration.receiptUrl.substring(
-      registration.receiptUrl.indexOf("/api/payments/"),
-    );
-    registration.receiptUrl = `${cleanBackendUrl}${pathPart}`;
+  for (const reg of allRegistrations) {
+    if (!reg.receiptUrl) {
+      const payment = await Payment.findOne({
+        registrationId: reg._id,
+        status: "SUCCESS",
+      }).select("receiptUrl");
+      if (payment?.receiptUrl) {
+        reg.receiptUrl = payment.receiptUrl;
+        await EventRegistration.findByIdAndUpdate(reg._id, {
+          receiptUrl: payment.receiptUrl,
+        });
+      }
+    }
+
+    if (reg.receiptUrl && reg.receiptUrl.includes("/api/payments/")) {
+      const pathPart = reg.receiptUrl.substring(
+        reg.receiptUrl.indexOf("/api/payments/"),
+      );
+      reg.receiptUrl = `${cleanBackendUrl}${pathPart}`;
+    }
   }
 
-  return registration;
+  return { registration, allRegistrations };
 };
 
 export const pushTeamMember = async (memId, eventId, joinCode) => {
@@ -350,11 +437,28 @@ export const pushTeamMember = async (memId, eventId, joinCode) => {
   const teamMember = await userRepo.findById(memId);
   if (!teamMember) throw new AppError("member not found", 404);
 
-  const existing = await regRepo.findRegistrationByUserAndEventId(
+  const existingRegs = await regRepo.findAllRegistrationsByUserAndEventId(
     memId,
     event._id,
   );
-  if (existing) throw new AppError("Team member already present", 409);
+  const hasInterclub = existingRegs.some(
+    (r) =>
+      r.section === "interclub" ||
+      r.section === "inter-club" ||
+      r.section === "inter club",
+  );
+  const hasOpenOrWomens = existingRegs.some(
+    (r) => r.section === "open" || r.section === "womens" || r.section === "women",
+  );
+  if (hasInterclub) {
+    throw new AppError("Team member is already part of an Inter-Club team", 409);
+  }
+  if (hasOpenOrWomens) {
+    throw new AppError(
+      "Participants registered in Open or Women's division cannot join an Inter-Club team",
+      400,
+    );
+  }
 
   const currentTeamSize = registration.team.members.length + 1;
   if (currentTeamSize >= event.teamConfig.maxSize)

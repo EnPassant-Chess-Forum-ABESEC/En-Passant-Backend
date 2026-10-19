@@ -4,6 +4,12 @@ export const registerForEventValidation = z.object({
   body: z.object({
     section: z.string().trim().optional().default("open"),
     bracket: z.string().trim().optional().default("open"),
+    gender: z.preprocess(
+      (val) => (typeof val === "string" ? val.toLowerCase().trim() : val),
+      z.enum(["male", "female"], {
+        errorMap: () => ({ message: "Gender is required (male or female)" }),
+      }),
+    ),
     isHosteler: z.preprocess(
       (val) => val === true || val === "true",
       z.boolean().default(false),
