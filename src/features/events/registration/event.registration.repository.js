@@ -42,6 +42,15 @@ export const findAllRegistrationsByEventId = async (eventId, filter = {}) => {
     .sort({ createdAt: 1 });
 };
 
+export const getAllRegistrationsForExport = async (filter = {}) => {
+  return await EventRegistration.find(filter)
+    .populate("eventId", "title")
+    .populate("registeredBy", "userName email phoneNumber collegeEmail chessAccounts")
+    .populate("team.leaderId", "userName email phoneNumber collegeEmail chessAccounts")
+    .populate("team.members.userId", "userName email phoneNumber collegeEmail chessAccounts")
+    .sort({ createdAt: -1 });
+};
+
 export const getAllMyRegistrations = async (userId) => {
   return await EventRegistration.find({
     $or: [

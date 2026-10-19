@@ -11,7 +11,6 @@ const router = express.Router();
 router.use(adminAuth);
 router.use(auditPresenceMiddleware);
 
-// recruitment management
 router.get(
   "/applications",
   validate(adminValidation.getAllApplicationsSchema),
@@ -35,7 +34,14 @@ router.delete(
 );
 router.post("/applications/remind-drafts", adminController.sendDraftReminders);
 
-// event registration management
+router.get(
+  "/event-registrations/export",
+  adminController.exportEventRegistrations,
+);
+router.get(
+  "/event-registrations/:id/export",
+  adminController.exportEventRegistrations,
+);
 router.get(
   "/event-registrations/:id",
   validate(eventValidation.getEventByIdSchema),
@@ -46,7 +52,6 @@ router.delete(
   adminController.deleteEventRegistration,
 );
 
-// department management
 router.get("/departments", adminController.getAllDepartments);
 router.post(
   "/departments",
@@ -64,7 +69,6 @@ router.delete(
   adminController.deleteDepartment,
 );
 
-// task management
 router.post(
   "/tasks",
   validate(adminValidation.createTaskSchema),
@@ -81,7 +85,6 @@ router.delete(
   adminController.deleteTask,
 );
 
-// user management
 router.post("/users/sync-all", adminController.syncAllUsers);
 router.get("/users", adminController.getAllUsers);
 router.get("/users/:id", adminController.getUserById);
@@ -92,11 +95,9 @@ router.patch(
 );
 router.delete("/users/:id", adminController.deleteUser);
 
-// system management
 router.post("/redis/clean", adminController.cleanRedisSets);
 router.post("/cloud/clean", adminController.cleanCloudFiles);
 
-// payments
 router.get("/payments", adminController.getAllPayments);
 router.get("/payments/export", adminController.exportPayments);
 router.patch(
@@ -106,10 +107,8 @@ router.patch(
 );
 router.post("/payments/retry-receipts", adminController.retryMissingReceipts);
 
-// admin stats
 router.get("/stats", adminController.getDashboardStats);
 
-// event management
 router.get("/events", adminController.getAllEvents);
 router.get(
   "/events/:id",

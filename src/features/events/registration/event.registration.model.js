@@ -134,6 +134,10 @@ const eventRegistrationSchema = new mongoose.Schema(
       type: Number,
       default: null,
     },
+    receiptUrl: {
+      type: String,
+      default: null,
+    },
   },
   { timestamps: true },
 );
@@ -154,3 +158,5 @@ export const EventRegistration = mongoose.model(
   "EventRegistration",
   eventRegistrationSchema,
 );
+
+export default EventRegistration;

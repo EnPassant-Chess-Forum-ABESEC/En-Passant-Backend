@@ -3,6 +3,8 @@ import * as regRepo from "./event.registration.repository.js";
 import * as eventRepo from "../event.repository.js";
 import * as userRepo from "../../users/user.repository.js";
 import * as paymentRepo from "../../payments/payment.repository.js";
+import Payment from "../../payments/payment.model.js";
+import { EventRegistration } from "./event.registration.model.js";
 import { uploadFile, deleteFile } from "../../storage/storage.service.js";
 import { fetchChessComRapidVerification } from "../../sync/adapters/chesscom.adapter.js";
 import {
@@ -11,6 +13,7 @@ import {
   REGISTRATION_TYPE,
   generateJoinCode,
 } from "../event.constants.js";
+import { clearAdminCache } from "../../../redis/redis.client.js";
 
 export const getSectionFee = (sectionName) => {
   const s = (sectionName || "").toLowerCase().trim();
@@ -196,6 +199,9 @@ export const createRegistration = async (
     paymentScreenshotUrl: uploadResult.secure_url,
   });
 
+  await clearAdminCache("admin:payments:*");
+  await clearAdminCache("admin:event-registrations:*");
+
   return registration;
 };
 
@@ -214,6 +220,17 @@ export const deleteUserRegistration = async (userId, eventId) => {
     eventId,
   );
   if (!registration) throw new AppError("Registration not found", 404);
+
+  const isConfirmed =
+    registration.paymentStatus?.toLowerCase() === PAYMENT_STATUS.SUCCESS ||
+    registration.status?.toLowerCase() === REGISTRATION_STATUS.CONFIRMED;
+
+  if (isConfirmed) {
+    throw new AppError(
+      "Withdrawal is not allowed once payment is confirmed by admins",
+      400,
+    );
+  }
 
   const { participationMode } = event;
 
@@ -240,6 +257,8 @@ export const deleteUserRegistration = async (userId, eventId) => {
   }
 
   await paymentRepo.deletePaymentByRegistrationId(registration._id);
+  await clearAdminCache("admin:payments:*");
+  await clearAdminCache("admin:event-registrations:*");
 
   if (registration.paymentScreenshotPublicId) {
     deleteFile(registration.paymentScreenshotPublicId).catch(() => null);
@@ -273,6 +292,36 @@ export const getMyRegistration = async (userId, eventId) => {
     eventId,
   );
   if (!registration) throw new AppError("Registration not found", 404);
+
+  if (!registration.receiptUrl) {
+    const payment = await Payment.findOne({
+      registrationId: registration._id,
+      status: "SUCCESS",
+    }).select("receiptUrl");
+    if (payment?.receiptUrl) {
+      registration.receiptUrl = payment.receiptUrl;
+      await EventRegistration.findByIdAndUpdate(registration._id, {
+        receiptUrl: payment.receiptUrl,
+      });
+    }
+  }
+
+  const backendUrl =
+    process.env.BACKEND_URL ||
+    (process.env.NODE_ENV === "production"
+      ? "https://en-passant-backend.onrender.com"
+      : `http://localhost:${process.env.PORT || 8080}`);
+  const cleanBackendUrl = backendUrl.replace(/\/$/, "").replace(/\/api$/, "");
+
+  if (
+    registration.receiptUrl &&
+    registration.receiptUrl.includes("/api/payments/")
+  ) {
+    const pathPart = registration.receiptUrl.substring(
+      registration.receiptUrl.indexOf("/api/payments/"),
+    );
+    registration.receiptUrl = `${cleanBackendUrl}${pathPart}`;
+  }
 
   return registration;
 };

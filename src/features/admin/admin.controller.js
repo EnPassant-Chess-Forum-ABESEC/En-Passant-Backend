@@ -10,24 +10,14 @@ import {
   handleSuccessfulPayment,
   handleFailedPayment,
 } from "../recruitment/recruitment.service.js";
-import { redisConnection } from "../../redis/redis.client.js";
+import { redisConnection, clearAdminCache } from "../../redis/redis.client.js";
 import { deleteAllCloudFiles } from "../storage/storage.service.js";
 import Payment from "../payments/payment.model.js";
 import { enqueueReceiptGeneration } from "../payments/receipt.queue.js";
 import { logAdminAction } from "../logs/audit.service.js";
 
-const CACHE_TTL = 300;
+const CACHE_TTL = 60;
 
-const clearAdminCache = async (pattern) => {
-  try {
-    const keys = await redisConnection.keys(pattern);
-    if (keys.length > 0) {
-      await redisConnection.del(...keys);
-    }
-  } catch (err) {
-    console.error("Redis cache clearing error:", err);
-  }
-};
 export const getAllApplications = async (req, res, next) => {
   const { status, departmentId, year } = req.query;
   const cacheKey = `admin:applications:${status || "ALL"}:${departmentId || "ALL"}:${year || "ALL"}`;
@@ -371,15 +361,19 @@ export const getAllPayments = async (req, res, next) => {
     const pageSize = Number(req.query.pageSize) || 10;
     const pageNumber = Number(req.query.pageNumber) || 1;
     const purpose = req.query.purpose;
+    const isForceRefresh =
+      req.query.refresh === "true" || req.query.refresh === true;
     const filter = {};
     if (purpose) {
       filter.purpose = purpose;
     }
     const cacheKey = `admin:payments:${purpose || "all"}:${pageSize}:${pageNumber}`;
 
-    const cachedData = await redisConnection.get(cacheKey);
-    if (cachedData) {
-      return res.status(200).json(JSON.parse(cachedData));
+    if (!isForceRefresh) {
+      const cachedData = await redisConnection.get(cacheKey);
+      if (cachedData) {
+        return res.status(200).json(JSON.parse(cachedData));
+      }
     }
 
     const payments = await adminService.getAllPayments(
@@ -408,7 +402,18 @@ export const getAllPayments = async (req, res, next) => {
 
 export const exportPayments = async (req, res, next) => {
   try {
-    const result = await adminService.exportPaymentsAsExcel();
+    const { purpose } = req.query;
+    const result = await adminService.exportPaymentsAsExcel(purpose);
+    return res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const exportEventRegistrations = async (req, res, next) => {
+  try {
+    const eventId = req.query.eventId || req.params.id;
+    const result = await adminService.exportEventRegistrationsAsExcel(eventId);
     return res.status(200).json(result);
   } catch (error) {
     next(error);
@@ -590,12 +595,19 @@ export const retryMissingReceipts = async (req, res, next) => {
   try {
     const paymentsWithoutReceipts = await Payment.find({
       status: "SUCCESS",
-      $or: [{ receiptUrl: null }, { receiptUrl: "" }],
+      $or: [
+        { receiptUrl: null },
+        { receiptUrl: "" },
+        { receiptS3Key: null },
+        { receiptS3Key: { $exists: false } },
+      ],
     });
 
     for (const payment of paymentsWithoutReceipts) {
       await enqueueReceiptGeneration(payment._id);
     }
+
+    await clearAdminCache("admin:payments:*");
 
     await logAdminAction(req.user, "RETRY_MISSING_RECEIPTS", null, {
       count: paymentsWithoutReceipts.length,

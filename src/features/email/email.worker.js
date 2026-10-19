@@ -53,26 +53,84 @@ const processEmailJob = async (job) => {
 
     await sendEmail({ to: email, subject, text, html });
   } else if (name === "send-payment-success-email") {
-    const { email, name: userName, receiptUrl } = data;
+    const {
+      email,
+      name: userName,
+      receiptUrl,
+      pdfBase64,
+      isEvent,
+      eventTitle,
+      eventId,
+      sectionName,
+      amount,
+      paymentId,
+    } = data;
 
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-    const recruitmentDashboardUrl = `${frontendUrl.replace(/\/$/, "")}/recruitment/dashboard`;
+    const cleanFrontendUrl = frontendUrl.replace(/\/$/, "");
+    const isEventPayment =
+      isEvent === true ||
+      isEvent === "true" ||
+      Boolean(eventTitle) ||
+      Boolean(eventId);
 
-    const subject = "Payment Verified & Receipt - En-Passant Recruitment";
-    const text = `Hi ${userName},\n\nYour payment has been successfully verified! You can now proceed with your recruitment tasks.\n\nRecruitment Dashboard: ${recruitmentDashboardUrl}\n\nYou can download your official receipt here: ${receiptUrl}`;
+    const attachments = [];
+    if (pdfBase64) {
+      attachments.push({
+        filename: `Receipt_${paymentId || "Payment"}.pdf`,
+        content: Buffer.from(pdfBase64, "base64"),
+        contentType: "application/pdf",
+      });
+    }
 
-    const templatePath = path.join(
-      __dirname,
-      "templates",
-      "payment_success.ejs",
-    );
-    const html = await ejs.renderFile(templatePath, {
-      userName,
-      receiptUrl,
-      recruitmentDashboardUrl,
-    });
+    if (isEventPayment) {
+      const cleanEventTitle =
+        eventTitle || "ABES Chess Championship (ACC 2026)";
+      const eventRegisterUrl = eventId
+        ? `${cleanFrontendUrl}/events/${eventId}/register`
+        : `${cleanFrontendUrl}/events`;
 
-    await sendEmail({ to: email, subject, text, html });
+      const subject = `Payment Verified & Official Receipt - ${cleanEventTitle}`;
+      const text = `Hi ${userName},\n\nYour payment for ${cleanEventTitle} has been successfully verified!\n\nYour tournament entry is confirmed. Your official receipt is attached to this email and can also be downloaded here:\n${receiptUrl}\n\nView registration details: ${eventRegisterUrl}\n\nEn-Passant Chess Forum · ABESEC`;
+
+      const templatePath = path.join(
+        __dirname,
+        "templates",
+        "event_payment_success.ejs",
+      );
+      const html = await ejs.renderFile(templatePath, {
+        userName,
+        receiptUrl,
+        eventTitle: cleanEventTitle,
+        eventRegisterUrl,
+        sectionName: sectionName || "",
+        amount,
+        paymentId,
+        year: new Date().getFullYear(),
+      });
+
+      await sendEmail({ to: email, subject, text, html, attachments });
+    } else {
+      const recruitmentDashboardUrl = `${cleanFrontendUrl}/recruitment/dashboard`;
+      const subject = "Payment Verified & Receipt - En-Passant Recruitment";
+      const text = `Hi ${userName},\n\nYour payment has been successfully verified! You can now proceed with your recruitment tasks.\n\nRecruitment Dashboard: ${recruitmentDashboardUrl}\n\nYou can download your official receipt here: ${receiptUrl}`;
+
+      const templatePath = path.join(
+        __dirname,
+        "templates",
+        "payment_success.ejs",
+      );
+      const html = await ejs.renderFile(templatePath, {
+        userName,
+        receiptUrl,
+        recruitmentDashboardUrl,
+        amount,
+        paymentId,
+        year: new Date().getFullYear(),
+      });
+
+      await sendEmail({ to: email, subject, text, html, attachments });
+    }
   } else if (name === "send-payment-failed-email") {
     const { email, name: userName, reason } = data;
 

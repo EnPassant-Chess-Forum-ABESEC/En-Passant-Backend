@@ -56,6 +56,7 @@ export const enqueuePaymentSuccessEmail = async (
   email,
   name,
   receiptUrl,
+  options = {},
 ) => {
   try {
     await emailQueue.add("send-payment-success-email", {
@@ -63,6 +64,7 @@ export const enqueuePaymentSuccessEmail = async (
       email,
       name,
       receiptUrl,
+      ...options,
     });
     console.log(`Enqueued payment success email for user ${userId}`);
   } catch (error) {

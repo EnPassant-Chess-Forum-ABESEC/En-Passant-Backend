@@ -1,5 +1,7 @@
 import Payment from "./payment.model.js";
 import User from "../users/user.model.js";
+import Event from "../events/event.model.js";
+import { EventRegistration } from "../events/registration/event.registration.model.js";
 import mongoose from "mongoose";
 
 export const createPayment = async (paymentData) => {
@@ -27,6 +29,10 @@ export const getPaymentById = async (id) => {
   return Payment.findById(id);
 };
 
+export const getPaymentByRegistrationId = async (registrationId) => {
+  return Payment.findOne({ registrationId });
+};
+
 export const hasPendingPaymentByApplicationId = async (applicationId) => {
   const pendingPayment = await Payment.findOne({ applicationId, status: "PENDING" });
   return !!pendingPayment;
@@ -50,10 +56,12 @@ export const getAllPayments = async (pageSize = 10, pageNumber = 1, filter = {})
     .skip((Number(pageNumber) - 1) * Number(pageSize));
 };
 
-export const getAllPaymentsForExport = async () => {
-  return Payment.find()
+export const getAllPaymentsForExport = async (filter = {}) => {
+  return Payment.find(filter)
     .select("-receiptFile")
     .populate("userId", "userName email collegeEmail phoneNumber")
+    .populate("eventId", "title participationMode")
+    .populate("registrationId", "section bracket teamName clubName chessUsername")
     .sort({ createdAt: -1 })
     .allowDiskUse(true);
 };

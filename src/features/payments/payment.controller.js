@@ -11,6 +11,7 @@ import * as paymentRepo from "./payment.repository.js";
 import { uploadFile } from "../storage/storage.service.js";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { clearAdminCache } from "../../redis/redis.client.js";
 
 const s3Client = new S3Client({
   region: "auto",
@@ -145,6 +146,9 @@ export const razorpayWebhook = async (req, res, next) => {
       }
     }
 
+    await clearAdminCache("admin:payments:*");
+    await clearAdminCache("admin:applications:*");
+
     return res.status(200).send("OK");
   } catch (error) {
     next(error);
@@ -184,7 +188,10 @@ export const getReceipt = async (req, res, next) => {
 export const downloadReceiptPdf = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const payment = await paymentRepo.getPaymentById(id);
+    let payment = await paymentRepo.getPaymentById(id);
+    if (!payment) {
+      payment = await paymentRepo.getPaymentByRegistrationId(id);
+    }
 
     if (!payment) {
       return res.status(404).send("Receipt not found");
@@ -194,7 +201,7 @@ export const downloadReceiptPdf = async (req, res, next) => {
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader(
         "Content-Disposition",
-        `inline; filename="receipt_${id}.pdf"`,
+        `inline; filename="receipt_${payment._id}.pdf"`,
       );
       return res.send(payment.receiptFile);
     }
@@ -203,6 +210,7 @@ export const downloadReceiptPdf = async (req, res, next) => {
       const command = new GetObjectCommand({
         Bucket: process.env.R2_BUCKET_NAME,
         Key: payment.receiptS3Key,
+        ResponseContentDisposition: `inline; filename="receipt_${payment._id}.pdf"`,
       });
       const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
       return res.redirect(signedUrl);
@@ -284,6 +292,8 @@ export const submitManualPayment = async (req, res, next) => {
     });
 
     await transitionStatus(application._id, "PAYMENT_PENDING");
+    await clearAdminCache("admin:payments:*");
+    await clearAdminCache("admin:applications:*");
 
     import("../email/email.queue.js").then((module) => {
       module.enqueuePaymentPendingEmail(

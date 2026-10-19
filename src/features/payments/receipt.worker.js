@@ -1,8 +1,10 @@
 import { AppError } from "../../utils/AppError.js";
 import { workerLogger } from "../../utils/logger.js";
 import { Worker } from "bullmq";
-import { createRedisConnection } from "../../redis/redis.client.js";
+import { createRedisConnection, clearAdminCache } from "../../redis/redis.client.js";
 import Payment from "./payment.model.js";
+import Event from "../events/event.model.js";
+import { EventRegistration } from "../events/registration/event.registration.model.js";
 
 import ejs from "ejs";
 import path from "path";
@@ -10,14 +12,16 @@ import { fileURLToPath } from "url";
 import puppeteer from "puppeteer";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
-const s3Client = new S3Client({
-  region: "auto",
-  endpoint: `https://${process.env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-  credentials: {
-    accessKeyId: process.env.R2_ACCESS_KEY_ID,
-    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
-  },
-});
+const getS3Client = () => {
+  return new S3Client({
+    region: "auto",
+    endpoint: `https://${process.env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    credentials: {
+      accessKeyId: process.env.R2_ACCESS_KEY_ID,
+      secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+    },
+  });
+};
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -47,7 +51,10 @@ const processReceiptJob = async (job) => {
   if (name === "generate-receipt") {
     const { paymentId } = data;
 
-    const payment = await Payment.findById(paymentId).populate("userId");
+    const payment = await Payment.findById(paymentId)
+      .populate("userId")
+      .populate("eventId")
+      .populate("registrationId");
     if (!payment) {
       throw new AppError(`Payment with ID ${paymentId} not found`, 404);
     }
@@ -57,15 +64,47 @@ const processReceiptJob = async (job) => {
       throw new AppError(`User not found for payment ${paymentId}`, 404);
     }
 
+    const isEvent =
+      payment.purpose === "event" ||
+      Boolean(payment.registrationId) ||
+      Boolean(payment.eventId) ||
+      payment.gatewayOrderId?.includes("event");
+
+    let event = payment.eventId;
+    if (!event && payment.registrationId) {
+      const regId = payment.registrationId._id || payment.registrationId;
+      const regDoc =
+        await EventRegistration.findById(regId).populate("eventId");
+      if (regDoc?.eventId) {
+        event = regDoc.eventId;
+      }
+    }
+
+    const eventTitle =
+      event?.title ||
+      payment.eventId?.title ||
+      "ABES Chess Championship (ACC 2026)";
+
+    const sectionName = payment.registrationId?.section
+      ? `${payment.registrationId.section.charAt(0).toUpperCase() + payment.registrationId.section.slice(1)} Section`
+      : "";
+
+    const purposeText = isEvent
+      ? `${eventTitle}${sectionName ? ` - ${sectionName}` : ""}`
+      : "Recruitment Registration Fee";
+
     const templatePath = path.join(__dirname, "templates", "receipt.ejs");
 
     const html = await ejs.renderFile(templatePath, {
-      paymentId: payment._id.toString(),
-      date: new Date(payment.createdAt).toLocaleDateString(),
-      userName: user.userName,
-      userEmail: user.email,
-      purpose:
-        payment.purpose === "recruitment" ? "Recruitment Fee" : "Event Fee",
+      paymentId: payment.utr ? `${payment._id} (${payment.utr})` : payment._id.toString(),
+      date: new Date(payment.createdAt).toLocaleDateString("en-IN", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      }),
+      userName: user.userName || "Participant",
+      userEmail: user.email || "",
+      purpose: purposeText,
       amount: payment.amount / 100,
     });
 
@@ -83,12 +122,16 @@ const processReceiptJob = async (job) => {
     await page.close();
 
     const backendUrl =
-      process.env.BACKEND_URL || "https://en-passant-backend.onrender.com";
+      process.env.BACKEND_URL ||
+      (process.env.NODE_ENV === "production"
+        ? "https://en-passant-backend.onrender.com"
+        : `http://localhost:${process.env.PORT || 8080}`);
     const receiptLink = `${backendUrl.replace(/\/$/, "").replace(/\/api$/, "")}/api/payments/${payment._id}/receipt.pdf`;
 
     const s3Key = `receipts/receipt_${payment._id}.pdf`;
 
-    await s3Client.send(
+    const s3 = getS3Client();
+    await s3.send(
       new PutObjectCommand({
         Bucket: process.env.R2_BUCKET_NAME,
         Key: s3Key,
@@ -102,6 +145,15 @@ const processReceiptJob = async (job) => {
     payment.receiptUrl = receiptLink;
     await payment.save();
 
+    if (payment.registrationId) {
+      const regId = payment.registrationId._id || payment.registrationId;
+      await EventRegistration.findByIdAndUpdate(regId, {
+        receiptUrl: receiptLink,
+      });
+    }
+
+    await clearAdminCache("admin:payments:*");
+
     workerLogger.log(
       `Successfully generated and uploaded receipt to R2 for payment ${payment._id}`,
     );
@@ -112,6 +164,19 @@ const processReceiptJob = async (job) => {
         user.email,
         user.userName,
         receiptLink,
+        {
+          pdfBase64: pdfBuffer.toString("base64"),
+          isEvent: Boolean(isEvent),
+          eventTitle: isEvent ? eventTitle : undefined,
+          sectionName: isEvent ? sectionName : undefined,
+          eventId:
+            event?._id?.toString() ||
+            payment.eventId?._id?.toString() ||
+            payment.eventId?.toString() ||
+            undefined,
+          amount: payment.amount / 100,
+          paymentId: payment._id.toString(),
+        },
       );
     });
   }

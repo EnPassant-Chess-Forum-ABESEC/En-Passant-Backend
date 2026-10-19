@@ -14,7 +14,9 @@ import { APPLICATION_STATUS } from "../recruitment/recruitment.constants.js";
 import {
   syncApplicationsToSheets,
   syncPaymentsToSheets,
+  syncEventRegistrationsToSheets,
 } from "../../utils/googleSheets.util.js";
+import { clearAdminCache } from "../../redis/redis.client.js";
 
 export const getAllApplications = async (filters) => {
   const query = {};
@@ -121,6 +123,8 @@ export const deleteApplication = async (applicationId) => {
 
   await submissionRepo.deleteSubmissionsByApplicationId(applicationId);
   await paymentRepo.deletePaymentByApplicationId(applicationId);
+  await clearAdminCache("admin:payments:*");
+  await clearAdminCache("admin:applications:*");
 
   return await recruitmentRepo.deleteApplication(applicationId);
 };
@@ -167,6 +171,9 @@ export const deleteEventRegistration = async (registrationId) => {
       }
     }
   } catch {}
+
+  await clearAdminCache("admin:payments:*");
+  await clearAdminCache("admin:event-registrations:*");
 
   return await eventRegRepo.deleteRegistrationById(registrationId);
 };
@@ -275,19 +282,66 @@ export const getAllPayments = async (pageSize, pageNumber, filter = {}) => {
 
   if (!payments) throw new AppError("Payments not found", 404);
 
-  return payments;
+  const backendUrl =
+    process.env.BACKEND_URL ||
+    (process.env.NODE_ENV === "production"
+      ? "https://en-passant-backend.onrender.com"
+      : `http://localhost:${process.env.PORT || 8080}`);
+  const cleanBackendUrl = backendUrl.replace(/\/$/, "").replace(/\/api$/, "");
+
+  return payments.map((p) => {
+    const pObj = p.toObject ? p.toObject() : { ...p };
+    if (pObj.receiptUrl && pObj.receiptUrl.includes("/api/payments/")) {
+      const pathPart = pObj.receiptUrl.substring(
+        pObj.receiptUrl.indexOf("/api/payments/"),
+      );
+      pObj.receiptUrl = `${cleanBackendUrl}${pathPart}`;
+    }
+    return pObj;
+  });
 };
 
 export const exportApplicationsAsExcel = async (filters) => {
   const applications = await getAllApplications(filters);
-  await syncApplicationsToSheets(applications);
-  return { success: true, message: "Google Sheet updated successfully" };
+  const result = await syncApplicationsToSheets(applications);
+  return {
+    success: true,
+    message: "Google Sheet updated successfully",
+    sheetUrl: result?.sheetUrl,
+  };
 };
 
-export const exportPaymentsAsExcel = async () => {
-  const payments = await paymentRepo.getAllPaymentsForExport();
-  await syncPaymentsToSheets(payments);
-  return { success: true, message: "Google Sheet updated successfully" };
+export const exportPaymentsAsExcel = async (purpose = null) => {
+  const filter = {};
+  if (purpose) {
+    filter.purpose = purpose;
+  }
+  const payments = await paymentRepo.getAllPaymentsForExport(filter);
+  const result = await syncPaymentsToSheets(payments, purpose);
+  return {
+    success: true,
+    message: "Google Sheet updated successfully",
+    sheetUrl: result?.sheetUrl,
+  };
+};
+
+export const exportEventRegistrationsAsExcel = async (eventId = null) => {
+  const filter = {};
+  let eventTitle = "";
+  if (eventId) {
+    filter.eventId = eventId;
+    const event = await eventRepo.findEventById(eventId);
+    if (event) {
+      eventTitle = event.title;
+    }
+  }
+  const registrations = await eventRegRepo.getAllRegistrationsForExport(filter);
+  const result = await syncEventRegistrationsToSheets(registrations, eventTitle);
+  return {
+    success: true,
+    message: "Google Sheet updated successfully",
+    sheetUrl: result?.sheetUrl,
+  };
 };
 
 export const sendDraftReminders = async () => {
