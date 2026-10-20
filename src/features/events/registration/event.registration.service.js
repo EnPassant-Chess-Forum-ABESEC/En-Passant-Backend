@@ -18,7 +18,7 @@ import { clearAdminCache } from "../../../redis/redis.client.js";
 export const getSectionFee = (sectionName) => {
   const s = (sectionName || "").toLowerCase().trim();
   if (s === "womens" || s === "women") return 40;
-  if (s === "interclub" || s === "inter-club" || s === "inter club") return 80;
+  if (s === "interclub" || s === "inter-club" || s === "inter club") return 60;
   return 60;
 };
 
