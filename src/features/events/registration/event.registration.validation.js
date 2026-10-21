@@ -14,7 +14,7 @@ export const registerForEventValidation = z.object({
       (val) => val === true || val === "true",
       z.boolean().default(false),
     ),
-    utr: z.string().trim().min(3, "Transaction UTR is required"),
+    utr: z.string().trim().optional(),
     teamName: z.string().trim().optional(),
     clubName: z.string().trim().optional(),
     participation: z

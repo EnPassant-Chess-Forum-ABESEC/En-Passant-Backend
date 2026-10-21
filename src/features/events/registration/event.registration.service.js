@@ -2,10 +2,7 @@ import { AppError } from "../../../utils/AppError.js";
 import * as regRepo from "./event.registration.repository.js";
 import * as eventRepo from "../event.repository.js";
 import * as userRepo from "../../users/user.repository.js";
-import * as paymentRepo from "../../payments/payment.repository.js";
-import Payment from "../../payments/payment.model.js";
-import { EventRegistration } from "./event.registration.model.js";
-import { uploadFile, deleteFile } from "../../storage/storage.service.js";
+import { deleteFile } from "../../storage/storage.service.js";
 import { fetchChessComRapidVerification } from "../../sync/adapters/chesscom.adapter.js";
 import {
   PAYMENT_STATUS,
@@ -15,18 +12,13 @@ import {
 } from "../event.constants.js";
 import { clearAdminCache } from "../../../redis/redis.client.js";
 
-export const getSectionFee = (sectionName) => {
-  const s = (sectionName || "").toLowerCase().trim();
-  if (s === "womens" || s === "women") return 40;
-  if (s === "interclub" || s === "inter-club" || s === "inter club") return 60;
-  return 60;
-};
+export const getSectionFee = (_sectionName) => 0;
 
 export const createRegistration = async (
   userId,
   eventId,
   regBody,
-  file,
+  _file,
   userObj,
 ) => {
   const event = await eventRepo.findEventById(eventId);
@@ -102,14 +94,6 @@ export const createRegistration = async (
     }
   }
 
-  if (!regBody.utr || !regBody.utr.trim()) {
-    throw new AppError("Transaction UTR is required", 400);
-  }
-
-  if (!file) {
-    throw new AppError("Payment screenshot is required", 400);
-  }
-
   const user = userObj || (await userRepo.findById(userId));
   if (!user) throw new AppError("User not found", 404);
 
@@ -181,20 +165,6 @@ export const createRegistration = async (
       ? "day_scholar"
       : null;
 
-  const userNameSanitized = (user.userName || "user")
-    .replace(/[^a-zA-Z0-9]/g, "_")
-    .toLowerCase();
-  const dateStr = new Date().toISOString().split("T")[0];
-  const publicId = `receipts/${userNameSanitized}_${dateStr}_${Date.now()}`;
-
-  const uploadResult = await uploadFile(file.buffer, {
-    public_id: publicId,
-    folder: "event_payments",
-  });
-
-  const feeInRupees = getSectionFee(sectionName);
-  const feeInPaise = feeInRupees * 100;
-
   const effectiveClubName =
     regBody.clubName?.trim() ||
     regBody.teamName?.trim() ||
@@ -220,15 +190,15 @@ export const createRegistration = async (
     peakRapidRating: peakRating,
     rapidGamesCount: verification.rapidGamesCount,
     chessUsername: chessAccount.username,
-    paymentStatus: PAYMENT_STATUS.PENDING,
+    paymentStatus: PAYMENT_STATUS.SUCCESS,
     registeredBy: userId,
-    status: REGISTRATION_STATUS.PENDING,
+    status: REGISTRATION_STATUS.CONFIRMED,
     teamName: effectiveTeamName,
     clubName: effectiveClubName,
-    utr: regBody.utr.trim(),
-    paymentScreenshotUrl: uploadResult.secure_url,
-    paymentScreenshotPublicId: uploadResult.public_id,
-    paymentAmount: feeInRupees,
+    utr: null,
+    paymentScreenshotUrl: null,
+    paymentScreenshotPublicId: null,
+    paymentAmount: 0,
   };
 
   if (participationMode === REGISTRATION_TYPE.TEAM) {
@@ -244,22 +214,6 @@ export const createRegistration = async (
 
   const registration = await regRepo.createRegistration(regData);
 
-  await paymentRepo.createPayment({
-    userId,
-    eventId,
-    registrationId: registration._id,
-    purpose: "event",
-    amount: feeInPaise,
-    currency: "INR",
-    gateway: "MANUAL",
-    gatewayOrderId: `manual_order_event_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-    status: "PENDING",
-    utr: regBody.utr.trim(),
-    paymentScreenshotPublicId: uploadResult.public_id,
-    paymentScreenshotUrl: uploadResult.secure_url,
-  });
-
-  await clearAdminCache("admin:payments:*");
   await clearAdminCache("admin:event-registrations:*");
 
   return registration;
@@ -297,13 +251,9 @@ export const deleteUserRegistration = async (
   }
   if (!registration) throw new AppError("Registration not found", 404);
 
-  const isConfirmed =
-    registration.paymentStatus?.toLowerCase() === PAYMENT_STATUS.SUCCESS ||
-    registration.status?.toLowerCase() === REGISTRATION_STATUS.CONFIRMED;
-
-  if (isConfirmed) {
+  if (event.registrationDeadline && new Date() > event.registrationDeadline) {
     throw new AppError(
-      "Withdrawal is not allowed once payment is confirmed by admins",
+      "Withdrawal is not allowed after the registration deadline has passed",
       400,
     );
   }
@@ -332,8 +282,6 @@ export const deleteUserRegistration = async (
     await regRepo.deleteRegistration(eventId, registration._id);
   }
 
-  await paymentRepo.deletePaymentByRegistrationId(registration._id);
-  await clearAdminCache("admin:payments:*");
   await clearAdminCache("admin:event-registrations:*");
 
   if (registration.paymentScreenshotPublicId) {
@@ -379,35 +327,6 @@ export const getMyRegistration = async (userId, eventId, section = null) => {
   }
   if (!registration) {
     registration = allRegistrations[allRegistrations.length - 1];
-  }
-
-  const backendUrl =
-    process.env.BACKEND_URL ||
-    (process.env.NODE_ENV === "production"
-      ? "https://en-passant-backend.onrender.com"
-      : `http://localhost:${process.env.PORT || 8080}`);
-  const cleanBackendUrl = backendUrl.replace(/\/$/, "").replace(/\/api$/, "");
-
-  for (const reg of allRegistrations) {
-    if (!reg.receiptUrl) {
-      const payment = await Payment.findOne({
-        registrationId: reg._id,
-        status: "SUCCESS",
-      }).select("receiptUrl");
-      if (payment?.receiptUrl) {
-        reg.receiptUrl = payment.receiptUrl;
-        await EventRegistration.findByIdAndUpdate(reg._id, {
-          receiptUrl: payment.receiptUrl,
-        });
-      }
-    }
-
-    if (reg.receiptUrl && reg.receiptUrl.includes("/api/payments/")) {
-      const pathPart = reg.receiptUrl.substring(
-        reg.receiptUrl.indexOf("/api/payments/"),
-      );
-      reg.receiptUrl = `${cleanBackendUrl}${pathPart}`;
-    }
   }
 
   return { registration, allRegistrations };

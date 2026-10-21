@@ -336,10 +336,10 @@ export const syncEventRegistrationsToSheets = async (
         : "Day Scholar",
       reg.clubName || "—",
       reg.teamName || reg.team?.teamName || "—",
-      (reg.status || "PENDING").toUpperCase(),
-      (reg.paymentStatus || "PENDING").toUpperCase(),
+      (reg.status || "CONFIRMED").toUpperCase(),
+      (reg.paymentStatus || "FREE").toUpperCase(),
       reg.utr || "—",
-      reg.paymentAmount || 60,
+      reg.paymentAmount != null ? reg.paymentAmount : 0,
       reg.paymentScreenshotUrl || "—",
       reg.receiptUrl || "—",
       new Date(reg.createdAt).toLocaleString("en-IN", {

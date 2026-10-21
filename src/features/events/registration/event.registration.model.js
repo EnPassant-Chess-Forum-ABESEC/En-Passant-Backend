@@ -71,7 +71,7 @@ const eventRegistrationSchema = new mongoose.Schema(
     paymentStatus: {
       type: String,
       enum: Object.values(PAYMENT_STATUS),
-      default: PAYMENT_STATUS.PENDING,
+      default: PAYMENT_STATUS.SUCCESS,
     },
     registeredBy: {
       type: mongoose.Schema.Types.ObjectId,
@@ -93,7 +93,7 @@ const eventRegistrationSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: Object.values(REGISTRATION_STATUS),
-      default: REGISTRATION_STATUS.PENDING,
+      default: REGISTRATION_STATUS.CONFIRMED,
     },
     gender: {
       type: String,
@@ -139,7 +139,7 @@ const eventRegistrationSchema = new mongoose.Schema(
     },
     paymentAmount: {
       type: Number,
-      default: null,
+      default: 0,
     },
     receiptUrl: {
       type: String,
