@@ -80,7 +80,7 @@ export const fetchChessComRapidVerification = async (username) => {
 
   const userLower = username.toLowerCase();
   const rapidGames = allGames.filter(
-    (g) => g.time_class === "bullet" && Number(g.end_time) >= thirtyDaysAgo,
+    (g) => g.time_class === "rapid" && Number(g.end_time) >= thirtyDaysAgo,
   );
 
   let currentRapid = 0;
@@ -92,7 +92,7 @@ export const fetchChessComRapidVerification = async (username) => {
     });
     if (statsRes.ok) {
       const statsData = await statsRes.json();
-      currentRapid = statsData.chess_bullet?.last?.rating || 0;
+      currentRapid = statsData.chess_rapid?.last?.rating || 0;
     }
   } catch {}
 

@@ -118,7 +118,7 @@ export const createRegistration = async (
 
   if (verification.rapidGamesCount < 5) {
     throw new AppError(
-      `You have played ${verification.rapidGamesCount} bullet games in the past 30 days on Chess.com. A minimum of 5 bullet games in the last 30 days is required to determine your bracket placement.`,
+      `You have played ${verification.rapidGamesCount} rapid games in the past 30 days on Chess.com. A minimum of 5 rapid games in the last 30 days is required to determine your bracket placement.`,
       400,
     );
   }
@@ -533,7 +533,6 @@ export const getBracketPreview = async (
   const peakRating =
     verification?.peakRapidRating ??
     chessAccount.ratings?.rapid ??
-    chessAccount.ratings?.bullet ??
     0;
   const gamesCount = verification?.rapidGamesCount ?? 0;
 
