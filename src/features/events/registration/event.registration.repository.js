@@ -26,12 +26,25 @@ export const findRegistrationByEventId = async (
   pageNumber = 1,
 ) => {
   return await EventRegistration.find({ eventId })
-    .populate("registeredBy", "userName email phoneNumber")
-    .populate("team.leaderId", "userName email phoneNumber")
-    .populate("team.members.userId", "userName email phoneNumber")
+    .populate(
+      "registeredBy",
+      "userName email phoneNumber collegeEmail chessAccounts branch year",
+    )
+    .populate(
+      "team.leaderId",
+      "userName email phoneNumber collegeEmail chessAccounts branch year",
+    )
+    .populate(
+      "team.members.userId",
+      "userName email phoneNumber collegeEmail chessAccounts branch year",
+    )
     .sort({ createdAt: -1 })
     .limit(Number(pageSize))
     .skip((Number(pageNumber) - 1) * Number(pageSize));
+};
+
+export const countRegistrationsByEventId = async (eventId, filter = {}) => {
+  return await EventRegistration.countDocuments({ eventId, ...filter });
 };
 
 export const findAllRegistrationsByEventId = async (eventId, filter = {}) => {

@@ -83,17 +83,25 @@ export const getApplicationById = async (req, res, next) => {
 
 export const getAllRegistrationForEvent = async (req, res, next) => {
   try {
-    const pageSize = Number(req.query.pageSize) || 10;
+    const pageSize = Number(req.query.pageSize) || 50;
     const pageNumber = Number(req.query.pageNumber) || 1;
     const registrations = await eventRegService.getRegistrationByEventId(
       req.params.id,
       pageSize,
       pageNumber,
     );
+    const total = await eventRegRepo.countRegistrationsByEventId(req.params.id);
 
     return res.status(200).json({
       success: true,
       registrations,
+      metadata: {
+        pageNumber,
+        pageSize,
+        total,
+        totalPages: Math.ceil(total / pageSize),
+      },
+      total,
     });
   } catch (error) {
     next(error);
