@@ -571,18 +571,32 @@ export function solveDutchPairings(players, statsMap) {
   if (players.length === 0) return [];
   if (players.length % 2 !== 0) return null;
 
+  const scoreGroupMap = new Map();
+  for (const p of players) {
+    const s = statsMap.get(p.id)?.score ?? 0;
+    if (!scoreGroupMap.has(s)) {
+      scoreGroupMap.set(s, []);
+    }
+    scoreGroupMap.get(s).push(p);
+  }
+
+  const sortedScores = Array.from(scoreGroupMap.keys()).sort((a, b) => b - a);
+  for (const s of sortedScores) {
+    scoreGroupMap.get(s).sort((a, b) => {
+      if (b.rating !== a.rating) return b.rating - a.rating;
+      return a.name.localeCompare(b.name);
+    });
+  }
+
   const getPairWeight = (pa, pb) => {
     const sa = statsMap.get(pa.id);
     const sb = statsMap.get(pb.id);
-    const scoreDiff = Math.abs(sa.score - sb.score);
-
-    let weight = scoreDiff * 100000;
-
+    let weight = Math.abs(sa.score - sb.score) * 10000;
     weight += Math.abs(pa.rating - pb.rating) * 0.05;
-
     const check = canBePaired(pa.id, pb.id, statsMap);
+    if (!check.valid) return Infinity;
     if (check.hasColorBreak) {
-      weight += 5000000;
+      weight += 5000;
     } else {
       const prefA = getColorPreference(sa);
       const prefB = getColorPreference(sb);
@@ -594,61 +608,146 @@ export function solveDutchPairings(players, statsMap) {
         weight += 40;
       }
     }
-
     return weight;
   };
 
-  const best = { solution: null, cost: Infinity };
-  const currentPairs = [];
-  const used = new Set();
+  const pairBracket = (bracket) => {
+    if (bracket.length === 0) return [];
+    if (bracket.length % 2 !== 0) return null;
 
-  function search(playerIndex, currentCost) {
-    if (currentCost >= best.cost) return;
+    const m = bracket.length / 2;
+    const s1 = bracket.slice(0, m);
+    const s2 = bracket.slice(m);
 
-    let idx = playerIndex;
-    while (idx < players.length && used.has(players[idx].id)) {
-      idx++;
+    const used = new Set();
+    const pairs = [];
+    let iterations = 0;
+
+    function matchS1(idx) {
+      if (idx >= s1.length) return true;
+      const p1 = s1[idx];
+      const candidates = [];
+      for (let j = 0; j < s2.length; j++) {
+        const p2 = s2[j];
+        if (used.has(p2.id)) continue;
+        const check = canBePaired(p1.id, p2.id, statsMap);
+        if (check.valid) {
+          const cost = getPairWeight(p1, p2) + Math.abs(idx - j) * 10;
+          candidates.push({ p2, cost });
+        }
+      }
+      candidates.sort((a, b) => a.cost - b.cost);
+
+      for (const { p2 } of candidates) {
+        iterations++;
+        if (iterations > 5000) return false;
+        used.add(p2.id);
+        pairs.push([p1, p2]);
+        if (matchS1(idx + 1)) return true;
+        pairs.pop();
+        used.delete(p2.id);
+      }
+      return false;
     }
 
-    if (idx >= players.length) {
-      best.cost = currentCost;
-      best.solution = [...currentPairs];
-      return;
+    if (matchS1(0)) {
+      return pairs;
     }
 
-    const p1 = players[idx];
-    used.add(p1.id);
+    const fallbackPairs = [];
+    const fbUsed = new Set();
+    let fbIters = 0;
 
-    const candidates = [];
-    for (let j = idx + 1; j < players.length; j++) {
-      const p2 = players[j];
-      if (used.has(p2.id)) continue;
+    function matchGeneral(pIdx) {
+      while (pIdx < bracket.length && fbUsed.has(bracket[pIdx].id)) {
+        pIdx++;
+      }
+      if (pIdx >= bracket.length) return true;
+      const p1 = bracket[pIdx];
+      fbUsed.add(p1.id);
 
-      const check = canBePaired(p1.id, p2.id, statsMap);
-      if (check.valid) {
-        const cost = getPairWeight(p1, p2);
-        candidates.push({ cost, p2 });
+      const cands = [];
+      for (let j = pIdx + 1; j < bracket.length; j++) {
+        const p2 = bracket[j];
+        if (fbUsed.has(p2.id)) continue;
+        const check = canBePaired(p1.id, p2.id, statsMap);
+        if (check.valid) {
+          cands.push({ p2, cost: getPairWeight(p1, p2) });
+        }
+      }
+      cands.sort((a, b) => a.cost - b.cost);
+
+      for (const { p2 } of cands) {
+        fbIters++;
+        if (fbIters > 5000) return false;
+        fbUsed.add(p2.id);
+        fallbackPairs.push([p1, p2]);
+        if (matchGeneral(pIdx + 1)) return true;
+        fallbackPairs.pop();
+        fbUsed.delete(p2.id);
+      }
+      fbUsed.delete(p1.id);
+      return false;
+    }
+
+    if (matchGeneral(0)) {
+      return fallbackPairs;
+    }
+
+    return null;
+  };
+
+  const allPairs = [];
+  let floaters = [];
+
+  for (let i = 0; i < sortedScores.length; i++) {
+    const sc = sortedScores[i];
+    const isLast = i === sortedScores.length - 1;
+    const group = scoreGroupMap.get(sc);
+    let bracket = [...floaters, ...group];
+    floaters = [];
+
+    if (!isLast && bracket.length % 2 !== 0) {
+      const floater = bracket.pop();
+      floaters.push(floater);
+    }
+
+    let paired = pairBracket(bracket);
+    if (paired) {
+      allPairs.push(...paired);
+    } else {
+      while (bracket.length % 2 !== 0 || !paired) {
+        if (bracket.length <= 2) break;
+        const fl = bracket.pop();
+        floaters.push(fl);
+        if (bracket.length % 2 === 0) {
+          paired = pairBracket(bracket);
+          if (paired) {
+            allPairs.push(...paired);
+            break;
+          }
+        }
+      }
+      if (!paired) {
+        floaters.push(...bracket);
       }
     }
-
-    candidates.sort((a, b) => a.cost - b.cost);
-
-    for (const { cost, p2 } of candidates) {
-      used.add(p2.id);
-      currentPairs.push([p1, p2]);
-      search(idx + 1, currentCost + cost);
-
-      if (best.cost === 0) return;
-
-      currentPairs.pop();
-      used.delete(p2.id);
-    }
-
-    used.delete(p1.id);
   }
 
-  search(0, 0.0);
-  return best.solution;
+  if (floaters.length > 0) {
+    const finalPairs = pairBracket(floaters);
+    if (finalPairs) {
+      allPairs.push(...finalPairs);
+    } else {
+      return null;
+    }
+  }
+
+  if (allPairs.length !== players.length / 2) {
+    return null;
+  }
+
+  return allPairs;
 }
 
 export function generateSubsequentRoundPairings(

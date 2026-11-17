@@ -26,7 +26,58 @@ export const initializeEventTournaments = async (userId, eventId, config = {}) =
   const referenceId = eventId.toString();
   const targets = [];
 
-  if (config.section) {
+  const isAll = !config.section || config.section.toLowerCase().trim() === "all";
+
+  if (isAll) {
+    if (Array.isArray(event.sections) && event.sections.length > 0) {
+      for (const sec of event.sections) {
+        const sectionName = sec.name.toLowerCase().trim();
+        for (const brk of sec.brackets || []) {
+          const bracketName = brk.name.toLowerCase().trim();
+          const rounds = Number(
+            config.bracketConfigs?.[bracketName]?.totalRounds ||
+            brk.totalRounds ||
+            sec.totalRounds ||
+            config.totalRounds ||
+            5
+          );
+          const timeControl =
+            config.bracketConfigs?.[bracketName]?.timeControl ||
+            brk.timeControl ||
+            brk.timeFormat ||
+            sec.timeControl ||
+            sec.timeFormat ||
+            config.timeControl ||
+            config.timeFormat ||
+            event.timeControl ||
+            (bracketName === "advanced" ? "15 + 2" : "10 + 5");
+
+          targets.push({
+            section: sectionName,
+            bracket: bracketName,
+            totalRounds: rounds,
+            timeControl,
+            timeFormat: timeControl,
+          });
+        }
+      }
+    } else {
+      const defaultBrackets = ["beginner", "intermediate", "advanced"];
+      const rounds = Number(config.totalRounds || 5);
+      for (const brk of defaultBrackets) {
+        const timeControl =
+          config.bracketConfigs?.[brk]?.timeControl ||
+          (brk === "advanced" ? "15 + 2" : "10 + 5");
+        targets.push({
+          section: "open",
+          bracket: brk,
+          totalRounds: rounds,
+          timeControl,
+          timeFormat: timeControl,
+        });
+      }
+    }
+  } else {
     const sectionName = config.section.toLowerCase().trim();
     const eventSec = event.sections?.find(
       (s) => s.name?.toLowerCase() === sectionName,
@@ -34,7 +85,9 @@ export const initializeEventTournaments = async (userId, eventId, config = {}) =
 
     let brackets = [];
     if (Array.isArray(config.brackets) && config.brackets.length > 0) {
-      brackets = config.brackets.map((b) => b.toLowerCase().trim());
+      brackets = config.brackets.map((b) =>
+        typeof b === "string" ? b.toLowerCase().trim() : b.name?.toLowerCase().trim()
+      );
     } else if (
       eventSec &&
       Array.isArray(eventSec.brackets) &&
@@ -45,103 +98,31 @@ export const initializeEventTournaments = async (userId, eventId, config = {}) =
       brackets = ["open"];
     }
 
-    const defaultRounds = Number(config.totalRounds || 10);
     for (const brkName of brackets) {
       const secBrk = eventSec?.brackets?.find(
         (b) => b.name?.toLowerCase() === brkName,
       );
       const rounds = Number(
-        config.totalRounds || secBrk?.totalRounds || defaultRounds,
+        config.bracketConfigs?.[brkName]?.totalRounds ||
+        secBrk?.totalRounds ||
+        config.totalRounds ||
+        eventSec?.totalRounds ||
+        5
       );
       const timeControl =
-        config.timeControl ||
-        config.timeFormat ||
+        config.bracketConfigs?.[brkName]?.timeControl ||
         secBrk?.timeControl ||
         secBrk?.timeFormat ||
         eventSec?.timeControl ||
         eventSec?.timeFormat ||
-        event.timeControl ||
-        null;
-      targets.push({
-        section: sectionName,
-        bracket: brkName,
-        totalRounds: rounds,
-        timeControl,
-        timeFormat: timeControl,
-      });
-    }
-  } else if (Array.isArray(config.sections) && config.sections.length > 0) {
-    for (const sec of config.sections) {
-      const sectionName = sec.name.toLowerCase().trim();
-      const rounds = Number(sec.totalRounds || config.totalRounds || 10);
-      const eventSec = event.sections?.find(
-        (s) => s.name?.toLowerCase() === sectionName,
-      );
-      for (const brk of sec.brackets || []) {
-        const brkName = brk.toLowerCase().trim();
-        const secBrk = eventSec?.brackets?.find(
-          (b) => b.name?.toLowerCase() === brkName,
-        );
-        const timeControl =
-          sec.timeControl ||
-          sec.timeFormat ||
-          config.timeControl ||
-          config.timeFormat ||
-          secBrk?.timeControl ||
-          secBrk?.timeFormat ||
-          eventSec?.timeControl ||
-          eventSec?.timeFormat ||
-          event.timeControl ||
-          null;
-        targets.push({
-          section: sectionName,
-          bracket: brkName,
-          totalRounds: rounds,
-          timeControl,
-          timeFormat: timeControl,
-        });
-      }
-    }
-  } else if (Array.isArray(event.sections) && event.sections.length > 0) {
-    for (const sec of event.sections) {
-      const sectionName = sec.name.toLowerCase().trim();
-      for (const brk of sec.brackets || []) {
-        const bracketName = brk.name.toLowerCase().trim();
-        const rounds = Number(brk.totalRounds || config.totalRounds || 10);
-        const timeControl =
-          config.timeControl ||
-          config.timeFormat ||
-          brk.timeControl ||
-          brk.timeFormat ||
-          sec.timeControl ||
-          sec.timeFormat ||
-          event.timeControl ||
-          null;
-        targets.push({
-          section: sectionName,
-          bracket: bracketName,
-          totalRounds: rounds,
-          timeControl,
-          timeFormat: timeControl,
-        });
-      }
-    }
-  } else {
-    const sectionName = "open";
-    const brackets =
-      Array.isArray(config.brackets) && config.brackets.length > 0
-        ? config.brackets
-        : ["beginner", "intermediate", "advanced"];
-    const rounds = Number(config.totalRounds || 10);
-    for (const brk of brackets) {
-      const timeControl =
         config.timeControl ||
         config.timeFormat ||
         event.timeControl ||
-        (brk === "advanced" ? "15 + 2" : "10 + 5");
+        (brkName === "advanced" ? "15 + 2" : "10 + 5");
+
       targets.push({
         section: sectionName,
-        bracket: brk.toLowerCase().trim(),
+        bracket: brkName,
         totalRounds: rounds,
         timeControl,
         timeFormat: timeControl,
@@ -171,10 +152,20 @@ export const initializeEventTournaments = async (userId, eventId, config = {}) =
         round1TopSeedColor: config.round1TopSeedColor || "W",
         players: [],
       });
-    } else if (target.timeControl && tournament.timeControl !== target.timeControl) {
-      tournament.timeControl = target.timeControl;
-      tournament.timeFormat = target.timeFormat;
-      await tournament.save();
+    } else if (tournament.currentRoundNumber === 0) {
+      let modified = false;
+      if (target.timeControl && tournament.timeControl !== target.timeControl) {
+        tournament.timeControl = target.timeControl;
+        tournament.timeFormat = target.timeFormat;
+        modified = true;
+      }
+      if (target.totalRounds && tournament.totalRounds !== target.totalRounds) {
+        tournament.totalRounds = target.totalRounds;
+        modified = true;
+      }
+      if (modified) {
+        await tournament.save();
+      }
     }
     results.push(tournament);
   }
@@ -194,8 +185,9 @@ export const seedPlayersFromRegistrations = async (eventId, options = {}) => {
 
   const tournamentMap = new Map();
   for (const t of tournaments) {
-    tournamentMap.set(`${t.section}:${t.bracket}`, t);
-    tournamentMap.set(t.bracket, t);
+    const secKey = (t.section || "").toLowerCase().trim();
+    const brkKey = (t.bracket || "").toLowerCase().trim();
+    tournamentMap.set(`${secKey}:${brkKey}`, t);
   }
 
   const statusFilter = options.status || REGISTRATION_STATUS.CONFIRMED;
@@ -208,14 +200,14 @@ export const seedPlayersFromRegistrations = async (eventId, options = {}) => {
     bucketMap.set(t._id.toString(), []);
   }
 
-    const secConfig = event.sections?.find(
+  const secConfig = event.sections?.find(
     (s) => s.name?.toLowerCase() === "open",
   );
   const begBracket = secConfig?.brackets?.find((b) => b.name === "beginner");
   const intBracket = secConfig?.brackets?.find((b) => b.name === "intermediate");
 
   const defaultBegMax = begBracket?.maxRating ? begBracket.maxRating + 1 : 900;
-  const defaultIntMax = intBracket?.maxRating ? intBracket.maxRating + 1 : 1501;
+  const defaultIntMax = intBracket?.maxRating ? intBracket.maxRating + 1 : 1500;
 
   const { beginnerMax = defaultBegMax, intermediateMax = defaultIntMax } =
     options.ratingThresholds || {};
@@ -224,27 +216,38 @@ export const seedPlayersFromRegistrations = async (eventId, options = {}) => {
     const user = reg.registeredBy;
     const playerId = user?._id?.toString() || reg._id.toString();
     const playerName =
+      reg.chessUsername ||
+      user?.name ||
+      user?.fullName ||
       user?.userName ||
       user?.collegeEmail ||
+      (user?.rollNo ? `Roll ${user.rollNo}` : null) ||
       `Player ${playerId.slice(-4)}`;
-    const rating = extractPlayerRating(user);
 
-    let targetBracket = (reg.bracket || "open").toLowerCase().trim();
-    const targetSection = (reg.section || "main").toLowerCase().trim();
-    if (targetSection === "open" && (options.autoAssignByRating || targetBracket === "open")) {
-      if (rating < beginnerMax) {
-        targetBracket = "beginner";
-      } else if (rating < intermediateMax) {
-        targetBracket = "intermediate";
-      } else {
-        targetBracket = "advanced";
+    const rating = Number(reg.peakRapidRating) || extractPlayerRating(user) || 1200;
+
+    let targetSection = (reg.section || "open").toLowerCase().trim();
+    let targetBracket = (reg.bracket || "").toLowerCase().trim();
+
+    if (targetSection === "open") {
+      if (options.forceAutoAssignByRating || !targetBracket || targetBracket === "open") {
+        if (rating < beginnerMax) {
+          targetBracket = "beginner";
+        } else if (rating < intermediateMax) {
+          targetBracket = "intermediate";
+        } else {
+          targetBracket = "advanced";
+        }
       }
+    } else if (targetSection === "womens") {
+      targetBracket = "open";
+    } else if (!targetBracket) {
+      targetBracket = "open";
     }
 
     let tournament =
       tournamentMap.get(`${targetSection}:${targetBracket}`) ||
-      tournaments.find((t) => t.section === targetSection) ||
-      tournamentMap.get(targetBracket) ||
+      tournaments.find((t) => (t.section || "").toLowerCase().trim() === targetSection) ||
       tournaments[0];
 
     const playerEntry = {
@@ -285,15 +288,21 @@ export const seedPlayersFromRegistrations = async (eventId, options = {}) => {
         continue;
       }
 
-      await tournamentService.addPlayers(tournament._id, playersToAdd);
-      summary.totalSeeded += playersToAdd.length;
+      const existingPlayerIds = new Set((tournament.players || []).map((p) => p.id));
+      const freshPlayers = playersToAdd.filter((p) => !existingPlayerIds.has(p.id));
+
+      if (freshPlayers.length > 0) {
+        await tournamentService.addPlayers(tournament._id, freshPlayers);
+        summary.totalSeeded += freshPlayers.length;
+      }
     }
 
+    const updatedTourn = await tournamentRepo.findTournamentById(tournament._id);
     summary.brackets[key] = {
       tournamentId: tournament._id,
       title: tournament.title,
-      playerCount: (tournament.players?.length || 0) + (isStartedOrDone ? 0 : playersToAdd.length),
-      seededInBatch: isStartedOrDone ? 0 : playersToAdd.length,
+      playerCount: updatedTourn?.players?.length || 0,
+      seededInBatch: playersToAdd.length,
       status: tournament.status,
     };
   }

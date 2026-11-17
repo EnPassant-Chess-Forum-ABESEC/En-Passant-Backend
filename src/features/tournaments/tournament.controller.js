@@ -83,6 +83,22 @@ export const getTournamentById = async (req, res, next) => {
   }
 };
 
+export const updateTournament = async (req, res, next) => {
+  try {
+    const tournament = await tournamentService.updateTournament(
+      req.params.id,
+      req.body,
+    );
+    return res.status(200).json({
+      success: true,
+      message: "Tournament updated successfully",
+      tournament,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const deleteTournament = async (req, res, next) => {
   try {
     await tournamentService.deleteTournament(req.params.id);
@@ -122,6 +138,39 @@ export const updatePlayer = async (req, res, next) => {
       success: true,
       message: "Player updated successfully",
       tournament,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deletePlayer = async (req, res, next) => {
+  try {
+    const tournament = await tournamentService.deletePlayer(
+      req.params.id,
+      req.params.playerId,
+    );
+    return res.status(200).json({
+      success: true,
+      message: "Player removed successfully",
+      tournament,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const movePlayer = async (req, res, next) => {
+  try {
+    const result = await tournamentService.movePlayer(
+      req.params.id,
+      req.body.targetTournamentId,
+      req.body.playerId,
+    );
+    return res.status(200).json({
+      success: true,
+      message: "Player moved successfully",
+      ...result,
     });
   } catch (error) {
     next(error);

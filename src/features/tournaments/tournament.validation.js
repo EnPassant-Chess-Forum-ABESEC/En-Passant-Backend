@@ -40,6 +40,20 @@ export const tournamentIdParamSchema = z.object({
   }),
 });
 
+export const updateTournamentSchema = z.object({
+  params: z.object({
+    id: objectId("Tournament ID"),
+  }),
+  body: z.object({
+    title: z.string().trim().optional(),
+    timeControl: z.union([z.string(), z.record(z.any())]).optional(),
+    timeFormat: z.union([z.string(), z.record(z.any())]).optional(),
+    totalRounds: z.number().int().min(1).optional(),
+    format: z.enum(Object.values(TOURNAMENT_FORMAT)).optional(),
+    round1TopSeedColor: z.enum(["W", "B"]).optional(),
+  }),
+});
+
 export const addPlayersSchema = z.object({
   params: z.object({
     id: objectId("Tournament ID"),
@@ -60,6 +74,23 @@ export const updatePlayerSchema = z.object({
     title: z.string().optional(),
     active: z.boolean().optional(),
     halfPointByeRequestedRounds: z.array(z.number().int().min(1)).optional(),
+  }),
+});
+
+export const deletePlayerSchema = z.object({
+  params: z.object({
+    id: objectId("Tournament ID"),
+    playerId: z.string().min(1, "Player ID is required"),
+  }),
+});
+
+export const movePlayerSchema = z.object({
+  params: z.object({
+    id: objectId("Tournament ID"),
+  }),
+  body: z.object({
+    playerId: z.string().min(1, "Player ID is required"),
+    targetTournamentId: objectId("Target Tournament ID"),
   }),
 });
 

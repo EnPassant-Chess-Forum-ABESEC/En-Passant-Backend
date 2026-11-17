@@ -5,8 +5,11 @@ import * as tournamentController from "./tournament.controller.js";
 import {
   createTournamentSchema,
   tournamentIdParamSchema,
+  updateTournamentSchema,
   addPlayersSchema,
   updatePlayerSchema,
+  deletePlayerSchema,
+  movePlayerSchema,
   updateGameResultSchema,
   bulkUpdateGameResultsSchema,
   roundParamsSchema,
@@ -29,6 +32,13 @@ router.get(
   tournamentController.getTournamentById,
 );
 
+router.patch(
+  "/:id",
+  adminAuth,
+  validate(updateTournamentSchema),
+  tournamentController.updateTournament,
+);
+
 router.delete(
   "/:id",
   adminAuth,
@@ -48,6 +58,20 @@ router.patch(
   adminAuth,
   validate(updatePlayerSchema),
   tournamentController.updatePlayer,
+);
+
+router.delete(
+  "/:id/players/:playerId",
+  adminAuth,
+  validate(deletePlayerSchema),
+  tournamentController.deletePlayer,
+);
+
+router.post(
+  "/:id/players/move",
+  adminAuth,
+  validate(movePlayerSchema),
+  tournamentController.movePlayer,
 );
 
 router.post(

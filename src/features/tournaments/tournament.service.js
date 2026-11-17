@@ -89,6 +89,50 @@ export const deleteTournament = async (id) => {
   return tournament;
 };
 
+export const updateTournament = async (tournamentId, updateData) => {
+  const tournament = await getTournamentById(tournamentId);
+
+  if (tournament.status === TOURNAMENT_STATUS.COMPLETED) {
+    throw new AppError("Cannot modify a completed tournament", 400);
+  }
+
+  if (updateData.title && typeof updateData.title === "string") {
+    tournament.title = updateData.title.trim();
+  }
+
+  if (updateData.timeControl) {
+    tournament.timeControl = updateData.timeControl;
+    tournament.timeFormat = updateData.timeControl;
+  } else if (updateData.timeFormat) {
+    tournament.timeControl = updateData.timeFormat;
+    tournament.timeFormat = updateData.timeFormat;
+  }
+
+  if (updateData.totalRounds !== undefined) {
+    const rounds = Number(updateData.totalRounds);
+    if (isNaN(rounds) || rounds < 1) {
+      throw new AppError("Total rounds must be at least 1", 400);
+    }
+    if (rounds < tournament.currentRoundNumber) {
+      throw new AppError(
+        `Total rounds cannot be less than current round (${tournament.currentRoundNumber})`,
+        400,
+      );
+    }
+    tournament.totalRounds = rounds;
+  }
+
+  if (updateData.format && tournament.currentRoundNumber === 0) {
+    tournament.format = updateData.format;
+  }
+
+  if (updateData.round1TopSeedColor && tournament.currentRoundNumber === 0) {
+    tournament.round1TopSeedColor = updateData.round1TopSeedColor;
+  }
+
+  return tournament.save();
+};
+
 export const addPlayers = async (tournamentId, playersList) => {
   const tournament = await getTournamentById(tournamentId);
 
@@ -111,7 +155,10 @@ export const addPlayers = async (tournamentId, playersList) => {
 
   for (const p of playersList) {
     let candidateId = p.id ? String(p.id) : null;
-    if (!candidateId || existingIds.has(candidateId)) {
+    if (candidateId && existingIds.has(candidateId)) {
+      continue;
+    }
+    if (!candidateId) {
       candidateId = `p_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
     }
     existingIds.add(candidateId);
@@ -124,6 +171,10 @@ export const addPlayers = async (tournamentId, playersList) => {
         ? p.halfPointByeRequestedRounds.map(Number)
         : [],
     });
+  }
+
+  if (newPlayers.length === 0) {
+    return tournament;
   }
 
   tournament.players.push(...newPlayers);
@@ -162,6 +213,88 @@ export const updatePlayer = async (tournamentId, playerId, updateData) => {
   }
 
   return tournament.save();
+};
+
+export const deletePlayer = async (tournamentId, playerId) => {
+  const tournament = await getTournamentById(tournamentId);
+
+  if (tournament.status === TOURNAMENT_STATUS.COMPLETED) {
+    throw new AppError("Cannot modify players in a completed tournament", 400);
+  }
+
+  const pId = String(playerId);
+  const exists = tournament.players.some((p) => p.id === pId);
+  if (!exists) {
+    throw new AppError("Player not found in tournament", 404);
+  }
+
+  if (tournament.currentRoundNumber > 0) {
+    const player = tournament.players.find((p) => p.id === pId);
+    player.active = false;
+  } else {
+    tournament.players = tournament.players.filter((p) => p.id !== pId);
+    tournament.players.sort((a, b) => {
+      if (b.rating !== a.rating) return b.rating - a.rating;
+      return a.name.localeCompare(b.name);
+    });
+    tournament.players.forEach((p, idx) => {
+      p.initialRank = idx + 1;
+    });
+  }
+
+  return tournament.save();
+};
+
+export const movePlayer = async (fromTournamentId, toTournamentId, playerId) => {
+  if (String(fromTournamentId) === String(toTournamentId)) {
+    throw new AppError("Source and destination tournaments cannot be the same", 400);
+  }
+
+  const fromTourn = await getTournamentById(fromTournamentId);
+  const toTourn = await getTournamentById(toTournamentId);
+
+  if (fromTourn.currentRoundNumber > 0 || toTourn.currentRoundNumber > 0) {
+    throw new AppError("Cannot move players between tournaments after rounds have started", 400);
+  }
+
+  const pId = String(playerId);
+  const player = fromTourn.players.find((p) => p.id === pId);
+  if (!player) {
+    throw new AppError("Player not found in source tournament", 404);
+  }
+
+  const rawPlayer = {
+    id: player.id,
+    name: player.name,
+    rating: player.rating,
+    title: player.title || "",
+    active: player.active !== false,
+    halfPointByeRequestedRounds: player.halfPointByeRequestedRounds || [],
+  };
+
+  fromTourn.players = fromTourn.players.filter((p) => p.id !== pId);
+  fromTourn.players.sort((a, b) => {
+    if (b.rating !== a.rating) return b.rating - a.rating;
+    return a.name.localeCompare(b.name);
+  });
+  fromTourn.players.forEach((p, idx) => {
+    p.initialRank = idx + 1;
+  });
+
+  toTourn.players = toTourn.players.filter((p) => p.id !== pId);
+  toTourn.players.push(rawPlayer);
+  toTourn.players.sort((a, b) => {
+    if (b.rating !== a.rating) return b.rating - a.rating;
+    return a.name.localeCompare(b.name);
+  });
+  toTourn.players.forEach((p, idx) => {
+    p.initialRank = idx + 1;
+  });
+
+  await fromTourn.save();
+  await toTourn.save();
+
+  return { fromTournament: fromTourn, toTournament: toTourn };
 };
 
 export const generateNextRound = async (tournamentId) => {
