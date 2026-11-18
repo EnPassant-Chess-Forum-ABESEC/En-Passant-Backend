@@ -108,7 +108,12 @@ export const findRegistrationByUserAndEventId = async (
     ],
   };
   if (section) {
-    query.section = section.toLowerCase().trim();
+    const s = section.toLowerCase().trim();
+    if (s === "womens" || s === "women") {
+      query.section = { $in: ["womens", "women"] };
+    } else {
+      query.section = s;
+    }
   }
   return EventRegistration.findOne(query);
 };

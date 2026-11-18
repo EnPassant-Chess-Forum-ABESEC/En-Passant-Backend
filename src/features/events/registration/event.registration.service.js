@@ -24,6 +24,10 @@ export const createRegistration = async (
   const event = await eventRepo.findEventById(eventId);
   if (!event) throw new AppError("Event not found", 404);
 
+  if (event.isRegistrationOpen === false) {
+    throw new AppError("Registrations are closed for this event", 400);
+  }
+
   if (event.registrationDeadline && new Date() > event.registrationDeadline)
     throw new AppError("Registration deadline has passed for the event", 400);
 
@@ -84,7 +88,10 @@ export const createRegistration = async (
       );
     }
     if (isOpen && hasOpen) {
-      throw new AppError("You are already registered for the Open division", 409);
+      throw new AppError(
+        "You are already registered for the Open division",
+        409,
+      );
     }
     if (isWomens && hasWomens) {
       throw new AppError(
@@ -156,8 +163,7 @@ export const createRegistration = async (
     }
   }
 
-  const isWomensSection =
-    sectionName === "womens" || sectionName === "women";
+  const isWomensSection = sectionName === "womens" || sectionName === "women";
   const isHosteler = Boolean(regBody.isHosteler);
   const residentType = isHosteler
     ? "hosteler"
@@ -179,9 +185,7 @@ export const createRegistration = async (
   const regData = {
     eventId,
     registrationType:
-      participationMode ||
-      regBody.participation?.participationType ||
-      "solo",
+      participationMode || regBody.participation?.participationType || "solo",
     section: sectionName,
     bracket: assignedBracket,
     gender,
@@ -367,10 +371,14 @@ export const pushTeamMember = async (memId, eventId, joinCode) => {
       r.section === "inter club",
   );
   const hasOpenOrWomens = existingRegs.some(
-    (r) => r.section === "open" || r.section === "womens" || r.section === "women",
+    (r) =>
+      r.section === "open" || r.section === "womens" || r.section === "women",
   );
   if (hasInterclub) {
-    throw new AppError("Team member is already part of an Inter-Club team", 409);
+    throw new AppError(
+      "Team member is already part of an Inter-Club team",
+      409,
+    );
   }
   if (hasOpenOrWomens) {
     throw new AppError(
@@ -531,9 +539,7 @@ export const getBracketPreview = async (
   }
 
   const peakRating =
-    verification?.peakRapidRating ??
-    chessAccount.ratings?.rapid ??
-    0;
+    verification?.peakRapidRating ?? chessAccount.ratings?.rapid ?? 0;
   const gamesCount = verification?.rapidGamesCount ?? 0;
 
   const secLower = (sectionName || "open").toLowerCase().trim();
@@ -571,4 +577,53 @@ export const getBracketPreview = async (
     gamesCount,
     hasMinimumGames: gamesCount >= 5,
   };
+};
+
+export const confirmPresence = async (userId, eventId, section = null) => {
+  const event = await eventRepo.findEventById(eventId);
+  if (!event) throw new AppError("Event not found", 404);
+
+  let registration = await regRepo.findRegistrationByUserAndEventId(
+    userId,
+    eventId,
+    section,
+  );
+
+  if (!registration) {
+    const allRegs = await regRepo.findAllRegistrationsByUserAndEventId(
+      userId,
+      eventId,
+    );
+    if (allRegs.length > 0) {
+      registration = allRegs[0];
+    }
+  }
+
+  if (!registration) {
+    throw new AppError(
+      "Only previously registered participants can confirm presence",
+      404,
+    );
+  }
+
+  registration.isConfirmed = true;
+  registration.confirmedAt = new Date();
+  await registration.save();
+
+  await clearAdminCache("admin:event-registrations:*");
+
+  return registration;
+};
+
+export const updateRegistrationPresence = async (regId, isConfirmed) => {
+  const registration = await regRepo.findRegistrationById(regId);
+  if (!registration) {
+    throw new AppError("Registration not found", 404);
+  }
+  registration.isConfirmed = Boolean(isConfirmed);
+  registration.confirmedAt = isConfirmed ? new Date() : null;
+  await registration.save();
+
+  await clearAdminCache("admin:event-registrations:*");
+  return registration;
 };

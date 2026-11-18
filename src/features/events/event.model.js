@@ -78,6 +78,7 @@ const eventSchema = new mongoose.Schema(
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
     registrationDeadline: { type: Date, required: true },
+    isRegistrationOpen: { type: Boolean, default: true },
     participationMode: {
       type: String,
       enum: Object.values(REGISTRATION_TYPE),

@@ -55,6 +55,7 @@ const eventBody = z.object({
   startDate: isoDate("startDate"),
   endDate: isoDate("endDate"),
   registrationDeadline: isoDate("registrationDeadline"),
+  isRegistrationOpen: z.boolean().optional(),
   participationMode: z.enum(Object.values(REGISTRATION_TYPE)),
   status: z.enum(Object.values(EVENT_STATUS)),
   sections: z.array(sectionConfigSchema).optional().default([]),

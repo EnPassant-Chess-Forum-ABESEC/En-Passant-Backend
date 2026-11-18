@@ -51,6 +51,10 @@ router.delete(
   "/event-registrations/:id",
   adminController.deleteEventRegistration,
 );
+router.patch(
+  "/event-registrations/:id/presence",
+  adminController.updateEventRegistrationPresence,
+);
 
 router.get("/departments", adminController.getAllDepartments);
 router.post(

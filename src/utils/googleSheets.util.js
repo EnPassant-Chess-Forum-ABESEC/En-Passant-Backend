@@ -111,21 +111,30 @@ const applyFormatting = async (
       const cell = sheet.getCell(r, c);
       cell.backgroundColor = bg;
       cell.verticalAlignment = "MIDDLE";
-      if (c === 0) cell.horizontalAlignment = "CENTER";
+      if (c === 0 || c === 18) cell.horizontalAlignment = "CENTER";
 
       cell.textFormat = {
         bold: false,
         foregroundColor: { red: 0, green: 0, blue: 0 },
       };
 
-      const val = (cell.value || "").toString().toUpperCase();
+      const val = cell.value != null ? cell.value.toString().toUpperCase() : "";
 
-      if (val === "ACTIVE" || val === "CONFIRMED" || val === "SUCCESS") {
+      if (
+        val === "ACTIVE" ||
+        val === "CONFIRMED" ||
+        val === "SUCCESS" ||
+        val === "TRUE"
+      ) {
         cell.textFormat = {
           bold: true,
           foregroundColor: { red: 21 / 255, green: 128 / 255, blue: 61 / 255 },
         };
-      } else if (val === "REJECTED" || val === "FAILED") {
+      } else if (
+        val === "REJECTED" ||
+        val === "FAILED" ||
+        val === "FALSE"
+      ) {
         cell.textFormat = {
           bold: true,
           foregroundColor: { red: 220 / 255, green: 38 / 255, blue: 38 / 255 },
@@ -151,8 +160,8 @@ const applyFormatting = async (
     colWidths = [50, 150, 240, 240, 150, 180, 200, 140, 140, 180, 180];
   } else if (mode === "event_registrations") {
     colWidths = [
-      50, 160, 90, 80, 100, 220, 200, 140, 160, 100, 110, 130, 110, 80, 110, 160, 140, 120,
-      120, 160, 90, 180, 180, 160,
+      50, 160, 90, 80, 100, 220, 200, 140, 160, 100, 110, 130, 110, 80, 110, 160, 140, 130,
+      140, 160, 160,
     ];
   } else if (mode === "payments_event") {
     colWidths = [50, 160, 90, 80, 100, 220, 140, 180, 120, 180, 100, 120, 180, 180, 160];
@@ -293,7 +302,7 @@ export const syncEventRegistrationsToSheets = async (
       "Email",
       "College Email",
       "Phone",
-      "Tournament",
+      "Event",
       "Division",
       "Rating Bracket",
       "Chess.com",
@@ -303,11 +312,8 @@ export const syncEventRegistrationsToSheets = async (
       "Club / Organization",
       "Team Name",
       "Registration Status",
-      "Payment Status",
-      "UTR / Transaction ID",
-      "Fee (₹)",
-      "Screenshot URL",
-      "Receipt URL",
+      "Confirmed Presence",
+      "Confirmation Date",
       "Registered Date",
     ],
   ];
@@ -337,19 +343,27 @@ export const syncEventRegistrationsToSheets = async (
       reg.clubName || "—",
       reg.teamName || reg.team?.teamName || "—",
       (reg.status || "CONFIRMED").toUpperCase(),
-      (reg.paymentStatus || "FREE").toUpperCase(),
-      reg.utr || "—",
-      reg.paymentAmount != null ? reg.paymentAmount : 0,
-      reg.paymentScreenshotUrl || "—",
-      reg.receiptUrl || "—",
-      new Date(reg.createdAt).toLocaleString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        timeZone: "Asia/Kolkata",
-      }),
+      Boolean(reg.isConfirmed),
+      reg.confirmedAt
+        ? new Date(reg.confirmedAt).toLocaleString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            timeZone: "Asia/Kolkata",
+          })
+        : "—",
+      reg.createdAt
+        ? new Date(reg.createdAt).toLocaleString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            timeZone: "Asia/Kolkata",
+          })
+        : "—",
     ]);
   });
 

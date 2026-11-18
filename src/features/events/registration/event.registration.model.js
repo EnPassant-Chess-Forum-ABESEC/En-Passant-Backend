@@ -95,6 +95,14 @@ const eventRegistrationSchema = new mongoose.Schema(
       enum: Object.values(REGISTRATION_STATUS),
       default: REGISTRATION_STATUS.CONFIRMED,
     },
+    isConfirmed: {
+      type: Boolean,
+      default: false,
+    },
+    confirmedAt: {
+      type: Date,
+      default: null,
+    },
     gender: {
       type: String,
       enum: ["male", "female", null],
@@ -149,16 +157,28 @@ const eventRegistrationSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-eventRegistrationSchema.index({ eventId: 1, section: 1, bracket: 1, status: 1 });
+eventRegistrationSchema.index({
+  eventId: 1,
+  section: 1,
+  bracket: 1,
+  status: 1,
+});
+eventRegistrationSchema.index({ eventId: 1, isConfirmed: 1 });
 
 eventRegistrationSchema.index(
   { eventId: 1, "team.teamName": 1 },
-  { unique: true, partialFilterExpression: { "team.teamName": { $type: "string" } } }
+  {
+    unique: true,
+    partialFilterExpression: { "team.teamName": { $type: "string" } },
+  },
 );
 
 eventRegistrationSchema.index(
   { eventId: 1, "team.joinCode": 1 },
-  { unique: true, partialFilterExpression: { "team.joinCode": { $type: "string" } } }
+  {
+    unique: true,
+    partialFilterExpression: { "team.joinCode": { $type: "string" } },
+  },
 );
 
 export const EventRegistration = mongoose.model(

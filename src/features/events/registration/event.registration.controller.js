@@ -146,3 +146,20 @@ export const leaveTeamAsLeader = async (req, res, next) => {
     next(error);
   }
 };
+
+export const confirmPresence = async (req, res, next) => {
+  try {
+    const registration = await regService.confirmPresence(
+      req.user._id,
+      req.params.id,
+      req.body?.section || req.query?.section,
+    );
+    return res.status(200).json({
+      success: true,
+      message: "Presence confirmed successfully",
+      registration,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

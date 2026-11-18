@@ -11,11 +11,13 @@ import {
   leaveTeamAsLeader,
   getAllMyRegistrations,
   previewBracket,
+  confirmPresence,
 } from "./event.registration.controller.js";
 import { validate } from "../../../middleware/validate.middleware.js";
 import {
   registerForEventValidation,
   joinCodeValidation,
+  confirmPresenceValidation,
 } from "./event.registration.validation.js";
 
 const router = express.Router();
@@ -32,6 +34,19 @@ router.delete("/:id/delete", userAuth, deleteRegistration);
 router.get("/my-registrations", userAuth, getAllMyRegistrations);
 router.get("/:id/my-registration", userAuth, getMyRegistration);
 router.get("/:id/preview-bracket", userAuth, previewBracket);
+
+router.patch(
+  "/:id/confirm-presence",
+  userAuth,
+  validate(confirmPresenceValidation),
+  confirmPresence,
+);
+router.post(
+  "/:id/confirm-presence",
+  userAuth,
+  validate(confirmPresenceValidation),
+  confirmPresence,
+);
 
 router.post("/:id/join-team", userAuth, validate(joinCodeValidation), joinTeam);
 router.post(

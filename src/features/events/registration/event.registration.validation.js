@@ -52,3 +52,15 @@ export const joinCodeValidation = z.object({
     joinCode: z.string().length(6, "Join code must be exactly 6 characters"),
   }),
 });
+
+export const confirmPresenceValidation = z.object({
+  params: z.object({
+    id: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid event ID"),
+  }),
+  body: z
+    .object({
+      section: z.string().trim().optional(),
+    })
+    .optional()
+    .default({}),
+});

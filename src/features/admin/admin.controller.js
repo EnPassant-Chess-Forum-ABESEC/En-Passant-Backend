@@ -124,6 +124,29 @@ export const deleteEventRegistration = async (req, res, next) => {
   }
 };
 
+export const updateEventRegistrationPresence = async (req, res, next) => {
+  const { id } = req.params;
+  const { isConfirmed } = req.body;
+
+  try {
+    const updated = await eventRegService.updateRegistrationPresence(
+      id,
+      isConfirmed,
+    );
+    await logAdminAction(req.user, "UPDATE_EVENT_REGISTRATION_PRESENCE", id, {
+      isConfirmed,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Event registration presence updated successfully",
+      registration: updated,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const deleteApplication = async (req, res, next) => {
   const { id } = req.params;
 

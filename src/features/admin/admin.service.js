@@ -8,7 +8,6 @@ import * as userRepo from "../users/user.repository.js";
 import * as paymentRepo from "../payments/payment.repository.js";
 import * as eventRepo from "../events/event.repository.js";
 import * as eventRegRepo from "../events/registration/event.registration.repository.js";
-import * as tournamentRepo from "../tournaments/tournament.repository.js";
 import { enqueueDraftReminderEmail } from "../email/email.queue.js";
 import { APPLICATION_STATUS } from "../recruitment/recruitment.constants.js";
 import {
@@ -152,25 +151,6 @@ export const deleteEventRegistration = async (registrationId) => {
   }
 
   await paymentRepo.deletePaymentByRegistrationId(registrationId);
-
-  try {
-    if (registration.eventId) {
-      const tournaments = await tournamentRepo.findTournamentsByReferenceId(
-        registration.eventId.toString(),
-      );
-      for (const t of tournaments) {
-        const playerId1 = registration.registeredBy?.toString();
-        const playerId2 = registration._id?.toString();
-        const initialCount = t.players?.length || 0;
-        t.players = (t.players || []).filter(
-          (p) => p.id !== playerId1 && p.id !== playerId2,
-        );
-        if (t.players.length !== initialCount) {
-          await t.save();
-        }
-      }
-    }
-  } catch {}
 
   await clearAdminCache("admin:payments:*");
   await clearAdminCache("admin:event-registrations:*");
