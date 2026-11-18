@@ -82,6 +82,14 @@ const applyFormatting = async (
   };
   titleCell.horizontalAlignment = "CENTER";
   titleCell.verticalAlignment = "MIDDLE";
+  try {
+    await sheet.unmergeCells({
+      startRowIndex: 0,
+      endRowIndex: 1,
+      startColumnIndex: 0,
+      endColumnIndex: Math.max(sheet.columnCount || 50, colCount, 50),
+    });
+  } catch (err) {}
   await sheet.mergeCells({
     startRowIndex: 0,
     endRowIndex: 1,
