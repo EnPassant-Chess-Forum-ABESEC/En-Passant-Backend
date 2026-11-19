@@ -97,11 +97,11 @@ const eventRegistrationSchema = new mongoose.Schema(
     },
     isConfirmed: {
       type: Boolean,
-      default: false,
+      default: true,
     },
     confirmedAt: {
       type: Date,
-      default: null,
+      default: Date.now,
     },
     gender: {
       type: String,

@@ -56,6 +56,13 @@ export const createRegistration = async (
     eventId,
   );
 
+  if (existingRegs.length > 0) {
+    throw new AppError(
+      "You are already registered for this event. You can only confirm presence.",
+      409,
+    );
+  }
+
   const hasInterclub = existingRegs.some(
     (r) =>
       r.section === "interclub" ||
@@ -197,6 +204,8 @@ export const createRegistration = async (
     paymentStatus: PAYMENT_STATUS.SUCCESS,
     registeredBy: userId,
     status: REGISTRATION_STATUS.CONFIRMED,
+    isConfirmed: true,
+    confirmedAt: new Date(),
     teamName: effectiveTeamName,
     clubName: effectiveClubName,
     utr: null,
@@ -224,73 +233,15 @@ export const createRegistration = async (
 };
 
 export const deleteUserRegistration = async (
-  userId,
-  eventId,
-  registrationId = null,
-  section = null,
+  _userId,
+  _eventId,
+  _registrationId = null,
+  _section = null,
 ) => {
-  const event = await eventRepo.findEventById(eventId);
-  if (!event) throw new AppError("Event not found", 404);
-
-  if (event.registrationDeadline && new Date() > event.registrationDeadline)
-    throw new AppError(
-      "Modifications are not allowed after the registration deadline",
-      400,
-    );
-
-  let registration = null;
-  if (registrationId) {
-    registration = await regRepo.findRegistrationById(registrationId);
-  } else if (section) {
-    registration = await regRepo.findRegistrationByUserAndEventId(
-      userId,
-      eventId,
-      section,
-    );
-  } else {
-    registration = await regRepo.findRegistrationByUserAndEventId(
-      userId,
-      eventId,
-    );
-  }
-  if (!registration) throw new AppError("Registration not found", 404);
-
-  if (event.registrationDeadline && new Date() > event.registrationDeadline) {
-    throw new AppError(
-      "Withdrawal is not allowed after the registration deadline has passed",
-      400,
-    );
-  }
-
-  const { participationMode } = event;
-
-  if (participationMode === REGISTRATION_TYPE.SOLO) {
-    await regRepo.deleteRegistration(eventId, registration._id);
-  } else {
-    const { team } = registration;
-
-    const isLeader = team.leaderId.toString() === userId.toString();
-
-    if (!isLeader)
-      throw new AppError(
-        "Team members must leave the team instead of deleting the registration",
-        400,
-      );
-
-    if (team.members.length > 0)
-      throw new AppError(
-        "Leader cannot delete the registration while team members exist",
-        400,
-      );
-
-    await regRepo.deleteRegistration(eventId, registration._id);
-  }
-
-  await clearAdminCache("admin:event-registrations:*");
-
-  if (registration.paymentScreenshotPublicId) {
-    deleteFile(registration.paymentScreenshotPublicId).catch(() => null);
-  }
+  throw new AppError(
+    "Withdrawal is not allowed. Participants can only confirm presence.",
+    400,
+  );
 };
 
 export const getRegistrationByEventId = async (
